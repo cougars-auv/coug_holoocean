@@ -102,6 +102,16 @@ def generate_launch_description() -> LaunchDescription:
         ]
     )
 
+    gps_link_frame = PythonExpression(
+        [
+            "'",
+            auv_ns,
+            "/gps_link' if '",
+            auv_ns,
+            "' != '' else 'gps_link'",
+        ]
+    )
+
     front_stereo_link_frame = PythonExpression(
         [
             "'",
@@ -191,7 +201,7 @@ def generate_launch_description() -> LaunchDescription:
                     auv_params,
                     {
                         "use_sim_time": use_sim_time,
-                        "gps_frame": com_link_frame,
+                        "gps_frame": gps_link_frame,
                         "add_noise": add_noise,
                     },
                 ],
