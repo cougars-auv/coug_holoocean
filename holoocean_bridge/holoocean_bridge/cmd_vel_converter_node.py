@@ -77,9 +77,7 @@ class CmdVelConverterNode(Node):
             vert_x, vert_y = 0.12, 0.2181  # 'thrusterLocations' 0-3, from COM (m)
             angled_x, angled_y = 0.1562, 0.0988  # 'thrusterLocations' 4-7 (m)
 
-            # Force/torque to hold steady state against drag at unit velocity. The
-            # angled thrusters act through cos(45°); torque per unit command is
-            # 4 × the moment arm about each axis.
+            # Force/torque to hold steady state against drag at unit velocity.
             self.h_scale = linear_drag / (4.0 * math.sqrt(0.5))
             self.v_scale = linear_drag / 4.0
             self.r_scale = angular_drag / (4.0 * vert_y)
@@ -87,8 +85,6 @@ class CmdVelConverterNode(Node):
             self.y_scale = angular_drag / (4.0 * (angled_x + angled_y) * math.sqrt(0.5))
         else:
             # SurfaceVessel.h/SurfaceVessel.cpp
-            # IMPORTANT! Iz is set by the UE mesh, so it is estimated as a solid box matching
-            # 'BoundingBox' (5.0 x 2.4 m): 200 * (5^2 + 2.4^2) / 12 = 512.7
             linear_drag = 600.0  # mass(200) × SetLinearDamping(3.0)
             angular_drag = 384.5  # Iz(512.7) × SetAngularDamping(0.75)
             self.thruster_limit = 1500.0  # SV_MAX_THRUST
