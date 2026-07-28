@@ -3,7 +3,7 @@
 <package format="3">
   <name>holoocean_bridge</name>
   <version>0.0.0</version>
-  <description>CoUGARs HoloOcean simulator bridge and message converters.</description>
+  <description>HoloOcean simulator bridge and message converters.</description>
   <maintainer email="snelsond@byu.edu">snelsondurrant</maintainer>
   <license>Apache-2.0</license>
   <url type="repository">https://github.com/cougars-auv/holoocean_bridge</url>
