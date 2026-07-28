@@ -30,7 +30,7 @@ class FinStatePublisherNode(Node):
     def __init__(self) -> None:
         super().__init__("fin_state_publisher_node")
 
-        self.declare_parameter("input_topic", "AgentCommand")
+        self.declare_parameter("input_topic", "ControlCommand")
         self.declare_parameter("output_topic", "joint_states")
 
         input_topic = (

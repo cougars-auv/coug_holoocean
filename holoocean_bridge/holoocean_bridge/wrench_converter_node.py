@@ -17,9 +17,8 @@ import math
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
-from geometry_msgs.msg import WrenchStamped, TwistWithCovarianceStamped, Vector3Stamped
-from tf2_ros import Buffer, TransformListener
-import tf2_geometry_msgs
+from geometry_msgs.msg import WrenchStamped
+from nav_msgs.msg import Odometry
 from holoocean_interfaces.msg import AgentCommand
 
 
@@ -34,26 +33,16 @@ class WrenchConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("wrench_converter_node")
 
-        self.declare_parameter("agent_topic", "/command/agent")
-        self.declare_parameter("control_topic", "AgentCommand")
-        self.declare_parameter("velocity_topic", "VelocitySensor")
+        self.declare_parameter("control_topic", "ControlCommand")
+        self.declare_parameter("odom_topic", "DynamicsSensorOdom")
         self.declare_parameter("wrench_raw_topic", "cmd_wrench_raw")
         self.declare_parameter("wrench_topic", "cmd_wrench")
         self.declare_parameter("wrench_frame", "com_link")
-        self.declare_parameter("map_frame", "map")
 
-        self.tf_buffer = Buffer()
-        self.tf_listener = TransformListener(self.tf_buffer, self)
-
-        agent_topic = (
-            self.get_parameter("agent_topic").get_parameter_value().string_value
-        )
         control_topic = (
             self.get_parameter("control_topic").get_parameter_value().string_value
         )
-        velocity_topic = (
-            self.get_parameter("velocity_topic").get_parameter_value().string_value
-        )
+        odom_topic = self.get_parameter("odom_topic").get_parameter_value().string_value
         wrench_raw_topic = (
             self.get_parameter("wrench_raw_topic").get_parameter_value().string_value
         )
@@ -63,23 +52,17 @@ class WrenchConverterNode(Node):
         self.wrench_frame = (
             self.get_parameter("wrench_frame").get_parameter_value().string_value
         )
-        self.map_frame = (
-            self.get_parameter("map_frame").get_parameter_value().string_value
-        )
 
-        self.agent_sub = self.create_subscription(
-            AgentCommand, agent_topic, self.agent_callback, qos_profile_system_default
-        )
         self.control_sub = self.create_subscription(
             AgentCommand,
             control_topic,
             self.control_callback,
             qos_profile_system_default,
         )
-        self.velocity_sub = self.create_subscription(
-            TwistWithCovarianceStamped,
-            velocity_topic,
-            self.velocity_callback,
+        self.odom_sub = self.create_subscription(
+            Odometry,
+            odom_topic,
+            self.odom_callback,
             qos_profile_system_default,
         )
         self.wrench_raw_pub = self.create_publisher(
@@ -108,30 +91,9 @@ class WrenchConverterNode(Node):
             * ((1 - self.w) / self.d_prop)
         )
 
-        self.velocity = 0.0
+        self.speed = 0.0
 
         self.get_logger().info("Initialization complete.")
-
-    def agent_callback(self, msg: AgentCommand) -> None:
-        """
-        Convert a BlueROV2 command into a COM-frame wrench and publish it.
-
-        :param msg: AgentCommand message containing thruster values.
-        """
-        cmd = msg.command
-
-        fwd = (cmd[4] + cmd[5] + cmd[6] + cmd[7]) * math.sqrt(0.5)
-        lat = (cmd[4] - cmd[5] + cmd[6] - cmd[7]) * math.sqrt(0.5)
-        vert = cmd[0] + cmd[1] + cmd[2] + cmd[3]
-
-        wrench_msg = WrenchStamped()
-        wrench_msg.header.stamp = msg.header.stamp
-        wrench_msg.header.frame_id = self.wrench_frame
-
-        wrench_msg.wrench.force.x = fwd
-        wrench_msg.wrench.force.y = lat
-        wrench_msg.wrench.force.z = vert
-        self.wrench_pub.publish(wrench_msg)
 
     def control_callback(self, msg: AgentCommand) -> None:
         """
@@ -139,14 +101,17 @@ class WrenchConverterNode(Node):
 
         :param msg: AgentCommand message containing control surface/thruster values.
         """
-        thruster_rpm = msg.command[3]
+        thruster_rpm = msg.command[-1]
 
         n_rps = thruster_rpm / 60.0
 
         # IMPORTANT! Assuming no spool up/down delays
+        # This only matters under the 'stepInput' and 'manualControl' modes, which
+        # report the raw RPM command. 'depthHeadingAutopilot' reports the propeller
+        # state after actuation, so the T_n spool lag is already accounted for.
         force_x_raw = self.c1 * abs(n_rps) * n_rps
         if n_rps > 0:
-            force_x = force_x_raw + self.c2 * n_rps * self.velocity
+            force_x = force_x_raw + self.c2 * n_rps * self.speed
         else:
             force_x = force_x_raw
 
@@ -162,31 +127,14 @@ class WrenchConverterNode(Node):
         wrench_msg.wrench.force.x = force_x
         self.wrench_pub.publish(wrench_msg)
 
-    def velocity_callback(self, msg: TwistWithCovarianceStamped) -> None:
+    def odom_callback(self, msg: Odometry) -> None:
         """
-        Transform velocity into the COM frame and store for CougUV command processing.
+        Store the vehicle speed for CougUV command processing.
 
-        :param msg: Twist message containing current velocity in the map frame.
+        :param msg: Odometry message containing the current COM velocity.
         """
-        try:
-            wrench_T_map_tf = self.tf_buffer.lookup_transform(
-                self.wrench_frame, self.map_frame, rclpy.time.Time()
-            )
-
-            # Transform map-frame velocity into the COM frame
-            vel_map = Vector3Stamped()
-            vel_map.header = msg.header
-            vel_map.vector = msg.twist.twist.linear
-            vel_wrench = tf2_geometry_msgs.do_transform_vector3(
-                vel_map, wrench_T_map_tf
-            )
-            self.velocity = vel_wrench.vector.x
-
-        except Exception as ex:
-            self.get_logger().warn(
-                f"Could not transform {self.wrench_frame} to {self.map_frame}: {ex}",
-                throttle_duration_sec=1.0,
-            )
+        linear = msg.twist.twist.linear
+        self.speed = math.sqrt(linear.x**2 + linear.y**2 + linear.z**2)
 
 
 def main(args: list[str] | None = None) -> None:
