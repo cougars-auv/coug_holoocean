@@ -84,7 +84,7 @@ class ModemStatusConverterNode(Node):
         q = imu_msg.orientation
         q_enu_b = Rotation.from_quat([q.x, q.y, q.z, q.w])
         q_ned_b = _Q_NED_ENU * q_enu_b
-        yaw_ned, pitch_ned, roll_ned = q_ned_b.as_euler("zyx", degrees=True)
+        roll_ned, pitch_ned, yaw_ned = q_ned_b.as_euler("xyz", degrees=True)
 
         modem_status_msg.includes_local_attitude = True
         modem_status_msg.attitude_yaw = seatrac.clamp_int16(yaw_ned * 10.0)
