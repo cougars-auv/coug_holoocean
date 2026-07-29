@@ -91,7 +91,7 @@ class DvlOdomConverterNode(Node):
             )
         except Exception as ex:
             self.get_logger().warn(
-                f"Could not transform {self.map_frame} to {msg.header.frame_id}: {ex}",
+                f"Could not transform {msg.header.frame_id} to {self.map_frame}: {ex}",
                 throttle_duration_sec=1.0,
             )
             return
