@@ -15,10 +15,10 @@
 import math
 
 import rclpy
-from rclpy.node import Node
-from rclpy.qos import qos_profile_system_default
 from geometry_msgs.msg import TwistStamped
 from holoocean_interfaces.msg import AgentCommand
+from rclpy.node import Node
+from rclpy.qos import qos_profile_system_default
 
 BLUEROV2 = "bluerov2"
 SURFACE_VESSEL = "surface_vessel"

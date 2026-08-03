@@ -13,13 +13,14 @@
 # limitations under the License.
 
 import math
+
 import message_filters
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
-from sensor_msgs.msg import Imu, MagneticField
 from scipy.spatial.transform import Rotation
 from seatrac_interfaces.msg import ModemStatus
+from sensor_msgs.msg import Imu, MagneticField
 
 from holoocean_bridge.utils import seatrac_enums as seatrac
 

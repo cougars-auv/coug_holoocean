@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import rclpy
+from holoocean_interfaces.msg import AgentCommand
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
-from holoocean_interfaces.msg import AgentCommand
 from sensor_msgs.msg import JointState
 
 

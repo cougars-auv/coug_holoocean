@@ -13,10 +13,11 @@
 # limitations under the License.
 
 import random
+
 import rclpy
+from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
-from nav_msgs.msg import Odometry
 from sensor_msgs.msg import FluidPressure
 
 
