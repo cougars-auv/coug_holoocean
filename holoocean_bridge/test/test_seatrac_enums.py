@@ -15,7 +15,7 @@
 """
 Unit tests for utils/seatrac_enums.py.
 
-:author: Nelson Durrant (w Claude Opus 4.8)
+:author: Nelson Durrant (w Opus 4.8)
 :date: May 2026
 """
 
