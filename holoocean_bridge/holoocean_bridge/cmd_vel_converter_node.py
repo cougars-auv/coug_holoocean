@@ -35,22 +35,22 @@ class CmdVelConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("cmd_vel_converter_node")
 
-        self.declare_parameter("input_topic", "cmd_vel_out")
-        self.declare_parameter("output_topic", "/command/agent")
         self.declare_parameter("agent_name", "auv0")
         self.declare_parameter("agent_type", BLUEROV2)
+        self.declare_parameter("input_topic", "cmd_vel_out")
+        self.declare_parameter("output_topic", "/command/agent")
 
-        input_topic = (
-            self.get_parameter("input_topic").get_parameter_value().string_value
-        )
-        output_topic = (
-            self.get_parameter("output_topic").get_parameter_value().string_value
-        )
         self.agent_name = (
             self.get_parameter("agent_name").get_parameter_value().string_value
         )
         self.agent_type = (
             self.get_parameter("agent_type").get_parameter_value().string_value
+        )
+        input_topic = (
+            self.get_parameter("input_topic").get_parameter_value().string_value
+        )
+        output_topic = (
+            self.get_parameter("output_topic").get_parameter_value().string_value
         )
 
         if self.agent_type not in (BLUEROV2, SURFACE_VESSEL):

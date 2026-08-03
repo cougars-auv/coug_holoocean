@@ -30,13 +30,19 @@ class DepthConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("depth_converter_node")
 
+        self.declare_parameter("noise_sigma", 0.02)
+        self.declare_parameter("add_noise", True)
         self.declare_parameter("input_topic", "DepthSensor")
         self.declare_parameter("output_topic", "depth/odometry")
         self.declare_parameter("depth_frame", "depth_link")
         self.declare_parameter("map_frame", "map")
-        self.declare_parameter("noise_sigma", 0.02)
-        self.declare_parameter("add_noise", True)
 
+        self.noise_sigma = (
+            self.get_parameter("noise_sigma").get_parameter_value().double_value
+        )
+        self.add_noise = (
+            self.get_parameter("add_noise").get_parameter_value().bool_value
+        )
         input_topic = (
             self.get_parameter("input_topic").get_parameter_value().string_value
         )
@@ -48,12 +54,6 @@ class DepthConverterNode(Node):
         )
         self.map_frame = (
             self.get_parameter("map_frame").get_parameter_value().string_value
-        )
-        self.noise_sigma = (
-            self.get_parameter("noise_sigma").get_parameter_value().double_value
-        )
-        self.add_noise = (
-            self.get_parameter("add_noise").get_parameter_value().bool_value
         )
 
         self.subscription = self.create_subscription(

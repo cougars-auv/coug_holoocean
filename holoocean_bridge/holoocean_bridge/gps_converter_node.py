@@ -32,24 +32,15 @@ class GpsConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("gps_converter_node")
 
-        self.declare_parameter("input_topic", "GPSSensor")
-        self.declare_parameter("output_topic", "gps/fix")
-        self.declare_parameter("gps_frame", "gps_link")
         self.declare_parameter("origin_latitude", 40.33940)
         self.declare_parameter("origin_longitude", -111.90721)
         self.declare_parameter("origin_altitude", 1412.0)
         self.declare_parameter("noise_sigmas", [0.015, 0.015, 0.025])
         self.declare_parameter("add_noise", True)
+        self.declare_parameter("input_topic", "GPSSensor")
+        self.declare_parameter("output_topic", "gps/fix")
+        self.declare_parameter("gps_frame", "gps_link")
 
-        input_topic = (
-            self.get_parameter("input_topic").get_parameter_value().string_value
-        )
-        output_topic = (
-            self.get_parameter("output_topic").get_parameter_value().string_value
-        )
-        self.gps_frame = (
-            self.get_parameter("gps_frame").get_parameter_value().string_value
-        )
         self.origin_lat = (
             self.get_parameter("origin_latitude").get_parameter_value().double_value
         )
@@ -64,6 +55,15 @@ class GpsConverterNode(Node):
         )
         self.add_noise = (
             self.get_parameter("add_noise").get_parameter_value().bool_value
+        )
+        input_topic = (
+            self.get_parameter("input_topic").get_parameter_value().string_value
+        )
+        output_topic = (
+            self.get_parameter("output_topic").get_parameter_value().string_value
+        )
+        self.gps_frame = (
+            self.get_parameter("gps_frame").get_parameter_value().string_value
         )
 
         self.subscription = self.create_subscription(

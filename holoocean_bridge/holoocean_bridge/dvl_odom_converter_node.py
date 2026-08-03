@@ -37,12 +37,13 @@ class DvlOdomConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("dvl_odom_converter_node")
 
+        self.declare_parameter("pos_std", 0.05)
         self.declare_parameter("input_topic", "DynamicsSensorOdom")
         self.declare_parameter("output_topic", "dvl/position")
         self.declare_parameter("com_frame", "com_link")
         self.declare_parameter("dvl_frame", "dvl_link")
         self.declare_parameter("map_frame", "map")
-        self.declare_parameter("pos_std", 0.05)
+        self.pos_std = self.get_parameter("pos_std").get_parameter_value().double_value
         input_topic = (
             self.get_parameter("input_topic").get_parameter_value().string_value
         )
@@ -58,7 +59,6 @@ class DvlOdomConverterNode(Node):
         self.map_frame = (
             self.get_parameter("map_frame").get_parameter_value().string_value
         )
-        self.pos_std = self.get_parameter("pos_std").get_parameter_value().double_value
 
         self.publisher = self.create_publisher(
             DVLDR, output_topic, qos_profile_sensor_data

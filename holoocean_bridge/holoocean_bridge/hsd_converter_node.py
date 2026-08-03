@@ -31,12 +31,15 @@ class HsdConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("hsd_converter_node")
 
+        self.declare_parameter("agent_name", "auv0")
         self.declare_parameter("hsd_topic", "cmd_hsd")
         self.declare_parameter("output_heading_topic", "/heading")
         self.declare_parameter("output_speed_topic", "/speed")
         self.declare_parameter("output_depth_topic", "/depth")
-        self.declare_parameter("agent_name", "auv0")
 
+        self.agent_name = (
+            self.get_parameter("agent_name").get_parameter_value().string_value
+        )
         self.hsd_topic = (
             self.get_parameter("hsd_topic").get_parameter_value().string_value
         )
@@ -50,9 +53,6 @@ class HsdConverterNode(Node):
         )
         self.output_depth_topic = (
             self.get_parameter("output_depth_topic").get_parameter_value().string_value
-        )
-        self.agent_name = (
-            self.get_parameter("agent_name").get_parameter_value().string_value
         )
 
         self.output_heading_pub = self.create_publisher(

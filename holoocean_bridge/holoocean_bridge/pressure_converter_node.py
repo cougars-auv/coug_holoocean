@@ -31,24 +31,15 @@ class PressureConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("pressure_converter_node")
 
-        self.declare_parameter("input_topic", "DepthSensor")
-        self.declare_parameter("output_topic", "pressure/data")
-        self.declare_parameter("depth_frame", "depth_link")
         self.declare_parameter("water_density", 997.0)
         self.declare_parameter("gravity", 9.81)
         self.declare_parameter("atmospheric_pressure", 101325.0)
         self.declare_parameter("noise_sigma", 195.61)
         self.declare_parameter("add_noise", True)
+        self.declare_parameter("input_topic", "DepthSensor")
+        self.declare_parameter("output_topic", "pressure/data")
+        self.declare_parameter("depth_frame", "depth_link")
 
-        input_topic = (
-            self.get_parameter("input_topic").get_parameter_value().string_value
-        )
-        output_topic = (
-            self.get_parameter("output_topic").get_parameter_value().string_value
-        )
-        self.depth_frame = (
-            self.get_parameter("depth_frame").get_parameter_value().string_value
-        )
         self.water_density = (
             self.get_parameter("water_density").get_parameter_value().double_value
         )
@@ -63,6 +54,15 @@ class PressureConverterNode(Node):
         )
         self.add_noise = (
             self.get_parameter("add_noise").get_parameter_value().bool_value
+        )
+        input_topic = (
+            self.get_parameter("input_topic").get_parameter_value().string_value
+        )
+        output_topic = (
+            self.get_parameter("output_topic").get_parameter_value().string_value
+        )
+        self.depth_frame = (
+            self.get_parameter("depth_frame").get_parameter_value().string_value
         )
 
         self.subscription = self.create_subscription(

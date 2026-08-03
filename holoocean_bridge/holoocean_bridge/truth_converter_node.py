@@ -34,13 +34,16 @@ class TruthConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("truth_converter_node")
 
+        self.declare_parameter("publish_tf", False)
         self.declare_parameter("input_topic", "DynamicsSensorOdom")
         self.declare_parameter("output_topic", "odometry/truth")
         self.declare_parameter("com_frame", "com_link")
         self.declare_parameter("base_frame", "base_link")
         self.declare_parameter("map_frame", "map")
-        self.declare_parameter("publish_tf", False)
 
+        self.publish_tf = (
+            self.get_parameter("publish_tf").get_parameter_value().bool_value
+        )
         input_topic = (
             self.get_parameter("input_topic").get_parameter_value().string_value
         )
@@ -132,7 +135,7 @@ class TruthConverterNode(Node):
 
         self.publisher.publish(odom_msg)
 
-        if self.get_parameter("publish_tf").get_parameter_value().bool_value:
+        if self.publish_tf:
             t = TransformStamped()
             t.header.stamp = msg.header.stamp
             t.header.frame_id = self.map_frame

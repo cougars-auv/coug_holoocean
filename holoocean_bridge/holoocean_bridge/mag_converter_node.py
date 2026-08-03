@@ -30,12 +30,22 @@ class MagConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("mag_converter_node")
 
-        self.declare_parameter("input_topic", "MagnetometerSensor")
-        self.declare_parameter("output_topic", "imu/mag")
-        self.declare_parameter("mag_frame", "imu_link")
-        self.declare_parameter("noise_sigmas", [0.006, 0.006, 0.006])
+        self.declare_parameter("au_to_tesla", 1.0)
+        self.declare_parameter("noise_sigmas", [3.0e-07, 3.0e-07, 3.0e-07])
         self.declare_parameter("add_noise", True)
+        self.declare_parameter("input_topic", "MagnetometerSensor")
+        self.declare_parameter("output_topic", "imu/mag_au")
+        self.declare_parameter("mag_frame", "imu_link")
 
+        self.au_to_tesla = (
+            self.get_parameter("au_to_tesla").get_parameter_value().double_value
+        )
+        self.noise_sigmas = (
+            self.get_parameter("noise_sigmas").get_parameter_value().double_array_value
+        )
+        self.add_noise = (
+            self.get_parameter("add_noise").get_parameter_value().bool_value
+        )
         input_topic = (
             self.get_parameter("input_topic").get_parameter_value().string_value
         )
@@ -44,12 +54,6 @@ class MagConverterNode(Node):
         )
         self.mag_frame = (
             self.get_parameter("mag_frame").get_parameter_value().string_value
-        )
-        self.noise_sigmas = (
-            self.get_parameter("noise_sigmas").get_parameter_value().double_array_value
-        )
-        self.add_noise = (
-            self.get_parameter("add_noise").get_parameter_value().bool_value
         )
 
         self.subscription = self.create_subscription(
@@ -81,6 +85,14 @@ class MagConverterNode(Node):
         msg.magnetic_field_covariance[0] = self.noise_sigmas[0] ** 2
         msg.magnetic_field_covariance[4] = self.noise_sigmas[1] ** 2
         msg.magnetic_field_covariance[8] = self.noise_sigmas[2] ** 2
+
+        if self.au_to_tesla != 1.0:
+            msg.magnetic_field.x /= self.au_to_tesla
+            msg.magnetic_field.y /= self.au_to_tesla
+            msg.magnetic_field.z /= self.au_to_tesla
+
+            for i in range(len(msg.magnetic_field_covariance)):
+                msg.magnetic_field_covariance[i] /= self.au_to_tesla**2
 
         self.publisher.publish(msg)
 

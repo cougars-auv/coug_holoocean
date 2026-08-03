@@ -36,11 +36,6 @@ class ImuConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("imu_converter_node")
 
-        self.declare_parameter("imu_input_topic", "IMUSensor")
-        self.declare_parameter("ahrs_input_topic", "RotationSensor")
-        self.declare_parameter("output_topic", "imu/data")
-        self.declare_parameter("bias_topic", "imu/bias")
-        self.declare_parameter("imu_frame", "imu_link")
         self.declare_parameter("accel_noise_sigmas", [0.0079, 0.0079, 0.0079])
         self.declare_parameter("gyro_noise_sigmas", [0.00074, 0.00074, 0.00074])
         self.declare_parameter("ahrs_noise_sigmas", [0.00698, 0.00698, 0.01745])
@@ -48,20 +43,12 @@ class ImuConverterNode(Node):
         self.declare_parameter("add_bias", True)
         self.declare_parameter("accel_bias_rw_sigmas", [1.4e-5, 1.4e-5, 1.4e-5])
         self.declare_parameter("gyro_bias_rw_sigmas", [3.5e-6, 3.5e-6, 3.5e-6])
+        self.declare_parameter("imu_input_topic", "IMUSensor")
+        self.declare_parameter("ahrs_input_topic", "RotationSensor")
+        self.declare_parameter("output_topic", "imu/data")
+        self.declare_parameter("bias_topic", "imu/bias")
+        self.declare_parameter("imu_frame", "imu_link")
 
-        imu_input_topic = (
-            self.get_parameter("imu_input_topic").get_parameter_value().string_value
-        )
-        ahrs_input_topic = (
-            self.get_parameter("ahrs_input_topic").get_parameter_value().string_value
-        )
-        output_topic = (
-            self.get_parameter("output_topic").get_parameter_value().string_value
-        )
-        bias_topic = self.get_parameter("bias_topic").get_parameter_value().string_value
-        self.imu_frame = (
-            self.get_parameter("imu_frame").get_parameter_value().string_value
-        )
         self.accel_noise_sigmas = (
             self.get_parameter("accel_noise_sigmas")
             .get_parameter_value()
@@ -90,6 +77,19 @@ class ImuConverterNode(Node):
             self.get_parameter("gyro_bias_rw_sigmas")
             .get_parameter_value()
             .double_array_value
+        )
+        imu_input_topic = (
+            self.get_parameter("imu_input_topic").get_parameter_value().string_value
+        )
+        ahrs_input_topic = (
+            self.get_parameter("ahrs_input_topic").get_parameter_value().string_value
+        )
+        output_topic = (
+            self.get_parameter("output_topic").get_parameter_value().string_value
+        )
+        bias_topic = self.get_parameter("bias_topic").get_parameter_value().string_value
+        self.imu_frame = (
+            self.get_parameter("imu_frame").get_parameter_value().string_value
         )
 
         self.accel_bias = [0.0, 0.0, 0.0]

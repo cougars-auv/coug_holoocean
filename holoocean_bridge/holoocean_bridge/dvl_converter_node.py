@@ -34,13 +34,19 @@ class DvlConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("dvl_converter_node")
 
+        self.declare_parameter("noise_sigmas", [0.02, 0.02, 0.02])
+        self.declare_parameter("add_noise", True)
         self.declare_parameter("input_topic", "DVLSensorVelocity")
         self.declare_parameter("output_topic", "dvl/data")
         self.declare_parameter("config_command_topic", "dvl/config/command")
         self.declare_parameter("dvl_frame", "dvl_link")
-        self.declare_parameter("noise_sigmas", [0.02, 0.02, 0.02])
-        self.declare_parameter("add_noise", True)
 
+        self.noise_sigmas = (
+            self.get_parameter("noise_sigmas").get_parameter_value().double_array_value
+        )
+        self.add_noise = (
+            self.get_parameter("add_noise").get_parameter_value().bool_value
+        )
         input_topic = (
             self.get_parameter("input_topic").get_parameter_value().string_value
         )
@@ -54,12 +60,6 @@ class DvlConverterNode(Node):
         )
         self.dvl_frame = (
             self.get_parameter("dvl_frame").get_parameter_value().string_value
-        )
-        self.noise_sigmas = (
-            self.get_parameter("noise_sigmas").get_parameter_value().double_array_value
-        )
-        self.add_noise = (
-            self.get_parameter("add_noise").get_parameter_value().bool_value
         )
 
         self.acoustic_enabled = True
