@@ -33,8 +33,11 @@ class MagConverterNode(Node):
         self.declare_parameter("au_to_tesla", 1.0)
         self.declare_parameter("noise_sigmas", [3.0e-07, 3.0e-07, 3.0e-07])
         self.declare_parameter("add_noise", True)
+        self.declare_parameter("add_bias", True)
+        self.declare_parameter("bias_sigmas", [1.0e-05, 1.0e-05, 1.0e-05])
         self.declare_parameter("input_topic", "MagnetometerSensor")
         self.declare_parameter("output_topic", "imu/mag_au")
+        self.declare_parameter("bias_topic", "imu/mag/bias")
         self.declare_parameter("mag_frame", "imu_link")
 
         self.au_to_tesla = (
@@ -46,15 +49,26 @@ class MagConverterNode(Node):
         self.add_noise = (
             self.get_parameter("add_noise").get_parameter_value().bool_value
         )
+        self.add_bias = self.get_parameter("add_bias").get_parameter_value().bool_value
+        self.bias_sigmas = (
+            self.get_parameter("bias_sigmas").get_parameter_value().double_array_value
+        )
         input_topic = (
             self.get_parameter("input_topic").get_parameter_value().string_value
         )
         output_topic = (
             self.get_parameter("output_topic").get_parameter_value().string_value
         )
+        bias_topic = self.get_parameter("bias_topic").get_parameter_value().string_value
         self.mag_frame = (
             self.get_parameter("mag_frame").get_parameter_value().string_value
         )
+
+        # Hard iron is static, so draw it once and hold it for the whole mission
+        self.mag_bias = [
+            random.gauss(0, sigma) if self.add_bias else 0.0
+            for sigma in self.bias_sigmas
+        ]
 
         self.subscription = self.create_subscription(
             MagneticField,
@@ -67,6 +81,10 @@ class MagConverterNode(Node):
             MagneticField, output_topic, qos_profile_system_default
         )
 
+        self.bias_publisher = self.create_publisher(
+            MagneticField, bias_topic, qos_profile_system_default
+        )
+
         self.get_logger().info("Initialization complete.")
 
     def listener_callback(self, msg: MagneticField) -> None:
@@ -76,6 +94,11 @@ class MagConverterNode(Node):
         :param msg: MagneticField message.
         """
         msg.header.frame_id = self.mag_frame
+
+        if self.add_bias:
+            msg.magnetic_field.x += self.mag_bias[0]
+            msg.magnetic_field.y += self.mag_bias[1]
+            msg.magnetic_field.z += self.mag_bias[2]
 
         if self.add_noise:
             msg.magnetic_field.x += random.gauss(0, self.noise_sigmas[0])
@@ -95,6 +118,14 @@ class MagConverterNode(Node):
                 msg.magnetic_field_covariance[i] /= self.au_to_tesla**2
 
         self.publisher.publish(msg)
+
+        bias_msg = MagneticField()
+        bias_msg.header = msg.header
+        bias_msg.magnetic_field.x = self.mag_bias[0]
+        bias_msg.magnetic_field.y = self.mag_bias[1]
+        bias_msg.magnetic_field.z = self.mag_bias[2]
+
+        self.bias_publisher.publish(bias_msg)
 
 
 def main(args: list[str] | None = None) -> None:
