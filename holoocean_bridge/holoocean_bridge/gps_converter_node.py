@@ -106,7 +106,7 @@ class GpsConverterNode(Node):
                 lon0=self.origin_lon,
                 h0=self.origin_alt,
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.get_logger().error(f"Failed ENU to geodetic conversion: {e}")
             return
 
