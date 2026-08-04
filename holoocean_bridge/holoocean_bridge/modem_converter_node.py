@@ -14,12 +14,13 @@
 
 import math
 import random
+
 import rclpy
+from holoocean_interfaces.msg import AcousticBeaconSend, AcousticBeaconSensor
+from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
-from holoocean_interfaces.msg import AcousticBeaconSensor, AcousticBeaconSend
-from seatrac_interfaces.msg import ModemRec, ModemSend, ModemCmdUpdate
-from nav_msgs.msg import Odometry
+from seatrac_interfaces.msg import ModemCmdUpdate, ModemRec, ModemSend
 
 from holoocean_bridge.utils import seatrac_enums as seatrac
 

@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import message_filters
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data, qos_profile_system_default
-from sensor_msgs.msg import Image, CameraInfo
-import message_filters
+from sensor_msgs.msg import CameraInfo, Image
 
 
 class StereoConverterNode(Node):

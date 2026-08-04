@@ -13,11 +13,12 @@
 # limitations under the License.
 
 import random
+
 import rclpy
+from dvl_msgs.msg import DVL, ConfigCommand
+from geometry_msgs.msg import TwistWithCovarianceStamped
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data, qos_profile_system_default
-from geometry_msgs.msg import TwistWithCovarianceStamped
-from dvl_msgs.msg import DVL, ConfigCommand
 
 
 class DvlConverterNode(Node):
