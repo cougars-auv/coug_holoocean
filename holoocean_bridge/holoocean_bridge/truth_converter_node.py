@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import rclpy
+import tf2_geometry_msgs  # noqa: F401
 from geometry_msgs.msg import PoseStamped, TransformStamped
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
-from tf2_geometry_msgs import do_transform_pose
 from tf2_ros import Buffer, TransformBroadcaster, TransformListener
 
 
@@ -37,7 +37,6 @@ class TruthConverterNode(Node):
         self.declare_parameter("publish_tf", False)
         self.declare_parameter("input_topic", "DynamicsSensorOdom")
         self.declare_parameter("output_topic", "odometry/truth")
-        self.declare_parameter("com_frame", "com_link")
         self.declare_parameter("base_frame", "base_link")
         self.declare_parameter("map_frame", "map")
 
@@ -49,9 +48,6 @@ class TruthConverterNode(Node):
         )
         output_topic = (
             self.get_parameter("output_topic").get_parameter_value().string_value
-        )
-        self.com_frame = (
-            self.get_parameter("com_frame").get_parameter_value().string_value
         )
         self.base_frame = (
             self.get_parameter("base_frame").get_parameter_value().string_value
@@ -76,17 +72,17 @@ class TruthConverterNode(Node):
 
     def listener_callback(self, msg: Odometry) -> None:
         """
-        Transform HoloOcean ground truth odometry into the base frame and publish.
+        Transform HoloOcean ground truth odometry into the map frame and publish.
 
-        :param msg: Odometry message from DynamicsSensorOdom.
+        :param msg: Odometry message from DynamicsSensorOdom (base in HoloOcean frame).
         """
-        p_com_in_holo = PoseStamped()
-        p_com_in_holo.header = msg.header
-        p_com_in_holo.pose = msg.pose.pose
+        p_base_in_holo = PoseStamped()
+        p_base_in_holo.header = msg.header
+        p_base_in_holo.pose = msg.pose.pose
 
         try:
-            p_com_in_map = self.tf_buffer.transform(
-                p_com_in_holo,
+            p_base_in_map = self.tf_buffer.transform(
+                p_base_in_holo,
                 self.map_frame,
                 timeout=rclpy.duration.Duration(seconds=0.1),
             )
@@ -97,39 +93,11 @@ class TruthConverterNode(Node):
             )
             return
 
-        try:
-            com_T_base_tf = self.tf_buffer.lookup_transform(
-                self.com_frame, self.base_frame, rclpy.time.Time()
-            )
-        except Exception as e:  # noqa: BLE001
-            self.get_logger().warn(
-                f"Could not transform {self.com_frame} to {self.base_frame}: {e}",
-                throttle_duration_sec=1.0,
-            )
-            return
-
-        # Transform from COM-frame to base-frame pose in the map frame
-        map_T_com_tf = TransformStamped()
-        map_T_com_tf.header = p_com_in_map.header
-        map_T_com_tf.child_frame_id = self.com_frame
-        map_T_com_tf.transform.translation.x = p_com_in_map.pose.position.x
-        map_T_com_tf.transform.translation.y = p_com_in_map.pose.position.y
-        map_T_com_tf.transform.translation.z = p_com_in_map.pose.position.z
-        map_T_com_tf.transform.rotation = p_com_in_map.pose.orientation
-
-        p_base_in_com = PoseStamped()
-        p_base_in_com.pose.position.x = com_T_base_tf.transform.translation.x
-        p_base_in_com.pose.position.y = com_T_base_tf.transform.translation.y
-        p_base_in_com.pose.position.z = com_T_base_tf.transform.translation.z
-        p_base_in_com.pose.orientation = com_T_base_tf.transform.rotation
-
-        p_base_in_map = do_transform_pose(p_base_in_com.pose, map_T_com_tf)
-
         odom_msg = Odometry()
         odom_msg.header.stamp = msg.header.stamp
         odom_msg.header.frame_id = self.map_frame
         odom_msg.child_frame_id = self.base_frame
-        odom_msg.pose.pose = p_base_in_map
+        odom_msg.pose.pose = p_base_in_map.pose
         odom_msg.pose.covariance = msg.pose.covariance
         odom_msg.twist.covariance = msg.twist.covariance
 
@@ -140,10 +108,10 @@ class TruthConverterNode(Node):
             t.header.stamp = msg.header.stamp
             t.header.frame_id = self.map_frame
             t.child_frame_id = self.base_frame
-            t.transform.translation.x = p_base_in_map.position.x
-            t.transform.translation.y = p_base_in_map.position.y
-            t.transform.translation.z = p_base_in_map.position.z
-            t.transform.rotation = p_base_in_map.orientation
+            t.transform.translation.x = p_base_in_map.pose.position.x
+            t.transform.translation.y = p_base_in_map.pose.position.y
+            t.transform.translation.z = p_base_in_map.pose.position.z
+            t.transform.rotation = p_base_in_map.pose.orientation
             self.tf_broadcaster.sendTransform(t)
 
 

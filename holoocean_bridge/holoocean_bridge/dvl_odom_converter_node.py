@@ -41,7 +41,7 @@ class DvlOdomConverterNode(Node):
         self.declare_parameter("pos_std", 0.05)
         self.declare_parameter("input_topic", "DynamicsSensorOdom")
         self.declare_parameter("output_topic", "dvl/position")
-        self.declare_parameter("com_frame", "com_link")
+        self.declare_parameter("base_frame", "base_link")
         self.declare_parameter("dvl_frame", "dvl_link")
         self.declare_parameter("map_frame", "map")
         self.pos_std = self.get_parameter("pos_std").get_parameter_value().double_value
@@ -51,8 +51,8 @@ class DvlOdomConverterNode(Node):
         output_topic = (
             self.get_parameter("output_topic").get_parameter_value().string_value
         )
-        self.com_frame = (
-            self.get_parameter("com_frame").get_parameter_value().string_value
+        self.base_frame = (
+            self.get_parameter("base_frame").get_parameter_value().string_value
         )
         self.dvl_frame = (
             self.get_parameter("dvl_frame").get_parameter_value().string_value
@@ -78,15 +78,15 @@ class DvlOdomConverterNode(Node):
         """
         Transform HoloOcean ground truth odometry into the DVL frame and publish.
 
-        :param msg: Odometry message from DynamicsSensorOdom (COM in HoloOcean frame).
+        :param msg: Odometry message from DynamicsSensorOdom (base in HoloOcean frame).
         """
-        p_com_in_holo = PoseStamped()
-        p_com_in_holo.header = msg.header
-        p_com_in_holo.pose = msg.pose.pose
+        p_base_in_holo = PoseStamped()
+        p_base_in_holo.header = msg.header
+        p_base_in_holo.pose = msg.pose.pose
 
         try:
-            p_com_in_map = self.tf_buffer.transform(
-                p_com_in_holo,
+            p_base_in_map = self.tf_buffer.transform(
+                p_base_in_holo,
                 self.map_frame,
                 timeout=rclpy.duration.Duration(seconds=0.1),
             )
@@ -98,32 +98,32 @@ class DvlOdomConverterNode(Node):
             return
 
         try:
-            com_T_dvl_tf = self.tf_buffer.lookup_transform(
-                self.com_frame, self.dvl_frame, rclpy.time.Time()
+            base_T_dvl_tf = self.tf_buffer.lookup_transform(
+                self.base_frame, self.dvl_frame, rclpy.time.Time()
             )
         except Exception as e:  # noqa: BLE001
             self.get_logger().warn(
-                f"Could not transform {self.com_frame} to {self.dvl_frame}: {e}",
+                f"Could not transform {self.base_frame} to {self.dvl_frame}: {e}",
                 throttle_duration_sec=1.0,
             )
             return
 
-        # Transform from COM-frame to DVL-frame pose in the map frame
-        map_T_com_tf = TransformStamped()
-        map_T_com_tf.header = p_com_in_map.header
-        map_T_com_tf.child_frame_id = self.com_frame
-        map_T_com_tf.transform.translation.x = p_com_in_map.pose.position.x
-        map_T_com_tf.transform.translation.y = p_com_in_map.pose.position.y
-        map_T_com_tf.transform.translation.z = p_com_in_map.pose.position.z
-        map_T_com_tf.transform.rotation = p_com_in_map.pose.orientation
+        # Transform from base-frame to DVL-frame pose in the map frame
+        map_T_base_tf = TransformStamped()
+        map_T_base_tf.header = p_base_in_map.header
+        map_T_base_tf.child_frame_id = self.base_frame
+        map_T_base_tf.transform.translation.x = p_base_in_map.pose.position.x
+        map_T_base_tf.transform.translation.y = p_base_in_map.pose.position.y
+        map_T_base_tf.transform.translation.z = p_base_in_map.pose.position.z
+        map_T_base_tf.transform.rotation = p_base_in_map.pose.orientation
 
-        p_dvl_in_com = PoseStamped()
-        p_dvl_in_com.pose.position.x = com_T_dvl_tf.transform.translation.x
-        p_dvl_in_com.pose.position.y = com_T_dvl_tf.transform.translation.y
-        p_dvl_in_com.pose.position.z = com_T_dvl_tf.transform.translation.z
-        p_dvl_in_com.pose.orientation = com_T_dvl_tf.transform.rotation
+        p_dvl_in_base = PoseStamped()
+        p_dvl_in_base.pose.position.x = base_T_dvl_tf.transform.translation.x
+        p_dvl_in_base.pose.position.y = base_T_dvl_tf.transform.translation.y
+        p_dvl_in_base.pose.position.z = base_T_dvl_tf.transform.translation.z
+        p_dvl_in_base.pose.orientation = base_T_dvl_tf.transform.rotation
 
-        p_dvl_in_map = do_transform_pose(p_dvl_in_com.pose, map_T_com_tf)
+        p_dvl_in_map = do_transform_pose(p_dvl_in_base.pose, map_T_base_tf)
 
         # Convert ENU -> NED
         x_ned = p_dvl_in_map.position.y
