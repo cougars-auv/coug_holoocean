@@ -19,6 +19,9 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 from std_msgs.msg import Header
 
+MIN_SPEED_RPM = 0.0
+MAX_SPEED_RPM = 1525.0
+
 
 class HsdConverterNode(Node):
     """
@@ -96,7 +99,7 @@ class HsdConverterNode(Node):
         """
         self.output_heading_pub.publish(self.create_command_msg(msg.heading))
         self.output_speed_pub.publish(
-            self.create_command_msg(max(0.0, min(1525.0, msg.speed)))
+            self.create_command_msg(max(MIN_SPEED_RPM, min(MAX_SPEED_RPM, msg.speed)))
         )
         self.output_depth_pub.publish(self.create_command_msg(max(-msg.depth, 0.0)))
 

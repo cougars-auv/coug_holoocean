@@ -23,6 +23,29 @@ from rclpy.qos import qos_profile_system_default
 BLUEROV2 = "bluerov2"
 SURFACE_VESSEL = "surface_vessel"
 
+# BlueROV2.h/BlueROV2.cpp
+BR_LINEAR_DRAG = 11.5  # mass(11.5) × SetLinearDamping(1.0)
+BR_ANGULAR_DRAG = 0.225  # Iz(0.3) × SetAngularDamping(0.75)
+BR_MAX_THRUST = 28.75  # BR_MAX_THRUST
+BR_VERT_X, BR_VERT_Y = 0.12, 0.2181  # 'thrusterLocations' 0-3, from COM (m)
+BR_ANGLED_X, BR_ANGLED_Y = 0.1562, 0.0988  # 'thrusterLocations' 4-7 (m)
+
+# Force/torque to hold steady state against drag at unit velocity.
+BR_H_SCALE = BR_LINEAR_DRAG / (4.0 * math.sqrt(0.5))
+BR_V_SCALE = BR_LINEAR_DRAG / 4.0
+BR_R_SCALE = BR_ANGULAR_DRAG / (4.0 * BR_VERT_Y)
+BR_P_SCALE = BR_ANGULAR_DRAG / (4.0 * BR_VERT_X)
+BR_Y_SCALE = BR_ANGULAR_DRAG / (4.0 * (BR_ANGLED_X + BR_ANGLED_Y) * math.sqrt(0.5))
+
+# SurfaceVessel.h/SurfaceVessel.cpp
+SV_LINEAR_DRAG = 600.0  # mass(200) × SetLinearDamping(3.0)
+SV_ANGULAR_DRAG = 384.5  # Iz(512.7) × SetAngularDamping(0.75)
+SV_MAX_THRUST = 1500.0  # SV_MAX_THRUST
+SV_THRUSTER_Y = 1.0  # 'thrusterLocations' half-separation (m)
+
+SV_H_SCALE = SV_LINEAR_DRAG
+SV_Y_SCALE = SV_ANGULAR_DRAG
+
 
 class CmdVelConverterNode(Node):
     """
@@ -70,28 +93,17 @@ class CmdVelConverterNode(Node):
         )
 
         if self.agent_type == BLUEROV2:
-            # BlueROV2.h/BlueROV2.cpp
-            linear_drag = 11.5  # mass(11.5) × SetLinearDamping(1.0)
-            angular_drag = 0.225  # Iz(0.3) × SetAngularDamping(0.75)
-            self.thruster_limit = 28.75  # BR_MAX_THRUST
-            vert_x, vert_y = 0.12, 0.2181  # 'thrusterLocations' 0-3, from COM (m)
-            angled_x, angled_y = 0.1562, 0.0988  # 'thrusterLocations' 4-7 (m)
-
-            # Force/torque to hold steady state against drag at unit velocity.
-            self.h_scale = linear_drag / (4.0 * math.sqrt(0.5))
-            self.v_scale = linear_drag / 4.0
-            self.r_scale = angular_drag / (4.0 * vert_y)
-            self.p_scale = angular_drag / (4.0 * vert_x)
-            self.y_scale = angular_drag / (4.0 * (angled_x + angled_y) * math.sqrt(0.5))
+            self.thruster_limit = BR_MAX_THRUST
+            self.h_scale = BR_H_SCALE
+            self.v_scale = BR_V_SCALE
+            self.r_scale = BR_R_SCALE
+            self.p_scale = BR_P_SCALE
+            self.y_scale = BR_Y_SCALE
         else:
-            # SurfaceVessel.h/SurfaceVessel.cpp
-            linear_drag = 600.0  # mass(200) × SetLinearDamping(3.0)
-            angular_drag = 384.5  # Iz(512.7) × SetAngularDamping(0.75)
-            self.thruster_limit = 1500.0  # SV_MAX_THRUST
-            self.thruster_y = 1.0  # 'thrusterLocations' half-separation (m)
-
-            self.h_scale = linear_drag
-            self.y_scale = angular_drag
+            self.thruster_limit = SV_MAX_THRUST
+            self.thruster_y = SV_THRUSTER_Y
+            self.h_scale = SV_H_SCALE
+            self.y_scale = SV_Y_SCALE
 
         self.get_logger().info("Initialization complete.")
 

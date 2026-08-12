@@ -21,6 +21,25 @@ from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 
+# actuator.py
+RHO = 1026.0
+D_PROP = 0.14
+T_PROP = 0.1
+KT_0 = 0.4566
+KT_MAX = 0.1798
+JA_MAX = 0.6632
+W = 0.056
+
+C1 = (1.0 - T_PROP) * RHO * pow(D_PROP, 4) * KT_0
+C2 = (
+    (1.0 - T_PROP)
+    * RHO
+    * pow(D_PROP, 4)
+    * (KT_MAX - KT_0)
+    / JA_MAX
+    * ((1 - W) / D_PROP)
+)
+
 
 class WrenchConverterNode(Node):
     """
@@ -72,25 +91,6 @@ class WrenchConverterNode(Node):
             WrenchStamped, wrench_topic, qos_profile_system_default
         )
 
-        # HoloOcean CougUV Thrusters (actuator.py)
-        self.rho = 1026.0
-        self.d_prop = 0.14
-        self.t_prop = 0.1
-        self.kt_0 = 0.4566
-        self.kt_max = 0.1798
-        self.ja_max = 0.6632
-        self.w = 0.056
-
-        self.c1 = (1.0 - self.t_prop) * self.rho * pow(self.d_prop, 4) * self.kt_0
-        self.c2 = (
-            (1.0 - self.t_prop)
-            * self.rho
-            * pow(self.d_prop, 4)
-            * (self.kt_max - self.kt_0)
-            / self.ja_max
-            * ((1 - self.w) / self.d_prop)
-        )
-
         self.speed = 0.0
 
         self.get_logger().info("Initialization complete.")
@@ -109,9 +109,9 @@ class WrenchConverterNode(Node):
         # This only matters under the 'stepInput' and 'manualControl' modes, which
         # report the raw RPM command. 'depthHeadingAutopilot' reports the propeller
         # state after actuation, so the T_n spool lag is already accounted for.
-        force_x_raw = self.c1 * abs(n_rps) * n_rps
+        force_x_raw = C1 * abs(n_rps) * n_rps
         if n_rps > 0:
-            force_x = force_x_raw + self.c2 * n_rps * self.speed
+            force_x = force_x_raw + C2 * n_rps * self.speed
         else:
             force_x = force_x_raw
 
