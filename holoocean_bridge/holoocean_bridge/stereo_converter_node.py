@@ -77,7 +77,7 @@ class StereoConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def create_camera_info(self, image_msg: Image) -> CameraInfo:
+    def create_camera_info_msg(self, image_msg: Image) -> CameraInfo:
         """
         Generate an identity CameraInfo message.
 
@@ -119,10 +119,10 @@ class StereoConverterNode(Node):
         self.front_pub.publish(front_msg)
         self.back_pub.publish(back_msg)
 
-        front_info_msg = self.create_camera_info(front_msg)
+        front_info_msg = self.create_camera_info_msg(front_msg)
         self.front_info_pub.publish(front_info_msg)
 
-        back_info_msg = self.create_camera_info(back_msg)
+        back_info_msg = self.create_camera_info_msg(back_msg)
         self.back_info_pub.publish(back_info_msg)
 
 

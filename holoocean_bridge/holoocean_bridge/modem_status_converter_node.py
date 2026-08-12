@@ -74,6 +74,18 @@ class ModemStatusConverterNode(Node):
         :param imu_msg: Imu message from imu_converter (with noise, bias, and fused orientation).
         :param mag_msg: MagneticField message from mag_converter (with noise).
         """
+        self.publisher.publish(self.create_modem_status_msg(imu_msg, mag_msg))
+
+    def create_modem_status_msg(
+        self, imu_msg: Imu, mag_msg: MagneticField
+    ) -> ModemStatus:
+        """
+        Create a ModemStatus message with NED attitude in decidegrees.
+
+        :param imu_msg: Imu message whose ENU orientation seeds the local attitude.
+        :param mag_msg: MagneticField message whose reading seeds the compass AHRS.
+        :return: Populated ModemStatus message, stamped with ms since node start.
+        """
         modem_status_msg = ModemStatus()
         modem_status_msg.header = imu_msg.header
 
@@ -97,7 +109,7 @@ class ModemStatusConverterNode(Node):
         modem_status_msg.mag_y = mag_msg.magnetic_field.y
         modem_status_msg.mag_z = mag_msg.magnetic_field.z
 
-        self.publisher.publish(modem_status_msg)
+        return modem_status_msg
 
 
 def main(args: list[str] | None = None) -> None:

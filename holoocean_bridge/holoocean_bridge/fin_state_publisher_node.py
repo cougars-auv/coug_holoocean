@@ -60,6 +60,15 @@ class FinStatePublisherNode(Node):
 
         :param msg: AgentCommand message containing fin states.
         """
+        self.publisher.publish(self.create_joint_state_msg(msg))
+
+    def create_joint_state_msg(self, msg: AgentCommand) -> JointState:
+        """
+        Create a JointState message from the reported fin positions.
+
+        :param msg: AgentCommand message containing fin states.
+        :return: Populated JointState message ordered to match self.joint_names.
+        """
         joint_state = JointState()
         joint_state.header.stamp = msg.header.stamp
         joint_state.name = self.joint_names
@@ -68,7 +77,7 @@ class FinStatePublisherNode(Node):
         starboard_elevator = msg.command[1]
         port_elevator = msg.command[2]
         joint_state.position = [rudder, port_elevator, starboard_elevator]
-        self.publisher.publish(joint_state)
+        return joint_state
 
 
 def main(args: list[str] | None = None) -> None:

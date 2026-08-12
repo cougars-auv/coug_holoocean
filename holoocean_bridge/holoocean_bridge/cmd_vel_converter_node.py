@@ -113,6 +113,15 @@ class CmdVelConverterNode(Node):
 
         :param msg: TwistStamped message containing linear and angular velocities.
         """
+        self.publisher.publish(self.create_agent_command_msg(msg))
+
+    def create_agent_command_msg(self, msg: TwistStamped) -> AgentCommand:
+        """
+        Create an AgentCommand message with thruster values scaled to the limit.
+
+        :param msg: TwistStamped message containing linear and angular velocities.
+        :return: Populated AgentCommand message in the HoloOcean command order.
+        """
         agent_cmd = AgentCommand()
         agent_cmd.header.stamp = self.get_clock().now().to_msg()
         agent_cmd.header.frame_id = self.agent_name
@@ -130,7 +139,7 @@ class CmdVelConverterNode(Node):
             final_cmds = raw_cmds
 
         agent_cmd.command = final_cmds
-        self.publisher.publish(agent_cmd)
+        return agent_cmd
 
     def bluerov2_command(self, msg: TwistStamped) -> list[float]:
         """

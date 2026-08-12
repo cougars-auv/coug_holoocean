@@ -77,7 +77,7 @@ class HsdConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def create_command_msg(self, value: float) -> DesiredCommand:
+    def create_desired_command_msg(self, value: float) -> DesiredCommand:
         """
         Create a DesiredCommand message.
 
@@ -97,11 +97,15 @@ class HsdConverterNode(Node):
 
         :param msg: ControlSetpoint message containing heading, speed, and depth.
         """
-        self.output_heading_pub.publish(self.create_command_msg(msg.heading))
+        self.output_heading_pub.publish(self.create_desired_command_msg(msg.heading))
         self.output_speed_pub.publish(
-            self.create_command_msg(max(MIN_SPEED_RPM, min(MAX_SPEED_RPM, msg.speed)))
+            self.create_desired_command_msg(
+                max(MIN_SPEED_RPM, min(MAX_SPEED_RPM, msg.speed))
+            )
         )
-        self.output_depth_pub.publish(self.create_command_msg(max(-msg.depth, 0.0)))
+        self.output_depth_pub.publish(
+            self.create_desired_command_msg(max(-msg.depth, 0.0))
+        )
 
 
 def main(args: list[str] | None = None) -> None:
