@@ -77,6 +77,27 @@ class StereoConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
+    def sync_callback(self, front_msg: Image, back_msg: Image) -> None:
+        """
+        Synchronize and publish the stereo image pair and their corresponding CameraInfo messages.
+
+        :param front_msg: The front camera image message.
+        :param back_msg: The back camera image message.
+        """
+        back_msg.header.stamp = front_msg.header.stamp
+
+        front_msg.header.frame_id = self.front_stereo_frame
+        back_msg.header.frame_id = self.back_stereo_frame
+
+        self.front_pub.publish(front_msg)
+        self.back_pub.publish(back_msg)
+
+        front_info_msg = self.create_camera_info_msg(front_msg)
+        self.front_info_pub.publish(front_info_msg)
+
+        back_info_msg = self.create_camera_info_msg(back_msg)
+        self.back_info_pub.publish(back_info_msg)
+
     def create_camera_info_msg(self, image_msg: Image) -> CameraInfo:
         """
         Generate an identity CameraInfo message.
@@ -103,27 +124,6 @@ class StereoConverterNode(Node):
         info.p = [fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0]
 
         return info
-
-    def sync_callback(self, front_msg: Image, back_msg: Image) -> None:
-        """
-        Synchronize and publish the stereo image pair and their corresponding CameraInfo messages.
-
-        :param front_msg: The front camera image message.
-        :param back_msg: The back camera image message.
-        """
-        back_msg.header.stamp = front_msg.header.stamp
-
-        front_msg.header.frame_id = self.front_stereo_frame
-        back_msg.header.frame_id = self.back_stereo_frame
-
-        self.front_pub.publish(front_msg)
-        self.back_pub.publish(back_msg)
-
-        front_info_msg = self.create_camera_info_msg(front_msg)
-        self.front_info_pub.publish(front_info_msg)
-
-        back_info_msg = self.create_camera_info_msg(back_msg)
-        self.back_info_pub.publish(back_info_msg)
 
 
 def main(args: list[str] | None = None) -> None:

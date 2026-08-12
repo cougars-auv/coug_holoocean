@@ -77,20 +77,6 @@ class HsdConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def create_desired_command_msg(self, value: float) -> DesiredCommand:
-        """
-        Create a DesiredCommand message.
-
-        :param value: The value (heading, speed, or depth) to put in the message.
-        :return: Populated DesiredCommand message.
-        """
-        msg = DesiredCommand()
-        msg.header = Header()
-        msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = self.agent_name
-        msg.data = float(value)
-        return msg
-
     def hsd_callback(self, msg: ControlSetpoint) -> None:
         """
         Process a setpoint message and publish heading, speed, and depth separately.
@@ -106,6 +92,20 @@ class HsdConverterNode(Node):
         self.output_depth_pub.publish(
             self.create_desired_command_msg(max(-msg.depth, 0.0))
         )
+
+    def create_desired_command_msg(self, value: float) -> DesiredCommand:
+        """
+        Create a DesiredCommand message.
+
+        :param value: The value (heading, speed, or depth) to put in the message.
+        :return: Populated DesiredCommand message.
+        """
+        msg = DesiredCommand()
+        msg.header = Header()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = self.agent_name
+        msg.data = float(value)
+        return msg
 
 
 def main(args: list[str] | None = None) -> None:
