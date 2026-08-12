@@ -24,7 +24,7 @@ from scipy.spatial.transform import Rotation
 from tf2_geometry_msgs import do_transform_pose
 from tf2_ros import Buffer, TransformListener
 
-_Q_NED_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv()
+_NED_R_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv()
 
 
 class DvlOdomConverterNode(Node):
@@ -80,13 +80,13 @@ class DvlOdomConverterNode(Node):
 
         :param msg: Odometry message from DynamicsSensorOdom (base in HoloOcean frame).
         """
-        p_base_in_holo = PoseStamped()
-        p_base_in_holo.header = msg.header
-        p_base_in_holo.pose = msg.pose.pose
+        holo_T_base = PoseStamped()
+        holo_T_base.header = msg.header
+        holo_T_base.pose = msg.pose.pose
 
         try:
-            p_base_in_map = self.tf_buffer.transform(
-                p_base_in_holo,
+            map_T_base = self.tf_buffer.transform(
+                holo_T_base,
                 self.map_frame,
                 timeout=rclpy.duration.Duration(seconds=0.1),
             )
@@ -110,30 +110,30 @@ class DvlOdomConverterNode(Node):
 
         # Transform from base-frame to DVL-frame pose in the map frame
         map_T_base_tf = TransformStamped()
-        map_T_base_tf.header = p_base_in_map.header
+        map_T_base_tf.header = map_T_base.header
         map_T_base_tf.child_frame_id = self.base_frame
-        map_T_base_tf.transform.translation.x = p_base_in_map.pose.position.x
-        map_T_base_tf.transform.translation.y = p_base_in_map.pose.position.y
-        map_T_base_tf.transform.translation.z = p_base_in_map.pose.position.z
-        map_T_base_tf.transform.rotation = p_base_in_map.pose.orientation
+        map_T_base_tf.transform.translation.x = map_T_base.pose.position.x
+        map_T_base_tf.transform.translation.y = map_T_base.pose.position.y
+        map_T_base_tf.transform.translation.z = map_T_base.pose.position.z
+        map_T_base_tf.transform.rotation = map_T_base.pose.orientation
 
-        p_dvl_in_base = PoseStamped()
-        p_dvl_in_base.pose.position.x = base_T_dvl_tf.transform.translation.x
-        p_dvl_in_base.pose.position.y = base_T_dvl_tf.transform.translation.y
-        p_dvl_in_base.pose.position.z = base_T_dvl_tf.transform.translation.z
-        p_dvl_in_base.pose.orientation = base_T_dvl_tf.transform.rotation
+        base_T_dvl = PoseStamped()
+        base_T_dvl.pose.position.x = base_T_dvl_tf.transform.translation.x
+        base_T_dvl.pose.position.y = base_T_dvl_tf.transform.translation.y
+        base_T_dvl.pose.position.z = base_T_dvl_tf.transform.translation.z
+        base_T_dvl.pose.orientation = base_T_dvl_tf.transform.rotation
 
-        p_dvl_in_map = do_transform_pose(p_dvl_in_base.pose, map_T_base_tf)
+        map_T_dvl = do_transform_pose(base_T_dvl.pose, map_T_base_tf)
 
         # Convert ENU -> NED
-        x_ned = p_dvl_in_map.position.y
-        y_ned = p_dvl_in_map.position.x
-        z_ned = -p_dvl_in_map.position.z
+        x_ned = map_T_dvl.position.y
+        y_ned = map_T_dvl.position.x
+        z_ned = -map_T_dvl.position.z
 
-        q = p_dvl_in_map.orientation
-        q_enu_b = Rotation.from_quat([q.x, q.y, q.z, q.w])
-        q_ned_b = _Q_NED_ENU * q_enu_b
-        roll, pitch, yaw = q_ned_b.as_euler("xyz", degrees=True)
+        q = map_T_dvl.orientation
+        enu_R_dvl = Rotation.from_quat([q.x, q.y, q.z, q.w])
+        ned_R_dvl = _NED_R_ENU * enu_R_dvl
+        roll_ned, pitch_ned, yaw_ned = ned_R_dvl.as_euler("xyz", degrees=True)
 
         dvl_msg = DVLDR()
         dvl_msg.header.stamp = msg.header.stamp
@@ -143,9 +143,9 @@ class DvlOdomConverterNode(Node):
         dvl_msg.position.y = y_ned
         dvl_msg.position.z = z_ned
         dvl_msg.pos_std = self.pos_std
-        dvl_msg.roll = roll
-        dvl_msg.pitch = pitch
-        dvl_msg.yaw = yaw
+        dvl_msg.roll = roll_ned
+        dvl_msg.pitch = pitch_ned
+        dvl_msg.yaw = yaw_ned
         dvl_msg.status = 0
 
         self.publisher.publish(dvl_msg)

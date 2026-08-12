@@ -24,7 +24,7 @@ from sensor_msgs.msg import Imu, MagneticField
 
 from holoocean_bridge.utils import seatrac_enums as seatrac
 
-_Q_NED_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv()
+_NED_R_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv()
 
 
 class ModemStatusConverterNode(Node):
@@ -95,9 +95,9 @@ class ModemStatusConverterNode(Node):
 
         # Convert ENU -> NED
         q = imu_msg.orientation
-        q_enu_b = Rotation.from_quat([q.x, q.y, q.z, q.w])
-        q_ned_b = _Q_NED_ENU * q_enu_b
-        roll_ned, pitch_ned, yaw_ned = q_ned_b.as_euler("xyz", degrees=True)
+        enu_R_base = Rotation.from_quat([q.x, q.y, q.z, q.w])
+        ned_R_base = _NED_R_ENU * enu_R_base
+        roll_ned, pitch_ned, yaw_ned = ned_R_base.as_euler("xyz", degrees=True)
 
         modem_status_msg.includes_local_attitude = True
         modem_status_msg.attitude_yaw = seatrac.clamp_int16(yaw_ned * 10.0)

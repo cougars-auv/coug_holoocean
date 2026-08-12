@@ -76,13 +76,13 @@ class TruthConverterNode(Node):
 
         :param msg: Odometry message from DynamicsSensorOdom (base in HoloOcean frame).
         """
-        p_base_in_holo = PoseStamped()
-        p_base_in_holo.header = msg.header
-        p_base_in_holo.pose = msg.pose.pose
+        holo_T_base = PoseStamped()
+        holo_T_base.header = msg.header
+        holo_T_base.pose = msg.pose.pose
 
         try:
-            p_base_in_map = self.tf_buffer.transform(
-                p_base_in_holo,
+            map_T_base = self.tf_buffer.transform(
+                holo_T_base,
                 self.map_frame,
                 timeout=rclpy.duration.Duration(seconds=0.1),
             )
@@ -97,7 +97,7 @@ class TruthConverterNode(Node):
         odom_msg.header.stamp = msg.header.stamp
         odom_msg.header.frame_id = self.map_frame
         odom_msg.child_frame_id = self.base_frame
-        odom_msg.pose.pose = p_base_in_map.pose
+        odom_msg.pose.pose = map_T_base.pose
         odom_msg.pose.covariance = msg.pose.covariance
         odom_msg.twist.covariance = msg.twist.covariance
 
@@ -108,10 +108,10 @@ class TruthConverterNode(Node):
             t.header.stamp = msg.header.stamp
             t.header.frame_id = self.map_frame
             t.child_frame_id = self.base_frame
-            t.transform.translation.x = p_base_in_map.pose.position.x
-            t.transform.translation.y = p_base_in_map.pose.position.y
-            t.transform.translation.z = p_base_in_map.pose.position.z
-            t.transform.rotation = p_base_in_map.pose.orientation
+            t.transform.translation.x = map_T_base.pose.position.x
+            t.transform.translation.y = map_T_base.pose.position.y
+            t.transform.translation.z = map_T_base.pose.position.z
+            t.transform.rotation = map_T_base.pose.orientation
             self.tf_broadcaster.sendTransform(t)
 
 
