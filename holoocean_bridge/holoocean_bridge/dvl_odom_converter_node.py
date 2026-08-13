@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import math
+import random
 
 import rclpy
 from dvl_msgs.msg import DVLDR, ConfigCommand
@@ -29,8 +30,9 @@ _NED_R_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv(
 
 class DvlOdomConverterNode(Node):
     """
-    ROS 2 node that converts HoloOcean Odometry messages to DVLDR messages.
+    ROS 2 node that converts HoloOcean Odometry messages to noisy DVLDR messages.
 
+    Models dead-reckoning drift as a velocity scale error and a drifting yaw estimate.
     Resets the dead-reckoning frame from a ConfigCommand like the real driver.
 
     :author: Nelson Durrant
@@ -40,15 +42,24 @@ class DvlOdomConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("dvl_odom_converter_node")
 
-        self.declare_parameter("noise_sigma", 0.05)
+        self.declare_parameter("noise_sigma_scale", 0.0101)
+        self.declare_parameter("yaw_drift_sigma", 0.3)
+        self.declare_parameter("add_noise", True)
         self.declare_parameter("input_topic", "DynamicsSensorOdom")
         self.declare_parameter("output_topic", "dvl/position")
         self.declare_parameter("config_command_topic", "dvl/config/command")
         self.declare_parameter("base_frame", "base_link")
         self.declare_parameter("dvl_frame", "dvl_link")
         self.declare_parameter("map_frame", "map")
-        self.noise_sigma = (
-            self.get_parameter("noise_sigma").get_parameter_value().double_value
+
+        self.noise_sigma_scale = (
+            self.get_parameter("noise_sigma_scale").get_parameter_value().double_value
+        )
+        self.yaw_drift_sigma = (
+            self.get_parameter("yaw_drift_sigma").get_parameter_value().double_value
+        )
+        self.add_noise = (
+            self.get_parameter("add_noise").get_parameter_value().bool_value
         )
         input_topic = (
             self.get_parameter("input_topic").get_parameter_value().string_value
@@ -73,7 +84,11 @@ class DvlOdomConverterNode(Node):
 
         self.ref_position = (0.0, 0.0, 0.0)
         self.ref_rotation = Rotation.identity()
+        self.ref_stamp = None
+        self.last_position = None
+        self.dr_position = (0.0, 0.0, 0.0)
         self.reset_pending = False
+        self.reset_drift()
 
         self.publisher = self.create_publisher(
             DVLDR, output_topic, qos_profile_sensor_data
@@ -94,6 +109,16 @@ class DvlOdomConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
+    def reset_drift(self) -> None:
+        """Zero the distance traveled and redraw the dead-reckoning drift errors."""
+        self.distance_traveled = 0.0
+        self.scale_error = 0.0
+        self.yaw_drift_rate = 0.0
+
+        if self.add_noise:
+            self.scale_error = random.gauss(0, self.noise_sigma_scale)
+            self.yaw_drift_rate = random.gauss(0, self.yaw_drift_sigma)
+
     def config_callback(self, msg: ConfigCommand) -> None:
         """
         Re-anchor the dead-reckoning frame from a DVL reset_dead_reckoning command.
@@ -108,7 +133,7 @@ class DvlOdomConverterNode(Node):
 
     def listener_callback(self, msg: Odometry) -> None:
         """
-        Transform HoloOcean ground truth odometry into the DVL frame and publish.
+        Transform HoloOcean ground truth odometry into the DVL frame, add drift, and publish it.
 
         :param msg: Odometry message containing the base pose in the HoloOcean frame.
         """
@@ -166,26 +191,52 @@ class DvlOdomConverterNode(Node):
         enu_R_dvl = Rotation.from_quat([q.x, q.y, q.z, q.w])
         ned_R_dvl = _NED_R_ENU * enu_R_dvl
 
+        stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        position_ned = (x_ned, y_ned, z_ned)
+
         if self.reset_pending:
-            self.ref_position = (x_ned, y_ned, z_ned)
+            self.ref_position = position_ned
             self.ref_rotation = ned_R_dvl
+            self.ref_stamp = stamp
+            self.last_position = None
+            self.reset_drift()
             self.reset_pending = False
 
-        ref_x, ref_y, ref_z = self.ref_position
-        x_ned, y_ned, z_ned = self.ref_rotation.inv().apply(
-            [x_ned - ref_x, y_ned - ref_y, z_ned - ref_z]
+        if self.ref_stamp is None:
+            self.ref_stamp = stamp
+
+        # The yaw estimate drifts from truth over time, dragging the position with it
+        ref_R_ned = self.ref_rotation.inv()
+        elapsed_min = (stamp - self.ref_stamp) / 60.0
+        yaw_error = Rotation.from_euler(
+            "z", self.yaw_drift_rate * elapsed_min, degrees=True
         )
-        ned_R_dvl = self.ref_rotation.inv() * ned_R_dvl
+
+        if self.last_position is None:
+            self.dr_position = ref_R_ned.apply(
+                [p - ref for p, ref in zip(position_ned, self.ref_position)]
+            )
+        else:
+            step = ref_R_ned.apply(
+                [p - last for p, last in zip(position_ned, self.last_position)]
+            )
+            self.distance_traveled += math.dist(position_ned, self.last_position)
+            self.dr_position += yaw_error.apply(step) * (1.0 + self.scale_error)
+
+        self.last_position = position_ned
+
+        x_ned, y_ned, z_ned = self.dr_position
+        ned_R_dvl = yaw_error * ref_R_ned * ned_R_dvl
         roll_ned, pitch_ned, yaw_ned = ned_R_dvl.as_euler("xyz", degrees=True)
 
         dvl_msg = DVLDR()
         dvl_msg.header.stamp = msg.header.stamp
         dvl_msg.header.frame_id = self.dvl_frame
-        dvl_msg.time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        dvl_msg.time = stamp
         dvl_msg.position.x = x_ned
         dvl_msg.position.y = y_ned
         dvl_msg.position.z = z_ned
-        dvl_msg.pos_std = self.noise_sigma
+        dvl_msg.pos_std = self.noise_sigma_scale * self.distance_traveled
         dvl_msg.roll = roll_ned
         dvl_msg.pitch = pitch_ned
         dvl_msg.yaw = yaw_ned

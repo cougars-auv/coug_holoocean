@@ -256,6 +256,7 @@ def generate_launch_description() -> LaunchDescription:
                         "base_frame": base_link_frame,
                         "dvl_frame": dvl_link_frame,
                         "map_frame": "map",
+                        "add_noise": add_noise,
                     },
                 ],
             ),
