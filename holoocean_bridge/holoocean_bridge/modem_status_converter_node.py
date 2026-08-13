@@ -40,10 +40,12 @@ class ModemStatusConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("modem_status_converter_node")
 
+        self.declare_parameter("sync_slop_sec", 0.05)
         self.declare_parameter("imu_input_topic", "modem/imu/data")
         self.declare_parameter("depth_input_topic", "modem/depth/odometry")
         self.declare_parameter("output_topic", "modem_status")
 
+        sync_slop_sec = self.get_parameter("sync_slop_sec").value
         imu_input_topic = self.get_parameter("imu_input_topic").value
         depth_input_topic = self.get_parameter("depth_input_topic").value
         output_topic = self.get_parameter("output_topic").value
@@ -58,7 +60,7 @@ class ModemStatusConverterNode(Node):
         )
 
         self.ts = message_filters.ApproximateTimeSynchronizer(
-            [self.imu_sub, self.depth_sub], queue_size=10, slop=0.05
+            [self.imu_sub, self.depth_sub], queue_size=10, slop=sync_slop_sec
         )
         self.ts.registerCallback(self.sync_callback)
 

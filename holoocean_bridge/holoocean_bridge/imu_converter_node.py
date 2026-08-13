@@ -44,6 +44,7 @@ class ImuConverterNode(Node):
         self.declare_parameter("add_bias", True)
         self.declare_parameter("accel_bias_rw_sigmas", [1.4e-5, 1.4e-5, 1.4e-5])
         self.declare_parameter("gyro_bias_rw_sigmas", [3.5e-6, 3.5e-6, 3.5e-6])
+        self.declare_parameter("sync_slop_sec", 0.05)
         self.declare_parameter("imu_input_topic", "IMUSensor")
         self.declare_parameter("ahrs_input_topic", "RotationSensor")
         self.declare_parameter("output_topic", "imu/data")
@@ -79,6 +80,9 @@ class ImuConverterNode(Node):
             .get_parameter_value()
             .double_array_value
         )
+        sync_slop_sec = (
+            self.get_parameter("sync_slop_sec").get_parameter_value().double_value
+        )
         imu_input_topic = (
             self.get_parameter("imu_input_topic").get_parameter_value().string_value
         )
@@ -107,7 +111,7 @@ class ImuConverterNode(Node):
             qos_profile=qos_profile_system_default,
         )
         self.ts = message_filters.ApproximateTimeSynchronizer(
-            [self.imu_sub, self.ahrs_sub], queue_size=10, slop=0.05
+            [self.imu_sub, self.ahrs_sub], queue_size=10, slop=sync_slop_sec
         )
         self.ts.registerCallback(self.sync_callback)
 

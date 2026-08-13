@@ -30,6 +30,7 @@ class StereoConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("stereo_converter_node")
 
+        self.declare_parameter("sync_slop_sec", 0.05)
         self.declare_parameter("front_input_topic", "RGBCameraFront")
         self.declare_parameter("back_input_topic", "RGBCameraBack")
         self.declare_parameter("front_output_topic", "stereo/front/image_raw")
@@ -39,6 +40,7 @@ class StereoConverterNode(Node):
         self.declare_parameter("front_stereo_frame", "front_stereo_link")
         self.declare_parameter("back_stereo_frame", "back_stereo_link")
 
+        sync_slop_sec = self.get_parameter("sync_slop_sec").value
         self.front_input_topic = self.get_parameter("front_input_topic").value
         self.back_input_topic = self.get_parameter("back_input_topic").value
         self.front_output_topic = self.get_parameter("front_output_topic").value
@@ -71,7 +73,7 @@ class StereoConverterNode(Node):
         )
 
         self.ts = message_filters.ApproximateTimeSynchronizer(
-            [self.front_sub, self.back_sub], queue_size=10, slop=0.05
+            [self.front_sub, self.back_sub], queue_size=10, slop=sync_slop_sec
         )
         self.ts.registerCallback(self.sync_callback)
 

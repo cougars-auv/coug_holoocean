@@ -45,6 +45,7 @@ class DvlOdomConverterNode(Node):
         self.declare_parameter("noise_sigma_scale", 0.0101)
         self.declare_parameter("yaw_drift_sigma", 0.3)
         self.declare_parameter("add_noise", True)
+        self.declare_parameter("tf_timeout_sec", 0.1)
         self.declare_parameter("input_topic", "DynamicsSensorOdom")
         self.declare_parameter("output_topic", "dvl/position")
         self.declare_parameter("config_command_topic", "dvl/config/command")
@@ -60,6 +61,9 @@ class DvlOdomConverterNode(Node):
         )
         self.add_noise = (
             self.get_parameter("add_noise").get_parameter_value().bool_value
+        )
+        self.tf_timeout_sec = (
+            self.get_parameter("tf_timeout_sec").get_parameter_value().double_value
         )
         input_topic = (
             self.get_parameter("input_topic").get_parameter_value().string_value
@@ -145,7 +149,7 @@ class DvlOdomConverterNode(Node):
             map_T_base = self.tf_buffer.transform(
                 holo_T_base,
                 self.map_frame,
-                timeout=rclpy.duration.Duration(seconds=0.1),
+                timeout=rclpy.duration.Duration(seconds=self.tf_timeout_sec),
             )
         except Exception as e:  # noqa: BLE001
             self.get_logger().warn(
