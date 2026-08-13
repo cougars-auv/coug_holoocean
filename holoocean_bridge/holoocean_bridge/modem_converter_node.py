@@ -168,7 +168,7 @@ class ModemConverterNode(Node):
         """
         Process an incoming HoloOcean beacon message.
 
-        :param msg: Incoming acoustic beacon message from HoloOcean.
+        :param msg: AcousticBeaconSensor message containing the incoming beacon data.
         """
         self.publish_modem_rec(msg)
 
@@ -189,7 +189,7 @@ class ModemConverterNode(Node):
         """
         Convert an incoming beacon message to a ModemRec and publish it.
 
-        :param msg: Incoming acoustic beacon message from HoloOcean.
+        :param msg: AcousticBeaconSensor message containing the incoming beacon data.
         """
         modem_rec = ModemRec()
         modem_rec.header.stamp = msg.header.stamp
@@ -239,7 +239,7 @@ class ModemConverterNode(Node):
         """
         Answer a REQ message with the matching RESP type, after a response delay.
 
-        :param msg: Incoming REQ beacon message to answer.
+        :param msg: AcousticBeaconSensor message containing the REQ to answer.
         """
         # Consume any payload staged for the requester (or for all beacons)
         queued = self.dat_queue.pop(int(msg.from_beacon), None) or self.dat_queue.pop(
@@ -264,7 +264,7 @@ class ModemConverterNode(Node):
         """
         Process an outgoing ModemSend command.
 
-        :param msg: Outgoing modem command.
+        :param msg: ModemSend message containing the outgoing modem command.
         """
         if msg.msg_id == seatrac.CID_DAT_QUEUE_SET:
             self.set_dat_queue(msg)
@@ -290,7 +290,7 @@ class ModemConverterNode(Node):
         """
         Stage RESP payload for the next REQ from dest_id (0 = any beacon); empty payload clears it.
 
-        :param msg: CID_DAT_QUEUE_SET modem command with the payload to stage.
+        :param msg: ModemSend message containing the CID_DAT_QUEUE_SET payload to stage.
         """
         payload = list(msg.packet_data[: msg.packet_len])
         if payload:

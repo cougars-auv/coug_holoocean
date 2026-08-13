@@ -92,7 +92,7 @@ class MagConverterNode(Node):
         """
         Add noise to a HoloOcean magnetometer reading and republish it as a MagneticField.
 
-        :param msg: MagneticField message.
+        :param msg: MagneticField message containing magnetometer data.
         """
         msg.header.frame_id = self.mag_frame
 

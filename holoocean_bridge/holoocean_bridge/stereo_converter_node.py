@@ -81,8 +81,8 @@ class StereoConverterNode(Node):
         """
         Synchronize and publish the stereo image pair and their corresponding CameraInfo messages.
 
-        :param front_msg: The front camera image message.
-        :param back_msg: The back camera image message.
+        :param front_msg: Image message containing the front camera frame.
+        :param back_msg: Image message containing the back camera frame.
         """
         back_msg.header.stamp = front_msg.header.stamp
 
@@ -102,8 +102,8 @@ class StereoConverterNode(Node):
         """
         Generate an identity CameraInfo message.
 
-        :param image_msg: Image whose header and dimensions seed the CameraInfo.
-        :return: CameraInfo with a pinhole intrinsics guess and identity rectification.
+        :param image_msg: Image message whose header and dimensions seed the CameraInfo.
+        :return: Populated CameraInfo message with a pinhole guess and identity rectification.
         """
         info = CameraInfo()
         info.header = image_msg.header
