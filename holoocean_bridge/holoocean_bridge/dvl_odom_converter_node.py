@@ -15,7 +15,7 @@
 import math
 
 import rclpy
-from dvl_msgs.msg import DVLDR
+from dvl_msgs.msg import DVLDR, ConfigCommand
 from geometry_msgs.msg import PoseStamped, TransformStamped
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
@@ -31,6 +31,8 @@ class DvlOdomConverterNode(Node):
     """
     ROS 2 node that converts HoloOcean Odometry messages to DVLDR messages.
 
+    Resets the dead-reckoning frame from a ConfigCommand like the real driver.
+
     :author: Nelson Durrant
     :date: May 2026
     """
@@ -38,18 +40,26 @@ class DvlOdomConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("dvl_odom_converter_node")
 
-        self.declare_parameter("pos_std", 0.05)
+        self.declare_parameter("noise_sigma", 0.05)
         self.declare_parameter("input_topic", "DynamicsSensorOdom")
         self.declare_parameter("output_topic", "dvl/position")
+        self.declare_parameter("config_command_topic", "dvl/config/command")
         self.declare_parameter("base_frame", "base_link")
         self.declare_parameter("dvl_frame", "dvl_link")
         self.declare_parameter("map_frame", "map")
-        self.pos_std = self.get_parameter("pos_std").get_parameter_value().double_value
+        self.noise_sigma = (
+            self.get_parameter("noise_sigma").get_parameter_value().double_value
+        )
         input_topic = (
             self.get_parameter("input_topic").get_parameter_value().string_value
         )
         output_topic = (
             self.get_parameter("output_topic").get_parameter_value().string_value
+        )
+        config_command_topic = (
+            self.get_parameter("config_command_topic")
+            .get_parameter_value()
+            .string_value
         )
         self.base_frame = (
             self.get_parameter("base_frame").get_parameter_value().string_value
@@ -61,6 +71,10 @@ class DvlOdomConverterNode(Node):
             self.get_parameter("map_frame").get_parameter_value().string_value
         )
 
+        self.ref_position = (0.0, 0.0, 0.0)
+        self.ref_rotation = Rotation.identity()
+        self.reset_pending = False
+
         self.publisher = self.create_publisher(
             DVLDR, output_topic, qos_profile_sensor_data
         )
@@ -71,8 +85,26 @@ class DvlOdomConverterNode(Node):
         self.subscription = self.create_subscription(
             Odometry, input_topic, self.listener_callback, qos_profile_system_default
         )
+        self.config_subscription = self.create_subscription(
+            ConfigCommand,
+            config_command_topic,
+            self.config_callback,
+            qos_profile_sensor_data,
+        )
 
         self.get_logger().info("Initialization complete.")
+
+    def config_callback(self, msg: ConfigCommand) -> None:
+        """
+        Re-anchor the dead-reckoning frame from a DVL reset_dead_reckoning command.
+
+        :param msg: ConfigCommand message containing DVL config data.
+        """
+        if msg.command != "reset_dead_reckoning":
+            return
+
+        self.reset_pending = True
+        self.get_logger().info("DVL dead reckoning reset.")
 
     def listener_callback(self, msg: Odometry) -> None:
         """
@@ -133,6 +165,17 @@ class DvlOdomConverterNode(Node):
         q = map_T_dvl.orientation
         enu_R_dvl = Rotation.from_quat([q.x, q.y, q.z, q.w])
         ned_R_dvl = _NED_R_ENU * enu_R_dvl
+
+        if self.reset_pending:
+            self.ref_position = (x_ned, y_ned, z_ned)
+            self.ref_rotation = ned_R_dvl
+            self.reset_pending = False
+
+        ref_x, ref_y, ref_z = self.ref_position
+        x_ned, y_ned, z_ned = self.ref_rotation.inv().apply(
+            [x_ned - ref_x, y_ned - ref_y, z_ned - ref_z]
+        )
+        ned_R_dvl = self.ref_rotation.inv() * ned_R_dvl
         roll_ned, pitch_ned, yaw_ned = ned_R_dvl.as_euler("xyz", degrees=True)
 
         dvl_msg = DVLDR()
@@ -142,7 +185,7 @@ class DvlOdomConverterNode(Node):
         dvl_msg.position.x = x_ned
         dvl_msg.position.y = y_ned
         dvl_msg.position.z = z_ned
-        dvl_msg.pos_std = self.pos_std
+        dvl_msg.pos_std = self.noise_sigma
         dvl_msg.roll = roll_ned
         dvl_msg.pitch = pitch_ned
         dvl_msg.yaw = yaw_ned
