@@ -344,18 +344,6 @@ def generate_launch_description() -> LaunchDescription:
             ),
             Node(
                 package="holoocean_bridge",
-                executable="modem_status_converter",
-                name="modem_status_converter_node",
-                parameters=[
-                    fleet_params,
-                    auv_params,
-                    {
-                        "use_sim_time": use_sim_time,
-                    },
-                ],
-            ),
-            Node(
-                package="holoocean_bridge",
                 executable="depth_converter",
                 name="modem_depth_converter_node",
                 parameters=[
@@ -366,6 +354,18 @@ def generate_launch_description() -> LaunchDescription:
                         "depth_frame": modem_link_frame,
                         "map_frame": "map",
                         "add_noise": add_noise,
+                    },
+                ],
+            ),
+            Node(
+                package="holoocean_bridge",
+                executable="modem_status_converter",
+                name="modem_status_converter_node",
+                parameters=[
+                    fleet_params,
+                    auv_params,
+                    {
+                        "use_sim_time": use_sim_time,
                     },
                 ],
             ),
