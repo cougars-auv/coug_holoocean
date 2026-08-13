@@ -204,7 +204,8 @@ class ModemConverterNode(Node):
 
         modem_rec.includes_usbl = msg.msg_type in seatrac.HAS_USBL
         if modem_rec.includes_usbl:
-            azimuth = msg.azimuth
+            # Convert FLU -> FRD
+            azimuth = -msg.azimuth
             elevation = msg.elevation
             if self.add_noise:
                 azimuth += random.gauss(0, self.bearing_noise_sigmas[0])
