@@ -26,6 +26,7 @@ from sensor_msgs.msg import Imu
 from holoocean_bridge.utils import seatrac_enums as seatrac
 
 _NED_R_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv()
+_FLU_R_FRD = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
 
 
 class ModemStatusConverterNode(Node):
@@ -92,11 +93,11 @@ class ModemStatusConverterNode(Node):
         elapsed_ns = (self.get_clock().now() - self.start_time).nanoseconds
         modem_status_msg.timestamp = elapsed_ns // 1_000_000  # ms since start
 
-        # Convert ENU -> NED
+        # Convert ENU -> NED and FLU -> FRD
         q = imu_msg.orientation
         enu_R_base = Rotation.from_quat([q.x, q.y, q.z, q.w])
-        ned_R_base = _NED_R_ENU * enu_R_base
-        roll_ned, pitch_ned, yaw_ned = ned_R_base.as_euler("xyz", degrees=True)
+        ned_R_beacon = _NED_R_ENU * enu_R_base * _FLU_R_FRD
+        roll_ned, pitch_ned, yaw_ned = ned_R_beacon.as_euler("xyz", degrees=True)
 
         modem_status_msg.includes_local_attitude = True
         modem_status_msg.attitude_yaw = seatrac.clamp_int16(yaw_ned * 10.0)
