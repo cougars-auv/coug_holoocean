@@ -21,7 +21,7 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 from scipy.spatial.transform import Rotation
 from seatrac_interfaces.msg import ModemStatus
-from sensor_msgs.msg import Imu, MagneticField
+from sensor_msgs.msg import Imu
 
 from holoocean_bridge.utils import seatrac_enums as seatrac
 
@@ -30,7 +30,7 @@ _NED_R_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv(
 
 class ModemStatusConverterNode(Node):
     """
-    ROS 2 node that converts Imu, MagneticField, and Odometry messages to ModemStatus messages.
+    ROS 2 node that converts Imu and Odometry messages to ModemStatus messages.
 
     :author: Nelson Durrant
     :date: May 2026
@@ -40,12 +40,10 @@ class ModemStatusConverterNode(Node):
         super().__init__("modem_status_converter_node")
 
         self.declare_parameter("imu_input_topic", "modem/imu/data")
-        self.declare_parameter("mag_input_topic", "modem/imu/mag")
         self.declare_parameter("depth_input_topic", "modem/depth/odometry")
         self.declare_parameter("output_topic", "modem_status")
 
         imu_input_topic = self.get_parameter("imu_input_topic").value
-        mag_input_topic = self.get_parameter("mag_input_topic").value
         depth_input_topic = self.get_parameter("depth_input_topic").value
         output_topic = self.get_parameter("output_topic").value
 
@@ -54,15 +52,12 @@ class ModemStatusConverterNode(Node):
         self.imu_sub = message_filters.Subscriber(
             self, Imu, imu_input_topic, qos_profile=qos_profile_system_default
         )
-        self.mag_sub = message_filters.Subscriber(
-            self, MagneticField, mag_input_topic, qos_profile=qos_profile_system_default
-        )
         self.depth_sub = message_filters.Subscriber(
             self, Odometry, depth_input_topic, qos_profile=qos_profile_system_default
         )
 
         self.ts = message_filters.ApproximateTimeSynchronizer(
-            [self.imu_sub, self.mag_sub, self.depth_sub], queue_size=10, slop=0.05
+            [self.imu_sub, self.depth_sub], queue_size=10, slop=0.05
         )
         self.ts.registerCallback(self.sync_callback)
 
@@ -73,29 +68,21 @@ class ModemStatusConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def sync_callback(
-        self, imu_msg: Imu, mag_msg: MagneticField, depth_msg: Odometry
-    ) -> None:
+    def sync_callback(self, imu_msg: Imu, depth_msg: Odometry) -> None:
         """
-        Combine synchronized IMU, magnetometer, and depth data into a ModemStatus and publish it.
+        Combine synchronized IMU and depth data into a ModemStatus and publish it.
 
-        :param imu_msg: Imu message from imu_converter (with noise, bias, and fused orientation).
-        :param mag_msg: MagneticField message from mag_converter (with noise).
-        :param depth_msg: Odometry message from depth_converter (with noise).
+        :param imu_msg: Imu message containing the fused orientation.
+        :param depth_msg: Odometry message containing depth data.
         """
-        self.publisher.publish(
-            self.create_modem_status_msg(imu_msg, mag_msg, depth_msg)
-        )
+        self.publisher.publish(self.create_modem_status_msg(imu_msg, depth_msg))
 
-    def create_modem_status_msg(
-        self, imu_msg: Imu, mag_msg: MagneticField, depth_msg: Odometry
-    ) -> ModemStatus:
+    def create_modem_status_msg(self, imu_msg: Imu, depth_msg: Odometry) -> ModemStatus:
         """
         Create a ModemStatus message with NED attitude in decidegrees and depth in decimeters.
 
-        :param imu_msg: Imu message whose ENU orientation seeds the local attitude.
-        :param mag_msg: MagneticField message whose reading seeds the compass AHRS.
-        :param depth_msg: Odometry message whose ENU Z position seeds the env fields.
+        :param imu_msg: Imu message containing the fused orientation.
+        :param depth_msg: Odometry message containing depth data.
         :return: Populated ModemStatus message, stamped with ms since node start.
         """
         modem_status_msg = ModemStatus()
@@ -115,11 +102,6 @@ class ModemStatusConverterNode(Node):
         modem_status_msg.attitude_yaw = seatrac.clamp_int16(yaw_ned * 10.0)
         modem_status_msg.attitude_pitch = seatrac.clamp_int16(pitch_ned * 10.0)
         modem_status_msg.attitude_roll = seatrac.clamp_int16(roll_ned * 10.0)
-
-        modem_status_msg.includes_comp_ahrs = True
-        modem_status_msg.mag_x = mag_msg.magnetic_field.x
-        modem_status_msg.mag_y = mag_msg.magnetic_field.y
-        modem_status_msg.mag_z = mag_msg.magnetic_field.z
 
         # Convert ENU -> NED
         modem_status_msg.includes_env_fields = True

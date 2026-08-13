@@ -102,7 +102,7 @@ class StereoConverterNode(Node):
         """
         Generate an identity CameraInfo message.
 
-        :param image_msg: Image message whose header and dimensions seed the CameraInfo.
+        :param image_msg: Image message containing the header and dimensions for the CameraInfo.
         :return: Populated CameraInfo message with a pinhole guess and identity rectification.
         """
         info = CameraInfo()

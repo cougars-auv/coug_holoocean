@@ -329,21 +329,6 @@ def generate_launch_description() -> LaunchDescription:
             ),
             Node(
                 package="holoocean_bridge",
-                executable="mag_converter",
-                name="modem_mag_converter_node",
-                parameters=[
-                    fleet_params,
-                    auv_params,
-                    {
-                        "use_sim_time": use_sim_time,
-                        "mag_frame": modem_link_frame,
-                        "add_noise": add_noise,
-                        "add_bias": add_noise,
-                    },
-                ],
-            ),
-            Node(
-                package="holoocean_bridge",
                 executable="depth_converter",
                 name="modem_depth_converter_node",
                 parameters=[

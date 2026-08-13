@@ -74,7 +74,7 @@ class TruthConverterNode(Node):
         """
         Transform HoloOcean ground truth odometry into the map frame and publish.
 
-        :param msg: Odometry message from DynamicsSensorOdom (base in HoloOcean frame).
+        :param msg: Odometry message containing the base pose in the HoloOcean frame.
         """
         holo_T_base = PoseStamped()
         holo_T_base.header = msg.header
