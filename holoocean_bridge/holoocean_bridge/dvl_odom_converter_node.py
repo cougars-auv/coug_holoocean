@@ -26,6 +26,7 @@ from tf2_geometry_msgs import do_transform_pose
 from tf2_ros import Buffer, TransformListener
 
 _NED_R_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv()
+_FLU_R_FRD = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
 
 
 class DvlOdomConverterNode(Node):
@@ -231,7 +232,11 @@ class DvlOdomConverterNode(Node):
 
         x_ned, y_ned, z_ned = self.dr_position
         ned_R_dvl = yaw_error * ref_R_ned * ned_R_dvl
-        roll_ned, pitch_ned, yaw_ned = ned_R_dvl.as_euler("xyz", degrees=True)
+
+        # Convert FLU -> FRD
+        roll_ned, pitch_ned, yaw_ned = (ned_R_dvl * _FLU_R_FRD).as_euler(
+            "xyz", degrees=True
+        )
 
         dvl_msg = DVLDR()
         dvl_msg.header.stamp = msg.header.stamp

@@ -19,6 +19,9 @@ from dvl_msgs.msg import DVL, ConfigCommand
 from geometry_msgs.msg import TwistWithCovarianceStamped
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data, qos_profile_system_default
+from scipy.spatial.transform import Rotation
+
+_FRD_R_FLU = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
 
 
 class DvlConverterNode(Node):
@@ -121,9 +124,18 @@ class DvlConverterNode(Node):
             noise_y = 0.0
             noise_z = 0.0
 
-        dvl_msg.velocity.x = msg.twist.twist.linear.x + noise_x
-        dvl_msg.velocity.y = msg.twist.twist.linear.y + noise_y
-        dvl_msg.velocity.z = msg.twist.twist.linear.z + noise_z
+        # Convert FLU -> FRD
+        velocity_frd = _FRD_R_FLU.apply(
+            [
+                msg.twist.twist.linear.x,
+                msg.twist.twist.linear.y,
+                msg.twist.twist.linear.z,
+            ]
+        )
+
+        dvl_msg.velocity.x = velocity_frd[0] + noise_x
+        dvl_msg.velocity.y = velocity_frd[1] + noise_y
+        dvl_msg.velocity.z = velocity_frd[2] + noise_z
 
         dvl_msg.velocity_valid = True
 
