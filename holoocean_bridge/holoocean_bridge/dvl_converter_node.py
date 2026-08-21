@@ -15,8 +15,9 @@
 import random
 
 import rclpy
-from dvl_msgs.msg import DVL, ConfigCommand
+from dvl_msgs.msg import DVL, ConfigCommand, DVLBeam
 from geometry_msgs.msg import TwistWithCovarianceStamped
+from holoocean_interfaces.msg import DVLSensorRange
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data, qos_profile_system_default
 from scipy.spatial.transform import Rotation
@@ -26,7 +27,7 @@ _FRD_R_FLU = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
 
 class DvlConverterNode(Node):
     """
-    ROS 2 node that converts HoloOcean TwistWithCovarianceStamped messages to noisy DVL messages.
+    ROS 2 node that converts HoloOcean velocity and range messages to noisy DVL messages.
 
     Enables/disables acoustics from a ConfigCommand like the real driver.
 
@@ -37,21 +38,37 @@ class DvlConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("dvl_converter_node")
 
-        self.declare_parameter("noise_sigmas", [0.02, 0.02, 0.02])
+        self.declare_parameter("velocity_noise_sigmas", [0.02, 0.02, 0.02])
+        self.declare_parameter("range_noise_sigma", 0.1)
+        self.declare_parameter("max_range", 50.0)
         self.declare_parameter("add_noise", True)
-        self.declare_parameter("input_topic", "DVLSensorVelocity")
+        self.declare_parameter("velocity_input_topic", "DVLSensorVelocity")
+        self.declare_parameter("range_input_topic", "DVLSensorRange")
         self.declare_parameter("output_topic", "dvl/data")
         self.declare_parameter("config_command_topic", "dvl/config/command")
         self.declare_parameter("dvl_frame", "dvl_link")
 
-        self.noise_sigmas = (
-            self.get_parameter("noise_sigmas").get_parameter_value().double_array_value
+        self.velocity_noise_sigmas = (
+            self.get_parameter("velocity_noise_sigmas")
+            .get_parameter_value()
+            .double_array_value
+        )
+        self.range_noise_sigma = (
+            self.get_parameter("range_noise_sigma").get_parameter_value().double_value
+        )
+        self.max_range = (
+            self.get_parameter("max_range").get_parameter_value().double_value
         )
         self.add_noise = (
             self.get_parameter("add_noise").get_parameter_value().bool_value
         )
-        input_topic = (
-            self.get_parameter("input_topic").get_parameter_value().string_value
+        velocity_input_topic = (
+            self.get_parameter("velocity_input_topic")
+            .get_parameter_value()
+            .string_value
+        )
+        range_input_topic = (
+            self.get_parameter("range_input_topic").get_parameter_value().string_value
         )
         output_topic = (
             self.get_parameter("output_topic").get_parameter_value().string_value
@@ -66,11 +83,18 @@ class DvlConverterNode(Node):
         )
 
         self.acoustic_enabled = True
+        self.beam_ranges = None
 
         self.subscription = self.create_subscription(
             TwistWithCovarianceStamped,
-            input_topic,
+            velocity_input_topic,
             self.listener_callback,
+            qos_profile_system_default,
+        )
+        self.range_subscription = self.create_subscription(
+            DVLSensorRange,
+            range_input_topic,
+            self.range_callback,
             qos_profile_system_default,
         )
         self.config_subscription = self.create_subscription(
@@ -84,6 +108,14 @@ class DvlConverterNode(Node):
         )
 
         self.get_logger().info("Initialization complete.")
+
+    def range_callback(self, msg: DVLSensorRange) -> None:
+        """
+        Update the latest HoloOcean beam ranges.
+
+        :param msg: DVLSensorRange message containing the four beam ranges.
+        """
+        self.beam_ranges = msg.range
 
     def config_callback(self, msg: ConfigCommand) -> None:
         """
@@ -115,9 +147,9 @@ class DvlConverterNode(Node):
         dvl_msg.header.frame_id = self.dvl_frame
 
         if self.add_noise:
-            noise_x = random.gauss(0, self.noise_sigmas[0])
-            noise_y = random.gauss(0, self.noise_sigmas[1])
-            noise_z = random.gauss(0, self.noise_sigmas[2])
+            noise_x = random.gauss(0, self.velocity_noise_sigmas[0])
+            noise_y = random.gauss(0, self.velocity_noise_sigmas[1])
+            noise_z = random.gauss(0, self.velocity_noise_sigmas[2])
         else:
             noise_x = 0.0
             noise_y = 0.0
@@ -144,11 +176,39 @@ class DvlConverterNode(Node):
         )
 
         dvl_msg.covariance = [0.0] * 9
-        dvl_msg.covariance[0] = self.noise_sigmas[0] ** 2
-        dvl_msg.covariance[4] = self.noise_sigmas[1] ** 2
-        dvl_msg.covariance[8] = self.noise_sigmas[2] ** 2
+        dvl_msg.covariance[0] = self.velocity_noise_sigmas[0] ** 2
+        dvl_msg.covariance[4] = self.velocity_noise_sigmas[1] ** 2
+        dvl_msg.covariance[8] = self.velocity_noise_sigmas[2] ** 2
+
+        if self.beam_ranges is not None:
+            dvl_msg.beams = self.create_beam_msgs(self.beam_ranges)
 
         self.publisher.publish(dvl_msg)
+
+    def create_beam_msgs(self, ranges: list[float]) -> list[DVLBeam]:
+        """
+        Create DVL beam messages from the HoloOcean beam ranges, adding noise.
+
+        :param ranges: The four HoloOcean beam ranges in meters.
+        :return: Populated DVLBeam messages; HoloOcean reports no per-beam velocity.
+        """
+        beams = []
+        for beam_id, beam_range in enumerate(ranges):
+            beam = DVLBeam()
+            beam.id = beam_id
+
+            beam.valid = bool(beam_range < self.max_range)
+            if not beam.valid:
+                beam.distance = -1.0
+            elif self.add_noise:
+                beam.distance = float(beam_range) + random.gauss(
+                    0, self.range_noise_sigma
+                )
+            else:
+                beam.distance = float(beam_range)
+
+            beams.append(beam)
+        return beams
 
 
 def main(args: list[str] | None = None) -> None:
