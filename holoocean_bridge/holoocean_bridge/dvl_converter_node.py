@@ -28,7 +28,6 @@ class DvlConverterNode(Node):
     """
     ROS 2 node that converts HoloOcean TwistWithCovarianceStamped messages to noisy DVL messages.
 
-    Models noise using the Janus configuration (like HoloOcean).
     Enables/disables acoustics from a ConfigCommand like the real driver.
 
     :author: Nelson Durrant
