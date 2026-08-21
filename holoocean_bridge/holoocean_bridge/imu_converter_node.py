@@ -136,12 +136,14 @@ class ImuConverterNode(Node):
         pitch_rad = math.radians(ahrs_msg.vector.y)
         yaw_rad = math.radians(ahrs_msg.vector.z)
 
-        if self.add_noise:
-            roll_rad += random.gauss(0, self.ahrs_noise_sigmas[0])
-            pitch_rad += random.gauss(0, self.ahrs_noise_sigmas[1])
-            yaw_rad += random.gauss(0, self.ahrs_noise_sigmas[2])
+        map_R_ahrs = Rotation.from_euler("xyz", [roll_rad, pitch_rad, yaw_rad])
 
-        q = Rotation.from_euler("xyz", [roll_rad, pitch_rad, yaw_rad]).as_quat()
+        if self.add_noise:
+            # Perturb IMU orientation about the map-frame axes
+            map_noise = [random.gauss(0, sigma) for sigma in self.ahrs_noise_sigmas]
+            map_R_ahrs = Rotation.from_rotvec(map_noise) * map_R_ahrs
+
+        q = map_R_ahrs.as_quat()
 
         imu_msg.header.frame_id = self.imu_frame
 
