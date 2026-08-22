@@ -25,15 +25,6 @@ from sensor_msgs.msg import Imu
 
 
 class ImuConverterNode(Node):
-    """
-    ROS 2 node that converts HoloOcean Imu and Vector3Stamped messages to noisy Imu messages.
-
-    Models IMU accel/gyro bias as a random walk.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("imu_converter_node")
 
@@ -126,12 +117,6 @@ class ImuConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def sync_callback(self, imu_msg: Imu, ahrs_msg: Vector3Stamped) -> None:
-        """
-        Fuse synchronized IMU and AHRS data into an IMU message, add noise, and publish it.
-
-        :param imu_msg: Imu message containing raw accelerometer and gyroscope data.
-        :param ahrs_msg: Vector3Stamped message containing fused Euler angles in degrees.
-        """
         roll_rad = math.radians(ahrs_msg.vector.x)
         pitch_rad = math.radians(ahrs_msg.vector.y)
         yaw_rad = math.radians(ahrs_msg.vector.z)

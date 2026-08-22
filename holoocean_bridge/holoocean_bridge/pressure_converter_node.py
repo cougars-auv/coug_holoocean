@@ -22,13 +22,6 @@ from sensor_msgs.msg import FluidPressure
 
 
 class PressureConverterNode(Node):
-    """
-    ROS 2 node that converts HoloOcean Odometry messages to noisy FluidPressure messages.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("pressure_converter_node")
 
@@ -77,11 +70,6 @@ class PressureConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def listener_callback(self, msg: Odometry) -> None:
-        """
-        Convert depth odometry into a fluid pressure reading, add noise, and publish it.
-
-        :param msg: Odometry message containing depth in pose.pose.position.z.
-        """
         depth = -msg.pose.pose.position.z
 
         # pressure [Pa] = depth [m] * rho [kg/m^3] * g [m/s^2] + atmospheric_pressure [Pa]

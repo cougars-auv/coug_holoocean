@@ -30,13 +30,6 @@ _FLU_R_FRD = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
 
 
 class ModemStatusConverterNode(Node):
-    """
-    ROS 2 node that converts Imu and Odometry messages to ModemStatus messages.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("modem_status_converter_node")
 
@@ -72,22 +65,9 @@ class ModemStatusConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def sync_callback(self, imu_msg: Imu, depth_msg: Odometry) -> None:
-        """
-        Combine synchronized IMU and depth data into a ModemStatus and publish it.
-
-        :param imu_msg: Imu message containing the fused orientation.
-        :param depth_msg: Odometry message containing depth data.
-        """
         self.publisher.publish(self.create_modem_status_msg(imu_msg, depth_msg))
 
     def create_modem_status_msg(self, imu_msg: Imu, depth_msg: Odometry) -> ModemStatus:
-        """
-        Create a ModemStatus message with NED attitude in decidegrees and depth in decimeters.
-
-        :param imu_msg: Imu message containing the fused orientation.
-        :param depth_msg: Odometry message containing depth data.
-        :return: Populated ModemStatus message, stamped with ms since node start.
-        """
         modem_status_msg = ModemStatus()
         modem_status_msg.header = imu_msg.header
 

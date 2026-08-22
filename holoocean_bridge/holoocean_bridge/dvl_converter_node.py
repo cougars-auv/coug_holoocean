@@ -26,15 +26,6 @@ _FRD_R_FLU = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
 
 
 class DvlConverterNode(Node):
-    """
-    ROS 2 node that converts HoloOcean velocity and range messages to noisy DVL messages.
-
-    Enables/disables acoustics from a ConfigCommand like the real driver.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("dvl_converter_node")
 
@@ -110,19 +101,9 @@ class DvlConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def range_callback(self, msg: DVLSensorRange) -> None:
-        """
-        Update the latest HoloOcean beam ranges.
-
-        :param msg: DVLSensorRange message containing the four beam ranges.
-        """
         self.beam_ranges = msg.range
 
     def config_callback(self, msg: ConfigCommand) -> None:
-        """
-        Toggle acoustics from a DVL set_config command.
-
-        :param msg: ConfigCommand message containing DVL config data.
-        """
         if msg.command != "set_config" or msg.parameter_name != "acoustic_enabled":
             return
 
@@ -132,11 +113,6 @@ class DvlConverterNode(Node):
         )
 
     def listener_callback(self, msg: TwistWithCovarianceStamped) -> None:
-        """
-        Convert HoloOcean DVL velocity into the Waterlinked format, add noise, and publish it.
-
-        :param msg: TwistWithCovarianceStamped message containing DVL data.
-        """
         if not self.acoustic_enabled:
             return
 
@@ -186,12 +162,6 @@ class DvlConverterNode(Node):
         self.publisher.publish(dvl_msg)
 
     def create_beam_msgs(self, ranges: list[float]) -> list[DVLBeam]:
-        """
-        Create DVL beam messages from the HoloOcean beam ranges, adding noise.
-
-        :param ranges: The four HoloOcean beam ranges in meters.
-        :return: Populated DVLBeam messages; HoloOcean reports no per-beam velocity.
-        """
         beams = []
         for beam_id, beam_range in enumerate(ranges):
             beam = DVLBeam()

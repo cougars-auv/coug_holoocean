@@ -21,13 +21,6 @@ from sensor_msgs.msg import MagneticField
 
 
 class MagConverterNode(Node):
-    """
-    ROS 2 node that converts HoloOcean MagneticField messages to noisy MagneticField messages.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("mag_converter_node")
 
@@ -89,11 +82,6 @@ class MagConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def listener_callback(self, msg: MagneticField) -> None:
-        """
-        Add noise to a HoloOcean magnetometer reading and republish it as a MagneticField.
-
-        :param msg: MagneticField message containing magnetometer data.
-        """
         msg.header.frame_id = self.mag_frame
 
         if self.add_bias:

@@ -23,13 +23,6 @@ from sensor_msgs.msg import NavSatFix
 
 
 class GpsConverterNode(Node):
-    """
-    ROS 2 node that converts HoloOcean Odometry messages to noisy NavSatFix messages.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("gps_converter_node")
 
@@ -78,11 +71,6 @@ class GpsConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def listener_callback(self, msg: Odometry) -> None:
-        """
-        Convert HoloOcean GPS odometry into a NavSatFix message, add noise, and publish it.
-
-        :param msg: Odometry message containing GPS data.
-        """
         navsat_msg = NavSatFix()
         navsat_msg.header.stamp = msg.header.stamp
         navsat_msg.header.frame_id = self.gps_frame

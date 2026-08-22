@@ -20,13 +20,6 @@ from sensor_msgs.msg import JointState
 
 
 class FinStatePublisherNode(Node):
-    """
-    ROS 2 node that publishes JointState messages from HoloOcean AgentCommand messages.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("fin_state_publisher_node")
 
@@ -55,20 +48,9 @@ class FinStatePublisherNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def listener_callback(self, msg: AgentCommand) -> None:
-        """
-        Map reported HoloOcean fin positions to TF-compatible joint states.
-
-        :param msg: AgentCommand message containing fin states.
-        """
         self.publisher.publish(self.create_joint_state_msg(msg))
 
     def create_joint_state_msg(self, msg: AgentCommand) -> JointState:
-        """
-        Create a JointState message from the reported fin positions.
-
-        :param msg: AgentCommand message containing fin states.
-        :return: Populated JointState message ordered to match self.joint_names.
-        """
         joint_state = JointState()
         joint_state.header.stamp = msg.header.stamp
         joint_state.name = self.joint_names

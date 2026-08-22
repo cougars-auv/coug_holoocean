@@ -20,13 +20,6 @@ from sensor_msgs.msg import CameraInfo, Image
 
 
 class StereoConverterNode(Node):
-    """
-    ROS 2 node that converts HoloOcean Image messages to Image and CameraInfo messages.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("stereo_converter_node")
 
@@ -80,12 +73,6 @@ class StereoConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def sync_callback(self, front_msg: Image, back_msg: Image) -> None:
-        """
-        Synchronize and publish the stereo image pair and their corresponding CameraInfo messages.
-
-        :param front_msg: Image message containing the front camera frame.
-        :param back_msg: Image message containing the back camera frame.
-        """
         back_msg.header.stamp = front_msg.header.stamp
 
         front_msg.header.frame_id = self.front_stereo_frame
@@ -101,12 +88,6 @@ class StereoConverterNode(Node):
         self.back_info_pub.publish(back_info_msg)
 
     def create_camera_info_msg(self, image_msg: Image) -> CameraInfo:
-        """
-        Generate an identity CameraInfo message.
-
-        :param image_msg: Image message containing the header and dimensions for the CameraInfo.
-        :return: Populated CameraInfo message with a pinhole guess and identity rectification.
-        """
         info = CameraInfo()
         info.header = image_msg.header
         info.height = image_msg.height

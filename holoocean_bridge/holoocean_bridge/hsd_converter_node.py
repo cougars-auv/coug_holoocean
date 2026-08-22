@@ -24,13 +24,6 @@ MAX_SPEED_RPM = 1525.0
 
 
 class HsdConverterNode(Node):
-    """
-    ROS 2 node that converts ControlSetpoint messages to HoloOcean DesiredCommand messages.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("hsd_converter_node")
 
@@ -78,11 +71,6 @@ class HsdConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def hsd_callback(self, msg: ControlSetpoint) -> None:
-        """
-        Process a setpoint message and publish heading, speed, and depth separately.
-
-        :param msg: ControlSetpoint message containing heading, speed, and depth.
-        """
         self.output_heading_pub.publish(self.create_desired_command_msg(msg.heading))
         self.output_speed_pub.publish(
             self.create_desired_command_msg(
@@ -94,12 +82,6 @@ class HsdConverterNode(Node):
         )
 
     def create_desired_command_msg(self, value: float) -> DesiredCommand:
-        """
-        Create a DesiredCommand message.
-
-        :param value: The value (heading, speed, or depth) to put in the message.
-        :return: Populated DesiredCommand message.
-        """
         msg = DesiredCommand()
         msg.header = Header()
         msg.header.stamp = self.get_clock().now().to_msg()

@@ -26,15 +26,6 @@ from holoocean_bridge.utils import seatrac_enums as seatrac
 
 
 class ModemConverterNode(Node):
-    """
-    ROS 2 node that bridges AcousticBeaconSensor/Send and ModemRec/Send/CmdUpdate messages.
-
-    Should match the seatrac-ros2 queueing/protocol approach as closely as possible.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("modem_converter_node")
 
@@ -157,19 +148,9 @@ class ModemConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def depth_callback(self, msg: Odometry) -> None:
-        """
-        Update the agent's depth.
-
-        :param msg: Odometry message containing the agent's depth.
-        """
         self.agent_depth = -msg.pose.pose.position.z
 
     def beacon_callback(self, msg: AcousticBeaconSensor) -> None:
-        """
-        Process an incoming HoloOcean beacon message.
-
-        :param msg: AcousticBeaconSensor message containing the incoming beacon data.
-        """
         self.publish_modem_rec(msg)
 
         # The real beacon firmware answers REQ messages with the queued data
@@ -186,11 +167,6 @@ class ModemConverterNode(Node):
             self.attempt_send()
 
     def publish_modem_rec(self, msg: AcousticBeaconSensor) -> None:
-        """
-        Convert an incoming beacon message to a ModemRec and publish it.
-
-        :param msg: AcousticBeaconSensor message containing the incoming beacon data.
-        """
         modem_rec = ModemRec()
         modem_rec.header.stamp = msg.header.stamp
         modem_rec.header.frame_id = self.modem_frame
@@ -237,11 +213,6 @@ class ModemConverterNode(Node):
         self.modem_rec_pub.publish(modem_rec)
 
     def queue_auto_response(self, msg: AcousticBeaconSensor) -> None:
-        """
-        Answer a REQ message with the matching RESP type, after a response delay.
-
-        :param msg: AcousticBeaconSensor message containing the REQ to answer.
-        """
         # Consume any payload staged for the requester (or for all beacons)
         queued = self.dat_queue.pop(int(msg.from_beacon), None) or self.dat_queue.pop(
             0, None
@@ -262,11 +233,6 @@ class ModemConverterNode(Node):
         self.attempt_send()
 
     def modem_send_callback(self, msg: ModemSend) -> None:
-        """
-        Process an outgoing ModemSend command.
-
-        :param msg: ModemSend message containing the outgoing modem command.
-        """
         if msg.msg_id == seatrac.CID_DAT_QUEUE_SET:
             self.set_dat_queue(msg)
             return
@@ -288,11 +254,6 @@ class ModemConverterNode(Node):
         self.attempt_send()
 
     def set_dat_queue(self, msg: ModemSend) -> None:
-        """
-        Stage RESP payload for the next REQ from dest_id (0 = any beacon); empty payload clears it.
-
-        :param msg: ModemSend message containing the CID_DAT_QUEUE_SET payload to stage.
-        """
         payload = list(msg.packet_data[: msg.packet_len])
         if payload:
             self.dat_queue[int(msg.dest_id)] = payload
@@ -302,7 +263,6 @@ class ModemConverterNode(Node):
         self.publish_cmd_update(seatrac.CID_DAT_QUEUE_SET, msg.dest_id)
 
     def tick_callback(self) -> None:
-        """Refresh the send queue once per tick, timing out stale REQs."""
         # A REQ that never gets a RESP eventually times out and frees the channel
         if self.pending_resp_target is not None:
             self.pending_resp_ticker += 1
@@ -322,7 +282,6 @@ class ModemConverterNode(Node):
             self.send_delay_ticker -= 1
 
     def release_auto_responses(self) -> None:
-        """Queue staged auto-responses whose response delay has elapsed."""
         ready = []
         for item in self.pending_auto_responses:
             item[1] -= 1
@@ -334,7 +293,6 @@ class ModemConverterNode(Node):
             self.send_queue.append((item[0], False))
 
     def attempt_send(self) -> None:
-        """Transmit the next queued send, or reject with CST_XCVR_BUSY when the channel is busy."""
         if not self.send_queue or self.send_delay_ticker > 0:
             return
 
@@ -366,13 +324,6 @@ class ModemConverterNode(Node):
     def publish_cmd_update(
         self, msg_id: int, target_id: int, status: int = seatrac.CST_OK
     ) -> None:
-        """
-        Publish a ModemCmdUpdate for a modem command.
-
-        :param msg_id: CID of the acknowledged command.
-        :param target_id: Beacon ID the command was addressed to.
-        :param status: Command status code (CST_E).
-        """
         cmd_update = ModemCmdUpdate()
         cmd_update.header.stamp = self.get_clock().now().to_msg()
         cmd_update.msg_id = msg_id

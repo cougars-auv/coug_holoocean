@@ -48,13 +48,6 @@ SV_Y_SCALE = SV_ANGULAR_DRAG
 
 
 class CmdVelConverterNode(Node):
-    """
-    ROS 2 node that converts TwistStamped messages to HoloOcean AgentCommand messages.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("cmd_vel_converter_node")
 
@@ -108,20 +101,9 @@ class CmdVelConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def listener_callback(self, msg: TwistStamped) -> None:
-        """
-        Convert a commanded velocity into a HoloOcean-compatible command and publish it.
-
-        :param msg: TwistStamped message containing linear and angular velocities.
-        """
         self.publisher.publish(self.create_agent_command_msg(msg))
 
     def create_agent_command_msg(self, msg: TwistStamped) -> AgentCommand:
-        """
-        Create an AgentCommand message with thruster values scaled to the limit.
-
-        :param msg: TwistStamped message containing linear and angular velocities.
-        :return: Populated AgentCommand message in the HoloOcean command order.
-        """
         agent_cmd = AgentCommand()
         agent_cmd.header.stamp = self.get_clock().now().to_msg()
         agent_cmd.header.frame_id = self.agent_name
@@ -142,12 +124,6 @@ class CmdVelConverterNode(Node):
         return agent_cmd
 
     def bluerov2_command(self, msg: TwistStamped) -> list[float]:
-        """
-        Map a commanded velocity onto the eight BlueROV2 thrusters.
-
-        :param msg: TwistStamped message containing linear and angular velocities.
-        :return: Thruster forces in the HoloOcean command order.
-        """
         # IMPORTANT! Assuming no quadratic drag
         fwd = msg.twist.linear.x * self.h_scale
         lat = msg.twist.linear.y * self.h_scale
@@ -168,12 +144,6 @@ class CmdVelConverterNode(Node):
         return [cmd_0, cmd_1, cmd_2, cmd_3, cmd_4, cmd_5, cmd_6, cmd_7]
 
     def surface_vessel_command(self, msg: TwistStamped) -> list[float]:
-        """
-        Map a commanded velocity onto the two SurfaceVessel thrusters.
-
-        :param msg: TwistStamped message containing linear and angular velocities.
-        :return: Left and right thruster forces.
-        """
         # IMPORTANT! Assuming no quadratic drag
         fwd = msg.twist.linear.x * self.h_scale
         yaw = msg.twist.angular.z * self.y_scale

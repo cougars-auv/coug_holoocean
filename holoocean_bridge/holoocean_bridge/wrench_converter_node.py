@@ -42,13 +42,6 @@ C2 = (
 
 
 class WrenchConverterNode(Node):
-    """
-    ROS 2 node that converts HoloOcean AgentCommand messages to WrenchStamped messages.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("wrench_converter_node")
 
@@ -96,11 +89,6 @@ class WrenchConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def control_callback(self, msg: AgentCommand) -> None:
-        """
-        Convert a CougUV command into a COM-frame wrench and publish it.
-
-        :param msg: AgentCommand message containing control surface/thruster values.
-        """
         thruster_rpm = msg.command[-1]
 
         n_rps = thruster_rpm / 60.0
@@ -128,11 +116,6 @@ class WrenchConverterNode(Node):
         self.wrench_pub.publish(wrench_msg)
 
     def odom_callback(self, msg: Odometry) -> None:
-        """
-        Store the vehicle speed for CougUV command processing.
-
-        :param msg: Odometry message containing the current COM velocity.
-        """
         linear = msg.twist.twist.linear
         self.speed = math.sqrt(linear.x**2 + linear.y**2 + linear.z**2)
 

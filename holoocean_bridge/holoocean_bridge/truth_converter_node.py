@@ -22,15 +22,6 @@ from tf2_ros import Buffer, TransformBroadcaster, TransformListener
 
 
 class TruthConverterNode(Node):
-    """
-    ROS 2 node that converts HoloOcean ground truth Odometry messages to Odometry messages.
-
-    Optionally publishes the map->base_link transform.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("truth_converter_node")
 
@@ -75,11 +66,6 @@ class TruthConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def listener_callback(self, msg: Odometry) -> None:
-        """
-        Transform HoloOcean ground truth odometry into the map frame and publish.
-
-        :param msg: Odometry message containing the base pose in the HoloOcean frame.
-        """
         holo_T_base = PoseStamped()
         holo_T_base.header = msg.header
         holo_T_base.pose = msg.pose.pose

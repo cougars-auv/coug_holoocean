@@ -21,13 +21,6 @@ from rclpy.qos import qos_profile_system_default
 
 
 class DepthConverterNode(Node):
-    """
-    ROS 2 node that converts HoloOcean depth Odometry messages to noisy Odometry messages.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("depth_converter_node")
 
@@ -67,11 +60,6 @@ class DepthConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def listener_callback(self, msg: Odometry) -> None:
-        """
-        Stamp the depth odometry, add measurement noise, and republish it.
-
-        :param msg: Odometry message containing depth data.
-        """
         msg.header.frame_id = self.map_frame
         msg.child_frame_id = self.depth_frame
 

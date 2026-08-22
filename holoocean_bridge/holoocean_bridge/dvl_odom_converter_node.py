@@ -30,16 +30,6 @@ _FLU_R_FRD = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
 
 
 class DvlOdomConverterNode(Node):
-    """
-    ROS 2 node that converts HoloOcean Odometry messages to noisy DVLDR messages.
-
-    Models dead-reckoning drift as a velocity scale error and a drifting yaw estimate.
-    Resets the dead-reckoning frame from a ConfigCommand like the real driver.
-
-    :author: Nelson Durrant
-    :date: May 2026
-    """
-
     def __init__(self) -> None:
         super().__init__("dvl_odom_converter_node")
 
@@ -115,7 +105,6 @@ class DvlOdomConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def reset_drift(self) -> None:
-        """Zero the distance traveled and redraw the dead-reckoning drift errors."""
         self.distance_traveled = 0.0
         self.scale_error = 0.0
         self.yaw_drift_rate = 0.0
@@ -125,11 +114,6 @@ class DvlOdomConverterNode(Node):
             self.yaw_drift_rate = random.gauss(0, self.yaw_drift_sigma)
 
     def config_callback(self, msg: ConfigCommand) -> None:
-        """
-        Re-anchor the dead-reckoning frame from a DVL reset_dead_reckoning command.
-
-        :param msg: ConfigCommand message containing DVL config data.
-        """
         if msg.command != "reset_dead_reckoning":
             return
 
@@ -137,11 +121,6 @@ class DvlOdomConverterNode(Node):
         self.get_logger().info("DVL dead reckoning reset.")
 
     def listener_callback(self, msg: Odometry) -> None:
-        """
-        Transform HoloOcean ground truth odometry into the DVL frame, add drift, and publish it.
-
-        :param msg: Odometry message containing the base pose in the HoloOcean frame.
-        """
         holo_T_base = PoseStamped()
         holo_T_base.header = msg.header
         holo_T_base.pose = msg.pose.pose
