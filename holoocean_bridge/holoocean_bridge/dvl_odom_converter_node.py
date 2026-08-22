@@ -149,7 +149,7 @@ class DvlOdomConverterNode(Node):
             )
             return
 
-        # Transform from base-frame to DVL-frame pose in the map frame
+        # Transform the base pose to the DVL pose, both in the map frame
         map_T_base_tf = TransformStamped()
         map_T_base_tf.header = map_T_base.header
         map_T_base_tf.child_frame_id = self.base_frame
