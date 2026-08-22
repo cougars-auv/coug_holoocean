@@ -124,7 +124,7 @@ class CmdVelConverterNode(Node):
         return agent_cmd
 
     def bluerov2_command(self, msg: TwistStamped) -> list[float]:
-        # IMPORTANT! Assuming no quadratic drag
+        # Assuming no quadratic drag
         fwd = msg.twist.linear.x * self.h_scale
         lat = msg.twist.linear.y * self.h_scale
         vert = msg.twist.linear.z * self.v_scale
@@ -144,7 +144,7 @@ class CmdVelConverterNode(Node):
         return [cmd_0, cmd_1, cmd_2, cmd_3, cmd_4, cmd_5, cmd_6, cmd_7]
 
     def surface_vessel_command(self, msg: TwistStamped) -> list[float]:
-        # IMPORTANT! Assuming no quadratic drag
+        # Assuming no quadratic drag
         fwd = msg.twist.linear.x * self.h_scale
         yaw = msg.twist.angular.z * self.y_scale
 

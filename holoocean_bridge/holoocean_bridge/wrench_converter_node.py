@@ -93,10 +93,7 @@ class WrenchConverterNode(Node):
 
         n_rps = thruster_rpm / 60.0
 
-        # IMPORTANT! Assuming no spool up/down delays
-        # This only matters under the 'stepInput' and 'manualControl' modes, which
-        # report the raw RPM command. 'depthHeadingAutopilot' reports the propeller
-        # state after actuation, so the T_n spool lag is already accounted for.
+        # Assuming no spool up/down delays
         force_x_raw = C1 * abs(n_rps) * n_rps
         if n_rps > 0:
             force_x = force_x_raw + C2 * n_rps * self.speed
