@@ -18,7 +18,7 @@ import pymap3d as pm
 import rclpy
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data, qos_profile_system_default
+from rclpy.qos import qos_profile_system_default
 from sensor_msgs.msg import NavSatFix
 
 
@@ -70,8 +70,9 @@ class GpsConverterNode(Node):
         self.subscription = self.create_subscription(
             Odometry, input_topic, self.listener_callback, qos_profile_system_default
         )
+        # Reliable QoS to match SBG-SYSTEMS/sbg_ros2_driver
         self.publisher = self.create_publisher(
-            NavSatFix, output_topic, qos_profile_sensor_data
+            NavSatFix, output_topic, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
