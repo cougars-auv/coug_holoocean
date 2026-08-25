@@ -59,17 +59,17 @@ class PressureConverterNode(Node):
             self.get_parameter("depth_frame").get_parameter_value().string_value
         )
 
-        self.subscription = self.create_subscription(
-            Odometry, input_topic, self.listener_callback, qos_profile_system_default
+        self.input_sub = self.create_subscription(
+            Odometry, input_topic, self.odom_callback, qos_profile_system_default
         )
         # Reliable QoS to match BYU-FROST-Lab/pressure_sensor_ros2
-        self.publisher = self.create_publisher(
+        self.output_pub = self.create_publisher(
             FluidPressure, output_topic, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
 
-    def listener_callback(self, msg: Odometry) -> None:
+    def odom_callback(self, msg: Odometry) -> None:
         depth = -msg.pose.pose.position.z
 
         # pressure [Pa] = depth [m] * rho [kg/m^3] * g [m/s^2] + atmospheric_pressure [Pa]
@@ -85,7 +85,7 @@ class PressureConverterNode(Node):
         if self.add_noise:
             pressure_msg.fluid_pressure += random.gauss(0, self.noise_sigma)
 
-        self.publisher.publish(pressure_msg)
+        self.output_pub.publish(pressure_msg)
 
 
 def main(args: list[str] | None = None) -> None:

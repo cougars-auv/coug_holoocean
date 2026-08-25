@@ -76,25 +76,25 @@ class DvlConverterNode(Node):
         self.acoustic_enabled = True
         self.beam_ranges = None
 
-        self.subscription = self.create_subscription(
+        self.input_sub = self.create_subscription(
             TwistWithCovarianceStamped,
             velocity_input_topic,
-            self.listener_callback,
+            self.twist_callback,
             qos_profile_system_default,
         )
-        self.range_subscription = self.create_subscription(
+        self.range_sub = self.create_subscription(
             DVLSensorRange,
             range_input_topic,
             self.range_callback,
             qos_profile_system_default,
         )
-        self.config_subscription = self.create_subscription(
+        self.config_sub = self.create_subscription(
             ConfigCommand,
             config_command_topic,
             self.config_callback,
             qos_profile_sensor_data,
         )
-        self.publisher = self.create_publisher(
+        self.output_pub = self.create_publisher(
             DVL, output_topic, qos_profile_sensor_data
         )
 
@@ -112,7 +112,7 @@ class DvlConverterNode(Node):
             f"DVL acoustics {'enabled' if self.acoustic_enabled else 'disabled'}."
         )
 
-    def listener_callback(self, msg: TwistWithCovarianceStamped) -> None:
+    def twist_callback(self, msg: TwistWithCovarianceStamped) -> None:
         if not self.acoustic_enabled:
             return
 
@@ -132,7 +132,7 @@ class DvlConverterNode(Node):
             noise_z = 0.0
 
         # Convert FLU -> FRD
-        velocity_frd = _FRD_R_FLU.apply(
+        frd_velocity = _FRD_R_FLU.apply(
             [
                 msg.twist.twist.linear.x,
                 msg.twist.twist.linear.y,
@@ -140,9 +140,9 @@ class DvlConverterNode(Node):
             ]
         )
 
-        dvl_msg.velocity.x = velocity_frd[0] + noise_x
-        dvl_msg.velocity.y = velocity_frd[1] + noise_y
-        dvl_msg.velocity.z = velocity_frd[2] + noise_z
+        dvl_msg.velocity.x = frd_velocity[0] + noise_x
+        dvl_msg.velocity.y = frd_velocity[1] + noise_y
+        dvl_msg.velocity.z = frd_velocity[2] + noise_z
 
         dvl_msg.velocity_valid = True
 
@@ -159,7 +159,7 @@ class DvlConverterNode(Node):
         if self.beam_ranges is not None:
             dvl_msg.beams = self.create_beam_msgs(self.beam_ranges)
 
-        self.publisher.publish(dvl_msg)
+        self.output_pub.publish(dvl_msg)
 
     def create_beam_msgs(self, ranges: list[float]) -> list[DVLBeam]:
         beams = []

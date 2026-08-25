@@ -35,20 +35,20 @@ class FinStatePublisherNode(Node):
 
         self.joint_names = ["top_fin_joint", "left_fin_joint", "right_fin_joint"]
 
-        self.subscription = self.create_subscription(
+        self.input_sub = self.create_subscription(
             AgentCommand,
             input_topic,
-            self.listener_callback,
+            self.command_callback,
             qos_profile_system_default,
         )
-        self.publisher = self.create_publisher(
+        self.output_pub = self.create_publisher(
             JointState, output_topic, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
 
-    def listener_callback(self, msg: AgentCommand) -> None:
-        self.publisher.publish(self.create_joint_state_msg(msg))
+    def command_callback(self, msg: AgentCommand) -> None:
+        self.output_pub.publish(self.create_joint_state_msg(msg))
 
     def create_joint_state_msg(self, msg: AgentCommand) -> JointState:
         joint_state = JointState()

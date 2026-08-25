@@ -64,24 +64,24 @@ class MagConverterNode(Node):
             for sigma in self.bias_sigmas
         ]
 
-        self.subscription = self.create_subscription(
+        self.input_sub = self.create_subscription(
             MagneticField,
             input_topic,
-            self.listener_callback,
+            self.mag_callback,
             qos_profile_system_default,
         )
         # Reliable QoS to match SBG-SYSTEMS/sbg_ros2_driver
-        self.publisher = self.create_publisher(
+        self.output_pub = self.create_publisher(
             MagneticField, output_topic, qos_profile_system_default
         )
 
-        self.bias_publisher = self.create_publisher(
+        self.bias_pub = self.create_publisher(
             MagneticField, bias_topic, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
 
-    def listener_callback(self, msg: MagneticField) -> None:
+    def mag_callback(self, msg: MagneticField) -> None:
         msg.header.frame_id = self.mag_frame
 
         if self.add_bias:
@@ -106,7 +106,7 @@ class MagConverterNode(Node):
             for i in range(len(msg.magnetic_field_covariance)):
                 msg.magnetic_field_covariance[i] /= self.au_to_tesla**2
 
-        self.publisher.publish(msg)
+        self.output_pub.publish(msg)
 
         bias_msg = MagneticField()
         bias_msg.header = msg.header
@@ -114,7 +114,7 @@ class MagConverterNode(Node):
         bias_msg.magnetic_field.y = self.mag_bias[1]
         bias_msg.magnetic_field.z = self.mag_bias[2]
 
-        self.bias_publisher.publish(bias_msg)
+        self.bias_pub.publish(bias_msg)
 
 
 def main(args: list[str] | None = None) -> None:

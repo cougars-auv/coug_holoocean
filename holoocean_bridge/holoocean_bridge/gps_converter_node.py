@@ -60,17 +60,17 @@ class GpsConverterNode(Node):
             self.get_parameter("gps_frame").get_parameter_value().string_value
         )
 
-        self.subscription = self.create_subscription(
-            Odometry, input_topic, self.listener_callback, qos_profile_system_default
+        self.input_sub = self.create_subscription(
+            Odometry, input_topic, self.odom_callback, qos_profile_system_default
         )
         # Reliable QoS to match SBG-SYSTEMS/sbg_ros2_driver
-        self.publisher = self.create_publisher(
+        self.output_pub = self.create_publisher(
             NavSatFix, output_topic, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
 
-    def listener_callback(self, msg: Odometry) -> None:
+    def odom_callback(self, msg: Odometry) -> None:
         navsat_msg = NavSatFix()
         navsat_msg.header.stamp = msg.header.stamp
         navsat_msg.header.frame_id = self.gps_frame
@@ -108,7 +108,7 @@ class GpsConverterNode(Node):
         navsat_msg.position_covariance[8] = self.noise_sigmas[2] ** 2  # Up
         navsat_msg.position_covariance_type = navsat_msg.COVARIANCE_TYPE_DIAGONAL_KNOWN
 
-        self.publisher.publish(navsat_msg)
+        self.output_pub.publish(navsat_msg)
 
 
 def main(args: list[str] | None = None) -> None:

@@ -75,13 +75,13 @@ class CmdVelConverterNode(Node):
                 f"(expected '{BLUEROV2}' or '{SURFACE_VESSEL}')"
             )
 
-        self.subscription = self.create_subscription(
+        self.input_sub = self.create_subscription(
             TwistStamped,
             input_topic,
-            self.listener_callback,
+            self.twist_callback,
             qos_profile_system_default,
         )
-        self.publisher = self.create_publisher(
+        self.output_pub = self.create_publisher(
             AgentCommand, output_topic, qos_profile_system_default
         )
 
@@ -100,8 +100,8 @@ class CmdVelConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def listener_callback(self, msg: TwistStamped) -> None:
-        self.publisher.publish(self.create_agent_command_msg(msg))
+    def twist_callback(self, msg: TwistStamped) -> None:
+        self.output_pub.publish(self.create_agent_command_msg(msg))
 
     def create_agent_command_msg(self, msg: TwistStamped) -> AgentCommand:
         agent_cmd = AgentCommand()

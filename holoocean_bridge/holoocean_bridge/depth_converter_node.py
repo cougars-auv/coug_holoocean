@@ -50,16 +50,16 @@ class DepthConverterNode(Node):
             self.get_parameter("map_frame").get_parameter_value().string_value
         )
 
-        self.subscription = self.create_subscription(
-            Odometry, input_topic, self.listener_callback, qos_profile_system_default
+        self.input_sub = self.create_subscription(
+            Odometry, input_topic, self.odom_callback, qos_profile_system_default
         )
-        self.publisher = self.create_publisher(
+        self.output_pub = self.create_publisher(
             Odometry, output_topic, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
 
-    def listener_callback(self, msg: Odometry) -> None:
+    def odom_callback(self, msg: Odometry) -> None:
         msg.header.frame_id = self.map_frame
         msg.child_frame_id = self.depth_frame
 
@@ -68,7 +68,7 @@ class DepthConverterNode(Node):
         if self.add_noise:
             msg.pose.pose.position.z += random.gauss(0, self.noise_sigma)
 
-        self.publisher.publish(msg)
+        self.output_pub.publish(msg)
 
 
 def main(args: list[str] | None = None) -> None:

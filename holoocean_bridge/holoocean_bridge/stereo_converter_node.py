@@ -65,10 +65,10 @@ class StereoConverterNode(Node):
             self, Image, self.back_input_topic, qos_profile=qos_profile_system_default
         )
 
-        self.ts = message_filters.ApproximateTimeSynchronizer(
+        self.time_sync = message_filters.ApproximateTimeSynchronizer(
             [self.front_sub, self.back_sub], queue_size=10, slop=sync_slop_sec
         )
-        self.ts.registerCallback(self.sync_callback)
+        self.time_sync.registerCallback(self.sync_callback)
 
         self.get_logger().info("Initialization complete.")
 

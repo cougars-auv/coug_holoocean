@@ -52,20 +52,20 @@ class ModemStatusConverterNode(Node):
             self, Odometry, depth_input_topic, qos_profile=qos_profile_system_default
         )
 
-        self.ts = message_filters.ApproximateTimeSynchronizer(
+        self.time_sync = message_filters.ApproximateTimeSynchronizer(
             [self.imu_sub, self.depth_sub], queue_size=10, slop=sync_slop_sec
         )
-        self.ts.registerCallback(self.sync_callback)
+        self.time_sync.registerCallback(self.sync_callback)
 
         # Reliable QoS to match BYU-FROST-Lab/seatrac-ros2
-        self.publisher = self.create_publisher(
+        self.output_pub = self.create_publisher(
             ModemStatus, output_topic, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
 
     def sync_callback(self, imu_msg: Imu, depth_msg: Odometry) -> None:
-        self.publisher.publish(self.create_modem_status_msg(imu_msg, depth_msg))
+        self.output_pub.publish(self.create_modem_status_msg(imu_msg, depth_msg))
 
     def create_modem_status_msg(self, imu_msg: Imu, depth_msg: Odometry) -> ModemStatus:
         modem_status_msg = ModemStatus()
@@ -76,15 +76,15 @@ class ModemStatusConverterNode(Node):
         modem_status_msg.timestamp = elapsed_ns // 1_000_000  # ms since start
 
         # Convert ENU -> NED and FLU -> FRD
-        q = imu_msg.orientation
-        enu_R_base = Rotation.from_quat([q.x, q.y, q.z, q.w])
+        quat = imu_msg.orientation
+        enu_R_base = Rotation.from_quat([quat.x, quat.y, quat.z, quat.w])
         ned_R_beacon = _NED_R_ENU * enu_R_base * _FLU_R_FRD
-        roll_ned, pitch_ned, yaw_ned = ned_R_beacon.as_euler("xyz", degrees=True)
+        ned_roll, ned_pitch, ned_yaw = ned_R_beacon.as_euler("xyz", degrees=True)
 
         modem_status_msg.includes_local_attitude = True
-        modem_status_msg.attitude_yaw = seatrac.clamp_int16(yaw_ned * 10.0)
-        modem_status_msg.attitude_pitch = seatrac.clamp_int16(pitch_ned * 10.0)
-        modem_status_msg.attitude_roll = seatrac.clamp_int16(roll_ned * 10.0)
+        modem_status_msg.attitude_yaw = seatrac.clamp_int16(ned_yaw * 10.0)
+        modem_status_msg.attitude_pitch = seatrac.clamp_int16(ned_pitch * 10.0)
+        modem_status_msg.attitude_roll = seatrac.clamp_int16(ned_roll * 10.0)
 
         # Convert ENU -> NED
         modem_status_msg.includes_env_fields = True

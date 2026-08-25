@@ -85,17 +85,17 @@ class DvlOdomConverterNode(Node):
         self.reset_pending = False
         self.reset_drift()
 
-        self.publisher = self.create_publisher(
+        self.output_pub = self.create_publisher(
             DVLDR, output_topic, qos_profile_sensor_data
         )
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
-        self.subscription = self.create_subscription(
-            Odometry, input_topic, self.listener_callback, qos_profile_system_default
+        self.input_sub = self.create_subscription(
+            Odometry, input_topic, self.odom_callback, qos_profile_system_default
         )
-        self.config_subscription = self.create_subscription(
+        self.config_sub = self.create_subscription(
             ConfigCommand,
             config_command_topic,
             self.config_callback,
@@ -120,7 +120,7 @@ class DvlOdomConverterNode(Node):
         self.reset_pending = True
         self.get_logger().info("DVL dead reckoning reset.")
 
-    def listener_callback(self, msg: Odometry) -> None:
+    def odom_callback(self, msg: Odometry) -> None:
         holo_T_base = PoseStamped()
         holo_T_base.header = msg.header
         holo_T_base.pose = msg.pose.pose
@@ -167,19 +167,19 @@ class DvlOdomConverterNode(Node):
         map_T_dvl = do_transform_pose(base_T_dvl.pose, map_T_base_tf)
 
         # Convert ENU -> NED
-        x_ned = map_T_dvl.position.y
-        y_ned = map_T_dvl.position.x
-        z_ned = -map_T_dvl.position.z
+        ned_x = map_T_dvl.position.y
+        ned_y = map_T_dvl.position.x
+        ned_z = -map_T_dvl.position.z
 
-        q = map_T_dvl.orientation
-        enu_R_dvl = Rotation.from_quat([q.x, q.y, q.z, q.w])
+        quat = map_T_dvl.orientation
+        enu_R_dvl = Rotation.from_quat([quat.x, quat.y, quat.z, quat.w])
         ned_R_dvl = _NED_R_ENU * enu_R_dvl
 
         stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
-        position_ned = (x_ned, y_ned, z_ned)
+        ned_position = (ned_x, ned_y, ned_z)
 
         if self.reset_pending:
-            self.ref_position = position_ned
+            self.ref_position = ned_position
             self.ref_rotation = ned_R_dvl
             self.ref_stamp = stamp
             self.last_position = None
@@ -191,29 +191,31 @@ class DvlOdomConverterNode(Node):
 
         # The yaw estimate drifts from truth over time, dragging the position with it
         ref_R_ned = self.ref_rotation.inv()
-        elapsed_min = (stamp - self.ref_stamp) / 60.0
+        elapsed_minutes = (stamp - self.ref_stamp) / 60.0
         yaw_error = Rotation.from_euler(
-            "z", self.yaw_drift_rate * elapsed_min, degrees=True
+            "z", self.yaw_drift_rate * elapsed_minutes, degrees=True
         )
 
         if self.last_position is None:
             self.dr_position = ref_R_ned.apply(
-                [p - ref for p, ref in zip(position_ned, self.ref_position)]
+                [pos - ref for pos, ref in zip(ned_position, self.ref_position)]
             )
         else:
-            step = ref_R_ned.apply(
-                [p - last for p, last in zip(position_ned, self.last_position)]
+            delta_position = ref_R_ned.apply(
+                [pos - last for pos, last in zip(ned_position, self.last_position)]
             )
-            self.distance_traveled += math.dist(position_ned, self.last_position)
-            self.dr_position += yaw_error.apply(step) * (1.0 + self.scale_error)
+            self.distance_traveled += math.dist(ned_position, self.last_position)
+            self.dr_position += yaw_error.apply(delta_position) * (
+                1.0 + self.scale_error
+            )
 
-        self.last_position = position_ned
+        self.last_position = ned_position
 
-        x_ned, y_ned, z_ned = self.dr_position
+        ned_x, ned_y, ned_z = self.dr_position
         ned_R_dvl = yaw_error * ref_R_ned * ned_R_dvl
 
         # Convert FLU -> FRD
-        roll_ned, pitch_ned, yaw_ned = (ned_R_dvl * _FLU_R_FRD).as_euler(
+        ned_roll, ned_pitch, ned_yaw = (ned_R_dvl * _FLU_R_FRD).as_euler(
             "xyz", degrees=True
         )
 
@@ -221,16 +223,16 @@ class DvlOdomConverterNode(Node):
         dvl_msg.header.stamp = msg.header.stamp
         dvl_msg.header.frame_id = self.dvl_frame
         dvl_msg.time = stamp
-        dvl_msg.position.x = x_ned
-        dvl_msg.position.y = y_ned
-        dvl_msg.position.z = z_ned
+        dvl_msg.position.x = ned_x
+        dvl_msg.position.y = ned_y
+        dvl_msg.position.z = ned_z
         dvl_msg.pos_std = self.noise_sigma_scale * self.distance_traveled
-        dvl_msg.roll = roll_ned
-        dvl_msg.pitch = pitch_ned
-        dvl_msg.yaw = yaw_ned
+        dvl_msg.roll = ned_roll
+        dvl_msg.pitch = ned_pitch
+        dvl_msg.yaw = ned_yaw
         dvl_msg.status = 0
 
-        self.publisher.publish(dvl_msg)
+        self.output_pub.publish(dvl_msg)
 
 
 def main(args: list[str] | None = None) -> None:

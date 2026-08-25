@@ -51,7 +51,7 @@ class TruthConverterNode(Node):
             self.get_parameter("map_frame").get_parameter_value().string_value
         )
 
-        self.publisher = self.create_publisher(
+        self.output_pub = self.create_publisher(
             Odometry, output_topic, qos_profile_system_default
         )
 
@@ -59,13 +59,13 @@ class TruthConverterNode(Node):
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.tf_broadcaster = TransformBroadcaster(self)
 
-        self.subscription = self.create_subscription(
-            Odometry, input_topic, self.listener_callback, qos_profile_system_default
+        self.input_sub = self.create_subscription(
+            Odometry, input_topic, self.odom_callback, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
 
-    def listener_callback(self, msg: Odometry) -> None:
+    def odom_callback(self, msg: Odometry) -> None:
         holo_T_base = PoseStamped()
         holo_T_base.header = msg.header
         holo_T_base.pose = msg.pose.pose
@@ -91,7 +91,7 @@ class TruthConverterNode(Node):
         odom_msg.pose.covariance = msg.pose.covariance
         odom_msg.twist.covariance = msg.twist.covariance
 
-        self.publisher.publish(odom_msg)
+        self.output_pub.publish(odom_msg)
 
         if self.publish_tf:
             t = TransformStamped()

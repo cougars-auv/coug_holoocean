@@ -101,16 +101,16 @@ class ImuConverterNode(Node):
             ahrs_input_topic,
             qos_profile=qos_profile_system_default,
         )
-        self.ts = message_filters.ApproximateTimeSynchronizer(
+        self.time_sync = message_filters.ApproximateTimeSynchronizer(
             [self.imu_sub, self.ahrs_sub], queue_size=10, slop=sync_slop_sec
         )
-        self.ts.registerCallback(self.sync_callback)
+        self.time_sync.registerCallback(self.sync_callback)
 
         # Reliable QoS to match SBG-SYSTEMS/sbg_ros2_driver
-        self.publisher = self.create_publisher(
+        self.output_pub = self.create_publisher(
             Imu, output_topic, qos_profile_system_default
         )
-        self.bias_publisher = self.create_publisher(
+        self.bias_pub = self.create_publisher(
             TwistWithCovarianceStamped, bias_topic, qos_profile_system_default
         )
 
@@ -128,7 +128,7 @@ class ImuConverterNode(Node):
             map_noise = [random.gauss(0, sigma) for sigma in self.ahrs_noise_sigmas]
             map_R_ahrs = Rotation.from_rotvec(map_noise) * map_R_ahrs
 
-        q = map_R_ahrs.as_quat()
+        quat = map_R_ahrs.as_quat()
 
         imu_msg.header.frame_id = self.imu_frame
 
@@ -174,16 +174,16 @@ class ImuConverterNode(Node):
         imu_msg.angular_velocity_covariance[4] = self.gyro_noise_sigmas[1] ** 2
         imu_msg.angular_velocity_covariance[8] = self.gyro_noise_sigmas[2] ** 2
 
-        imu_msg.orientation.x = q[0]
-        imu_msg.orientation.y = q[1]
-        imu_msg.orientation.z = q[2]
-        imu_msg.orientation.w = q[3]
+        imu_msg.orientation.x = quat[0]
+        imu_msg.orientation.y = quat[1]
+        imu_msg.orientation.z = quat[2]
+        imu_msg.orientation.w = quat[3]
 
         imu_msg.orientation_covariance[0] = self.ahrs_noise_sigmas[0] ** 2
         imu_msg.orientation_covariance[4] = self.ahrs_noise_sigmas[1] ** 2
         imu_msg.orientation_covariance[8] = self.ahrs_noise_sigmas[2] ** 2
 
-        self.publisher.publish(imu_msg)
+        self.output_pub.publish(imu_msg)
 
         bias_msg = TwistWithCovarianceStamped()
         bias_msg.header = imu_msg.header
@@ -194,7 +194,7 @@ class ImuConverterNode(Node):
         bias_msg.twist.twist.angular.y = self.gyro_bias[1]
         bias_msg.twist.twist.angular.z = self.gyro_bias[2]
 
-        self.bias_publisher.publish(bias_msg)
+        self.bias_pub.publish(bias_msg)
 
 
 def main(args: list[str] | None = None) -> None:
