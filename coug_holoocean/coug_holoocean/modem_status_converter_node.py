@@ -23,7 +23,7 @@ from scipy.spatial.transform import Rotation
 from seatrac_interfaces.msg import ModemStatus
 from sensor_msgs.msg import Imu
 
-from holoocean_bridge.utils import seatrac_enums as seatrac
+from coug_holoocean.utils import seatrac_enums as seatrac
 
 _NED_R_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv()
 _FLU_R_FRD = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])

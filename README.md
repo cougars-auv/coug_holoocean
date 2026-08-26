@@ -1,9 +1,9 @@
 # 🌊 CoUGARs HoloOcean Bridge
 
-[![ROS 2 Build & Test](https://github.com/cougars-auv/holoocean_bridge/actions/workflows/ros2_build_and_test.yml/badge.svg)](https://github.com/cougars-auv/holoocean_bridge/actions/workflows/ros2_build_and_test.yml)
-[![Docker Build](https://github.com/cougars-auv/holoocean_bridge/actions/workflows/docker_build.yml/badge.svg)](https://github.com/cougars-auv/holoocean_bridge/actions/workflows/docker_build.yml)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/cougars-auv/holoocean_bridge/main.svg)](https://results.pre-commit.ci/latest/github/cougars-auv/holoocean_bridge/main)
-[![codecov](https://codecov.io/gh/cougars-auv/holoocean_bridge/graph/badge.svg?token=92GLUNI35L)](https://codecov.io/gh/cougars-auv/holoocean_bridge)
+[![ROS 2 Build & Test](https://github.com/cougars-auv/coug_holoocean/actions/workflows/ros2_build_and_test.yml/badge.svg)](https://github.com/cougars-auv/coug_holoocean/actions/workflows/ros2_build_and_test.yml)
+[![Docker Build](https://github.com/cougars-auv/coug_holoocean/actions/workflows/docker_build.yml/badge.svg)](https://github.com/cougars-auv/coug_holoocean/actions/workflows/docker_build.yml)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/cougars-auv/coug_holoocean/main.svg)](https://results.pre-commit.ci/latest/github/cougars-auv/coug_holoocean/main)
+[![codecov](https://codecov.io/gh/cougars-auv/coug_holoocean/graph/badge.svg?token=92GLUNI35L)](https://codecov.io/gh/cougars-auv/coug_holoocean)
 
 ## Contributing
 

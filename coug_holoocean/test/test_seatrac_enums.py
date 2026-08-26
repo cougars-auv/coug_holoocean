@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from holoocean_bridge.utils import seatrac_enums as seatrac
+from coug_holoocean.utils import seatrac_enums as seatrac
 
 
 def test_amsgtype_table() -> None:

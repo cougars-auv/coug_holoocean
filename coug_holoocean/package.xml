@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>holoocean_bridge</name>
+  <name>coug_holoocean</name>
   <version>0.0.0</version>
   <description>HoloOcean simulator bridge and message converters.</description>
   <maintainer email="snelsond@byu.edu">snelsondurrant</maintainer>
   <license>Apache-2.0</license>
-  <url type="repository">https://github.com/cougars-auv/holoocean_bridge</url>
+  <url type="repository">https://github.com/cougars-auv/coug_holoocean</url>
 
   <depend>coug_interfaces</depend>
   <depend>dvl_msgs</depend>

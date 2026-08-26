@@ -32,7 +32,7 @@ def generate_launch_description() -> LaunchDescription:
         [
             EnvironmentVariable("CONFIG_DIR"),
             "fleet",
-            "holoocean_bridge_params.yaml",
+            "coug_holoocean_params.yaml",
         ]
     )
     auv_params = PathJoinSubstitution(
@@ -154,7 +154,7 @@ def generate_launch_description() -> LaunchDescription:
                 description="Whether to add noise to sensor data",
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="depth_converter",
                 name="depth_converter_node",
                 parameters=[
@@ -169,7 +169,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="pressure_converter",
                 name="pressure_converter_node",
                 parameters=[
@@ -183,7 +183,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="gps_converter",
                 name="gps_converter_node",
                 parameters=[
@@ -197,7 +197,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="cmd_vel_converter",
                 name="cmd_vel_converter_node",
                 parameters=[
@@ -207,7 +207,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="dvl_converter",
                 name="dvl_converter_node",
                 parameters=[
@@ -221,7 +221,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="fin_state_publisher",
                 name="fin_state_publisher_node",
                 parameters=[
@@ -231,7 +231,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="truth_converter",
                 name="truth_converter_node",
                 parameters=[
@@ -245,7 +245,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="dvl_odom_converter",
                 name="dvl_odom_converter_node",
                 parameters=[
@@ -261,7 +261,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="hsd_converter",
                 name="hsd_converter_node",
                 parameters=[
@@ -271,7 +271,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="imu_converter",
                 name="imu_converter_node",
                 parameters=[
@@ -286,7 +286,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="mag_converter",
                 name="mag_converter_node",
                 parameters=[
@@ -301,7 +301,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="wrench_converter",
                 name="wrench_converter_node",
                 parameters=[
@@ -314,7 +314,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="imu_converter",
                 name="modem_imu_converter_node",
                 parameters=[
@@ -329,7 +329,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="depth_converter",
                 name="modem_depth_converter_node",
                 parameters=[
@@ -344,7 +344,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="modem_status_converter",
                 name="modem_status_converter_node",
                 parameters=[
@@ -356,7 +356,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="modem_converter",
                 name="modem_converter_node",
                 parameters=[
@@ -370,7 +370,7 @@ def generate_launch_description() -> LaunchDescription:
                 ],
             ),
             Node(
-                package="holoocean_bridge",
+                package="coug_holoocean",
                 executable="stereo_converter",
                 name="stereo_converter_node",
                 parameters=[

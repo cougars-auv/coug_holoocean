@@ -22,7 +22,7 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 from seatrac_interfaces.msg import ModemCmdUpdate, ModemRec, ModemSend
 
-from holoocean_bridge.utils import seatrac_enums as seatrac
+from coug_holoocean.utils import seatrac_enums as seatrac
 
 
 class ModemConverterNode(Node):
