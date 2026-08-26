@@ -94,15 +94,15 @@ class TruthConverterNode(Node):
         self.output_pub.publish(odom_msg)
 
         if self.publish_tf:
-            t = TransformStamped()
-            t.header.stamp = msg.header.stamp
-            t.header.frame_id = self.map_frame
-            t.child_frame_id = self.base_frame
-            t.transform.translation.x = map_T_base.pose.position.x
-            t.transform.translation.y = map_T_base.pose.position.y
-            t.transform.translation.z = map_T_base.pose.position.z
-            t.transform.rotation = map_T_base.pose.orientation
-            self.tf_broadcaster.sendTransform(t)
+            map_T_base_tf = TransformStamped()
+            map_T_base_tf.header.stamp = msg.header.stamp
+            map_T_base_tf.header.frame_id = self.map_frame
+            map_T_base_tf.child_frame_id = self.base_frame
+            map_T_base_tf.transform.translation.x = map_T_base.pose.position.x
+            map_T_base_tf.transform.translation.y = map_T_base.pose.position.y
+            map_T_base_tf.transform.translation.z = map_T_base.pose.position.z
+            map_T_base_tf.transform.rotation = map_T_base.pose.orientation
+            self.tf_broadcaster.sendTransform(map_T_base_tf)
 
 
 def main(args: list[str] | None = None) -> None:
