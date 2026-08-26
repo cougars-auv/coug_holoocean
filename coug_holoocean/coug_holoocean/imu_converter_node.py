@@ -133,9 +133,11 @@ class ImuConverterNode(Node):
         imu_msg.header.frame_id = self.imu_frame
 
         if self.add_bias:
-            curr_stamp = imu_msg.header.stamp.sec + imu_msg.header.stamp.nanosec * 1e-9
+            current_stamp = (
+                imu_msg.header.stamp.sec + imu_msg.header.stamp.nanosec * 1e-9
+            )
             if self.last_stamp is not None:
-                dt = curr_stamp - self.last_stamp
+                dt = current_stamp - self.last_stamp
                 if dt > 0.0:
                     sqrt_dt = math.sqrt(dt)
                     for i in range(3):
@@ -145,7 +147,7 @@ class ImuConverterNode(Node):
                         self.gyro_bias[i] += random.gauss(
                             0, self.gyro_bias_rw_sigmas[i] * sqrt_dt
                         )
-            self.last_stamp = curr_stamp
+            self.last_stamp = current_stamp
 
             imu_msg.linear_acceleration.x += self.accel_bias[0]
             imu_msg.linear_acceleration.y += self.accel_bias[1]
