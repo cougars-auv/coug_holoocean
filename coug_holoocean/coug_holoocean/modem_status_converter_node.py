@@ -82,14 +82,20 @@ class ModemStatusConverterNode(Node):
         ned_roll, ned_pitch, ned_yaw = ned_R_beacon.as_euler("xyz", degrees=True)
 
         modem_status_msg.includes_local_attitude = True
-        modem_status_msg.attitude_yaw = seatrac.clamp_int16(ned_yaw * 10.0)
-        modem_status_msg.attitude_pitch = seatrac.clamp_int16(ned_pitch * 10.0)
-        modem_status_msg.attitude_roll = seatrac.clamp_int16(ned_roll * 10.0)
+        modem_status_msg.attitude_yaw = seatrac.clamp_int16(
+            ned_yaw * seatrac.DEGREES_TO_DECIDEGREES
+        )
+        modem_status_msg.attitude_pitch = seatrac.clamp_int16(
+            ned_pitch * seatrac.DEGREES_TO_DECIDEGREES
+        )
+        modem_status_msg.attitude_roll = seatrac.clamp_int16(
+            ned_roll * seatrac.DEGREES_TO_DECIDEGREES
+        )
 
         # Convert ENU -> NED
         modem_status_msg.includes_env_fields = True
         modem_status_msg.depth_local = seatrac.clamp_int16(
-            -depth_msg.pose.pose.position.z * 10.0
+            -depth_msg.pose.pose.position.z * seatrac.METERS_TO_DECIMETERS
         )
 
         return modem_status_msg

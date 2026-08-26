@@ -176,7 +176,9 @@ class ModemConverterNode(Node):
         modem_rec.dest_id = msg.to_beacon & 0xFF
         modem_rec.src_id = msg.from_beacon & 0xFF
 
-        modem_rec.depth_local = seatrac.clamp_int16(self.agent_depth * 10.0)
+        modem_rec.depth_local = seatrac.clamp_int16(
+            self.agent_depth * seatrac.METERS_TO_DECIMETERS
+        )
 
         modem_rec.includes_usbl = msg.msg_type in seatrac.HAS_USBL
         if modem_rec.includes_usbl:
@@ -186,9 +188,11 @@ class ModemConverterNode(Node):
             if self.add_noise:
                 azimuth += random.gauss(0, self.bearing_noise_sigmas[0])
                 elevation += random.gauss(0, self.bearing_noise_sigmas[1])
-            modem_rec.usbl_azimuth = seatrac.clamp_int16(math.degrees(azimuth) * 10.0)
+            modem_rec.usbl_azimuth = seatrac.clamp_int16(
+                math.degrees(azimuth) * seatrac.DEGREES_TO_DECIDEGREES
+            )
             modem_rec.usbl_elevation = seatrac.clamp_int16(
-                math.degrees(elevation) * 10.0
+                math.degrees(elevation) * seatrac.DEGREES_TO_DECIDEGREES
             )
             modem_rec.usbl_channels = 4
 
@@ -197,14 +201,18 @@ class ModemConverterNode(Node):
             range_dist = msg.range
             if self.add_noise:
                 range_dist += random.gauss(0, self.range_noise_sigma)
-            modem_rec.range_dist = seatrac.clamp_uint16(range_dist * 10.0)
+            modem_rec.range_dist = seatrac.clamp_uint16(
+                range_dist * seatrac.METERS_TO_DECIMETERS
+            )
 
         modem_rec.includes_position = msg.msg_type in seatrac.HAS_Z
         if modem_rec.includes_position:
             # TODO: Fix RESPX remote depth reading in HoloOcean (not populated)
             modem_rec.position_enhanced = False
             z = self.agent_depth - msg.range * math.sin(msg.elevation)
-            modem_rec.position_depth = seatrac.clamp_int16(z * 10.0)
+            modem_rec.position_depth = seatrac.clamp_int16(
+                z * seatrac.METERS_TO_DECIMETERS
+            )
 
         payload = list(msg.msg_data[:30])
         modem_rec.packet_len = len(payload)

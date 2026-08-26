@@ -49,6 +49,9 @@ HAS_USBL = {"OWAYU", "MSG_REQU", "MSG_RESPU", "MSG_REQX", "MSG_RESPX"}
 HAS_RANGE = {"MSG_RESP", "MSG_RESPU", "MSG_RESPX"}
 HAS_Z = {"MSG_RESPU", "MSG_RESPX"}
 
+METERS_TO_DECIMETERS = 10.0
+DEGREES_TO_DECIDEGREES = 10.0
+
 
 def clamp_int16(v: float) -> int:
     return max(-32768, min(32767, round(v)))
