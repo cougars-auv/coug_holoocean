@@ -58,7 +58,6 @@ class MagConverterNode(Node):
             self.get_parameter("mag_frame").get_parameter_value().string_value
         )
 
-        # Hard iron is static, so hold for the whole mission
         self.mag_bias = [
             random.gauss(0, sigma) if self.add_bias else 0.0
             for sigma in self.bias_sigmas
