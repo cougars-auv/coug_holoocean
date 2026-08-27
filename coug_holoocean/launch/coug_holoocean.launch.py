@@ -25,7 +25,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description() -> LaunchDescription:
     use_sim_time = LaunchConfiguration("use_sim_time")
-    auv_ns = LaunchConfiguration("auv_ns")
+    agent_ns = LaunchConfiguration("agent_ns")
     add_noise = LaunchConfiguration("add_noise")
 
     fleet_params = PathJoinSubstitution(
@@ -35,19 +35,19 @@ def generate_launch_description() -> LaunchDescription:
             "coug_holoocean_params.yaml",
         ]
     )
-    auv_params = PathJoinSubstitution(
+    agent_params = PathJoinSubstitution(
         [
             EnvironmentVariable("CONFIG_DIR"),
-            PythonExpression(["'", auv_ns, "' + '_params.yaml'"]),
+            PythonExpression(["'", agent_ns, "' + '_params.yaml'"]),
         ]
     )
 
     base_link_frame = PythonExpression(
         [
             "'",
-            auv_ns,
+            agent_ns,
             "/base_link' if '",
-            auv_ns,
+            agent_ns,
             "' != '' else 'base_link'",
         ]
     )
@@ -55,9 +55,9 @@ def generate_launch_description() -> LaunchDescription:
     com_link_frame = PythonExpression(
         [
             "'",
-            auv_ns,
+            agent_ns,
             "/com_link' if '",
-            auv_ns,
+            agent_ns,
             "' != '' else 'com_link'",
         ]
     )
@@ -65,9 +65,9 @@ def generate_launch_description() -> LaunchDescription:
     imu_link_frame = PythonExpression(
         [
             "'",
-            auv_ns,
+            agent_ns,
             "/imu_link' if '",
-            auv_ns,
+            agent_ns,
             "' != '' else 'imu_link'",
         ]
     )
@@ -75,9 +75,9 @@ def generate_launch_description() -> LaunchDescription:
     depth_link_frame = PythonExpression(
         [
             "'",
-            auv_ns,
+            agent_ns,
             "/depth_link' if '",
-            auv_ns,
+            agent_ns,
             "' != '' else 'depth_link'",
         ]
     )
@@ -85,9 +85,9 @@ def generate_launch_description() -> LaunchDescription:
     modem_link_frame = PythonExpression(
         [
             "'",
-            auv_ns,
+            agent_ns,
             "/modem_link' if '",
-            auv_ns,
+            agent_ns,
             "' != '' else 'modem_link'",
         ]
     )
@@ -95,9 +95,9 @@ def generate_launch_description() -> LaunchDescription:
     dvl_link_frame = PythonExpression(
         [
             "'",
-            auv_ns,
+            agent_ns,
             "/dvl_link' if '",
-            auv_ns,
+            agent_ns,
             "' != '' else 'dvl_link'",
         ]
     )
@@ -105,9 +105,9 @@ def generate_launch_description() -> LaunchDescription:
     gps_link_frame = PythonExpression(
         [
             "'",
-            auv_ns,
+            agent_ns,
             "/gps_link' if '",
-            auv_ns,
+            agent_ns,
             "' != '' else 'gps_link'",
         ]
     )
@@ -115,9 +115,9 @@ def generate_launch_description() -> LaunchDescription:
     front_stereo_link_frame = PythonExpression(
         [
             "'",
-            auv_ns,
+            agent_ns,
             "/front_stereo_link' if '",
-            auv_ns,
+            agent_ns,
             "' != '' else 'front_stereo_link'",
         ]
     )
@@ -125,15 +125,15 @@ def generate_launch_description() -> LaunchDescription:
     back_stereo_link_frame = PythonExpression(
         [
             "'",
-            auv_ns,
+            agent_ns,
             "/back_stereo_link' if '",
-            auv_ns,
+            agent_ns,
             "' != '' else 'back_stereo_link'",
         ]
     )
 
     agent_name = PythonExpression(
-        ["'", auv_ns, "' if '", auv_ns, "' != '' else 'auv0'"]
+        ["'", agent_ns, "' if '", agent_ns, "' != '' else 'auv0'"]
     )
 
     return LaunchDescription(
@@ -144,9 +144,9 @@ def generate_launch_description() -> LaunchDescription:
                 description="Use simulation/rosbag clock if true",
             ),
             DeclareLaunchArgument(
-                "auv_ns",
+                "agent_ns",
                 default_value="auv0",
-                description="Namespace for the AUV (e.g. auv0)",
+                description="Namespace for the agent (e.g. auv0)",
             ),
             DeclareLaunchArgument(
                 "add_noise",
@@ -159,7 +159,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="depth_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                         "depth_frame": depth_link_frame,
@@ -174,7 +174,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="pressure_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                         "depth_frame": depth_link_frame,
@@ -188,7 +188,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="gps_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                         "gps_frame": gps_link_frame,
@@ -202,7 +202,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="cmd_vel_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {"use_sim_time": use_sim_time, "agent_name": agent_name},
                 ],
             ),
@@ -212,7 +212,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="dvl_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                         "dvl_frame": dvl_link_frame,
@@ -226,7 +226,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="fin_state_publisher_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {"use_sim_time": use_sim_time},
                 ],
             ),
@@ -236,7 +236,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="truth_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                         "base_frame": base_link_frame,
@@ -250,7 +250,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="dvl_odom_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                         "base_frame": base_link_frame,
@@ -266,7 +266,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="hsd_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {"use_sim_time": use_sim_time, "agent_name": agent_name},
                 ],
             ),
@@ -276,7 +276,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="imu_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                         "imu_frame": imu_link_frame,
@@ -291,7 +291,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="mag_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                         "mag_frame": imu_link_frame,
@@ -306,7 +306,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="wrench_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                         "wrench_frame": com_link_frame,
@@ -319,7 +319,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="modem_imu_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                         "imu_frame": modem_link_frame,
@@ -334,7 +334,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="modem_depth_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                         "depth_frame": modem_link_frame,
@@ -349,7 +349,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="modem_status_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                     },
@@ -361,7 +361,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="modem_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                         "modem_frame": modem_link_frame,
@@ -375,7 +375,7 @@ def generate_launch_description() -> LaunchDescription:
                 name="stereo_converter_node",
                 parameters=[
                     fleet_params,
-                    auv_params,
+                    agent_params,
                     {
                         "use_sim_time": use_sim_time,
                         "front_stereo_frame": front_stereo_link_frame,
