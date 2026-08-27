@@ -170,7 +170,7 @@ class ModemConverterNode(Node):
         modem_rec = ModemRec()
         modem_rec.header.stamp = msg.header.stamp
         modem_rec.header.frame_id = self.modem_frame
-        modem_rec.msg_id = seatrac.CID_DAT_RECEIVE
+        modem_rec.msg_id = seatrac.CommandId.DAT_RECEIVE
 
         modem_rec.local_flag = msg.to_beacon in (self.beacon_id, 0)
         modem_rec.dest_id = msg.to_beacon & 0xFF
@@ -241,11 +241,11 @@ class ModemConverterNode(Node):
         self.attempt_send()
 
     def modem_send_callback(self, msg: ModemSend) -> None:
-        if msg.msg_id == seatrac.CID_DAT_QUEUE_SET:
+        if msg.msg_id == seatrac.CommandId.DAT_QUEUE_SET:
             self.set_dat_queue(msg)
             return
 
-        if msg.msg_id != seatrac.CID_DAT_SEND:
+        if msg.msg_id != seatrac.CommandId.DAT_SEND:
             self.get_logger().warning(
                 f"Unsupported send CID 0x{msg.msg_id:02X}. Dropping message."
             )
@@ -255,7 +255,9 @@ class ModemConverterNode(Node):
         beacon_send.header = msg.header
         beacon_send.from_beacon = self.beacon_id
         beacon_send.to_beacon = int(msg.dest_id)
-        beacon_send.msg_type = seatrac.AMSGTYPE_TO_MSG_TYPE.get(msg.msg_type, "OWAY")
+        beacon_send.msg_type = seatrac.AMSGTYPE_TO_MSG_TYPE.get(
+            msg.msg_type, seatrac.AcousticMessageType.ONE_WAY
+        )
         beacon_send.msg_data = list(msg.packet_data[: msg.packet_len])
 
         self.send_queue.append((beacon_send, True))
@@ -268,7 +270,7 @@ class ModemConverterNode(Node):
         else:
             self.dat_queue.pop(int(msg.dest_id), None)
 
-        self.publish_cmd_update(seatrac.CID_DAT_QUEUE_SET, msg.dest_id)
+        self.publish_cmd_update(seatrac.CommandId.DAT_QUEUE_SET, msg.dest_id)
 
     def tick_callback(self) -> None:
         # A REQ that never gets a RESP eventually times out and frees the channel
@@ -276,9 +278,9 @@ class ModemConverterNode(Node):
             self.pending_resp_ticker += 1
             if self.pending_resp_ticker >= self.resp_timeout_ticks:
                 self.publish_cmd_update(
-                    seatrac.CID_DAT_ERROR,
+                    seatrac.CommandId.DAT_ERROR,
                     self.pending_resp_target,
-                    seatrac.CST_XCVR_RESP_TIMEOUT,
+                    seatrac.CommandStatus.TRANSCEIVER_RESPONSE_TIMEOUT,
                 )
                 self.pending_resp_target = None
                 self.pending_resp_ticker = 0
@@ -310,7 +312,9 @@ class ModemConverterNode(Node):
         if self.pending_resp_target is not None:
             if is_command:
                 self.publish_cmd_update(
-                    seatrac.CID_DAT_SEND, beacon_send.to_beacon, seatrac.CST_XCVR_BUSY
+                    seatrac.CommandId.DAT_SEND,
+                    beacon_send.to_beacon,
+                    seatrac.CommandStatus.TRANSCEIVER_BUSY,
                 )
             self.send_delay_ticker = self.send_delay_ticks
             return
@@ -320,7 +324,7 @@ class ModemConverterNode(Node):
 
         if is_command:
             # Transmission always succeeds in sim
-            self.publish_cmd_update(seatrac.CID_DAT_SEND, beacon_send.to_beacon)
+            self.publish_cmd_update(seatrac.CommandId.DAT_SEND, beacon_send.to_beacon)
 
         # A REQ holds the channel until its RESP arrives (or times out)
         if beacon_send.msg_type in seatrac.REQ_TO_RESP:
@@ -330,7 +334,10 @@ class ModemConverterNode(Node):
         self.send_delay_ticker = self.send_delay_ticks
 
     def publish_cmd_update(
-        self, msg_id: int, target_id: int, status: int = seatrac.CST_OK
+        self,
+        msg_id: seatrac.CommandId,
+        target_id: int,
+        status: seatrac.CommandStatus = seatrac.CommandStatus.OK,
     ) -> None:
         cmd_update = ModemCmdUpdate()
         cmd_update.header.stamp = self.get_clock().now().to_msg()

@@ -71,7 +71,7 @@ class ModemStatusConverterNode(Node):
         modem_status_msg = ModemStatus()
         modem_status_msg.header = imu_msg.header
 
-        modem_status_msg.msg_id = seatrac.CID_STATUS
+        modem_status_msg.msg_id = seatrac.CommandId.STATUS
         elapsed_ns = (self.get_clock().now() - self.start_time).nanoseconds
         modem_status_msg.timestamp = elapsed_ns // 1_000_000  # ms since start
 

@@ -12,37 +12,74 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-AMSGTYPE_TO_MSG_TYPE = {
-    0: "OWAY",
-    1: "OWAYU",
-    2: "MSG_REQ",
-    3: "MSG_RESP",
-    4: "MSG_REQU",
-    5: "MSG_RESPU",
-    6: "MSG_REQX",
-    7: "MSG_RESPX",
+from enum import IntEnum, StrEnum
+
+
+class AcousticMessageType(StrEnum):
+    ONE_WAY = "OWAY"
+    ONE_WAY_USBL = "OWAYU"
+    REQUEST = "MSG_REQ"
+    RESPONSE = "MSG_RESP"
+    REQUEST_USBL = "MSG_REQU"
+    RESPONSE_USBL = "MSG_RESPU"
+    REQUEST_EXTENDED = "MSG_REQX"
+    RESPONSE_EXTENDED = "MSG_RESPX"
+
+
+class CommandId(IntEnum):
+    STATUS = 0x10
+    DAT_SEND = 0x60
+    DAT_RECEIVE = 0x61
+    DAT_ERROR = 0x63
+    DAT_QUEUE_SET = 0x64
+
+
+class CommandStatus(IntEnum):
+    OK = 0x00
+    TRANSCEIVER_BUSY = 0x30
+    TRANSCEIVER_RESPONSE_TIMEOUT = 0x34
+
+
+AMSGTYPE_TO_MSG_TYPE: dict[int, AcousticMessageType] = {
+    0: AcousticMessageType.ONE_WAY,
+    1: AcousticMessageType.ONE_WAY_USBL,
+    2: AcousticMessageType.REQUEST,
+    3: AcousticMessageType.RESPONSE,
+    4: AcousticMessageType.REQUEST_USBL,
+    5: AcousticMessageType.RESPONSE_USBL,
+    6: AcousticMessageType.REQUEST_EXTENDED,
+    7: AcousticMessageType.RESPONSE_EXTENDED,
 }
 
-CID_STATUS = 0x10
-CID_DAT_SEND = 0x60
-CID_DAT_RECEIVE = 0x61
-CID_DAT_ERROR = 0x63
-CID_DAT_QUEUE_SET = 0x64
-
-CST_OK = 0x00
-CST_XCVR_BUSY = 0x30
-CST_XCVR_RESP_TIMEOUT = 0x34
-
-REQ_TO_RESP = {
-    "MSG_REQ": "MSG_RESP",
-    "MSG_REQU": "MSG_RESPU",
-    "MSG_REQX": "MSG_RESPX",
+REQ_TO_RESP: dict[AcousticMessageType, AcousticMessageType] = {
+    AcousticMessageType.REQUEST: AcousticMessageType.RESPONSE,
+    AcousticMessageType.REQUEST_USBL: AcousticMessageType.RESPONSE_USBL,
+    AcousticMessageType.REQUEST_EXTENDED: AcousticMessageType.RESPONSE_EXTENDED,
 }
-RESP_TYPES = set(REQ_TO_RESP.values())
+RESP_TYPES = frozenset(REQ_TO_RESP.values())
 
-HAS_USBL = {"OWAYU", "MSG_REQU", "MSG_RESPU", "MSG_REQX", "MSG_RESPX"}
-HAS_RANGE = {"MSG_RESP", "MSG_RESPU", "MSG_RESPX"}
-HAS_Z = {"MSG_RESPU", "MSG_RESPX"}
+HAS_USBL = frozenset(
+    {
+        AcousticMessageType.ONE_WAY_USBL,
+        AcousticMessageType.REQUEST_USBL,
+        AcousticMessageType.RESPONSE_USBL,
+        AcousticMessageType.REQUEST_EXTENDED,
+        AcousticMessageType.RESPONSE_EXTENDED,
+    }
+)
+HAS_RANGE = frozenset(
+    {
+        AcousticMessageType.RESPONSE,
+        AcousticMessageType.RESPONSE_USBL,
+        AcousticMessageType.RESPONSE_EXTENDED,
+    }
+)
+HAS_Z = frozenset(
+    {
+        AcousticMessageType.RESPONSE_USBL,
+        AcousticMessageType.RESPONSE_EXTENDED,
+    }
+)
 
 METERS_TO_DECIMETERS = 10.0
 DEGREES_TO_DECIDEGREES = 10.0

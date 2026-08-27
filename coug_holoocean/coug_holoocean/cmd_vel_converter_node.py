@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import math
+from enum import StrEnum
 
 import rclpy
 from geometry_msgs.msg import TwistStamped
@@ -20,8 +21,11 @@ from holoocean_interfaces.msg import AgentCommand
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 
-BLUEROV2 = "bluerov2"
-SURFACE_VESSEL = "surface_vessel"
+
+class AgentType(StrEnum):
+    BLUEROV2 = "bluerov2"
+    SURFACE_VESSEL = "surface_vessel"
+
 
 # BlueROV2.h/BlueROV2.cpp
 BR_LINEAR_DRAG = 11.5  # mass(11.5) × SetLinearDamping(1.0)
@@ -52,16 +56,14 @@ class CmdVelConverterNode(Node):
         super().__init__("cmd_vel_converter_node")
 
         self.declare_parameter("agent_name", "auv0")
-        self.declare_parameter("agent_type", BLUEROV2)
+        self.declare_parameter("agent_type", AgentType.BLUEROV2)
         self.declare_parameter("input_topic", "cmd_vel_out")
         self.declare_parameter("output_topic", "/command/agent")
 
         self.agent_name = (
             self.get_parameter("agent_name").get_parameter_value().string_value
         )
-        self.agent_type = (
-            self.get_parameter("agent_type").get_parameter_value().string_value
-        )
+        agent_type = self.get_parameter("agent_type").get_parameter_value().string_value
         input_topic = (
             self.get_parameter("input_topic").get_parameter_value().string_value
         )
@@ -69,11 +71,13 @@ class CmdVelConverterNode(Node):
             self.get_parameter("output_topic").get_parameter_value().string_value
         )
 
-        if self.agent_type not in (BLUEROV2, SURFACE_VESSEL):
+        try:
+            self.agent_type = AgentType(agent_type)
+        except ValueError as error:
             raise ValueError(
-                f"Unknown agent_type '{self.agent_type}' "
-                f"(expected '{BLUEROV2}' or '{SURFACE_VESSEL}')"
-            )
+                f"Unknown agent_type '{agent_type}' "
+                f"(expected '{AgentType.BLUEROV2}' or '{AgentType.SURFACE_VESSEL}')"
+            ) from error
 
         self.input_sub = self.create_subscription(
             TwistStamped,
@@ -85,7 +89,7 @@ class CmdVelConverterNode(Node):
             AgentCommand, output_topic, qos_profile_system_default
         )
 
-        if self.agent_type == BLUEROV2:
+        if self.agent_type == AgentType.BLUEROV2:
             self.thruster_limit = BR_MAX_THRUST
             self.h_scale = BR_H_SCALE
             self.v_scale = BR_V_SCALE
@@ -108,7 +112,7 @@ class CmdVelConverterNode(Node):
         agent_cmd.header.stamp = self.get_clock().now().to_msg()
         agent_cmd.header.frame_id = self.agent_name
 
-        if self.agent_type == BLUEROV2:
+        if self.agent_type == AgentType.BLUEROV2:
             raw_cmds = self.bluerov2_command(msg)
         else:
             raw_cmds = self.surface_vessel_command(msg)
