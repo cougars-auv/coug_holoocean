@@ -209,9 +209,9 @@ class ModemConverterNode(Node):
         if modem_rec.includes_position:
             # TODO: Fix RESPX remote depth reading in HoloOcean (not populated)
             modem_rec.position_enhanced = False
-            z = self.agent_depth - msg.range * math.sin(msg.elevation)
+            remote_depth = self.agent_depth - msg.range * math.sin(msg.elevation)
             modem_rec.position_depth = seatrac.clamp_int16(
-                z * seatrac.METERS_TO_DECIMETERS
+                remote_depth * seatrac.METERS_TO_DECIMETERS
             )
 
         payload = list(msg.msg_data[:30])
