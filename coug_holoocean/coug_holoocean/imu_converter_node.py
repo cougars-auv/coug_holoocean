@@ -128,7 +128,7 @@ class ImuConverterNode(Node):
             map_noise = [random.gauss(0, sigma) for sigma in self.ahrs_noise_sigmas]
             map_R_ahrs = Rotation.from_rotvec(map_noise) * map_R_ahrs
 
-        quat = map_R_ahrs.as_quat()
+        q = map_R_ahrs.as_quat()
 
         imu_msg.header.frame_id = self.imu_frame
 
@@ -174,10 +174,10 @@ class ImuConverterNode(Node):
         imu_msg.angular_velocity_covariance[4] = self.gyro_noise_sigmas[1] ** 2
         imu_msg.angular_velocity_covariance[8] = self.gyro_noise_sigmas[2] ** 2
 
-        imu_msg.orientation.x = quat[0]
-        imu_msg.orientation.y = quat[1]
-        imu_msg.orientation.z = quat[2]
-        imu_msg.orientation.w = quat[3]
+        imu_msg.orientation.x = q[0]
+        imu_msg.orientation.y = q[1]
+        imu_msg.orientation.z = q[2]
+        imu_msg.orientation.w = q[3]
 
         imu_msg.orientation_covariance[0] = self.ahrs_noise_sigmas[0] ** 2
         imu_msg.orientation_covariance[4] = self.ahrs_noise_sigmas[1] ** 2

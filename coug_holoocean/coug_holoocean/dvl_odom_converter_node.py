@@ -171,8 +171,8 @@ class DvlOdomConverterNode(Node):
         ned_y = map_T_dvl.position.x
         ned_z = -map_T_dvl.position.z
 
-        quat = map_T_dvl.orientation
-        enu_R_dvl = Rotation.from_quat([quat.x, quat.y, quat.z, quat.w])
+        q = map_T_dvl.orientation
+        enu_R_dvl = Rotation.from_quat([q.x, q.y, q.z, q.w])
         ned_R_dvl = _NED_R_ENU * enu_R_dvl
 
         stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9

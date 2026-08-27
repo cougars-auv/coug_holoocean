@@ -76,8 +76,8 @@ class ModemStatusConverterNode(Node):
         modem_status_msg.timestamp = elapsed_ns // 1_000_000  # ms since start
 
         # Convert ENU -> NED and FLU -> FRD
-        quat = imu_msg.orientation
-        enu_R_base = Rotation.from_quat([quat.x, quat.y, quat.z, quat.w])
+        q = imu_msg.orientation
+        enu_R_base = Rotation.from_quat([q.x, q.y, q.z, q.w])
         ned_R_beacon = _NED_R_ENU * enu_R_base * _FLU_R_FRD
         ned_roll, ned_pitch, ned_yaw = ned_R_beacon.as_euler("xyz", degrees=True)
 
