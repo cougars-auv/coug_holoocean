@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# AMSGTYPE_E enum values to HoloOcean msg_type strings
 AMSGTYPE_TO_MSG_TYPE = {
     0: "OWAY",
     1: "OWAYU",
@@ -24,19 +23,16 @@ AMSGTYPE_TO_MSG_TYPE = {
     7: "MSG_RESPX",
 }
 
-# Command identification codes (CID_E)
 CID_STATUS = 0x10
 CID_DAT_SEND = 0x60
 CID_DAT_RECEIVE = 0x61
 CID_DAT_ERROR = 0x63
 CID_DAT_QUEUE_SET = 0x64
 
-# Command status codes (CST_E)
 CST_OK = 0x00
 CST_XCVR_BUSY = 0x30
 CST_XCVR_RESP_TIMEOUT = 0x34
 
-# REQ message types and the RESP types that answer them
 REQ_TO_RESP = {
     "MSG_REQ": "MSG_RESP",
     "MSG_REQU": "MSG_RESPU",
@@ -44,7 +40,6 @@ REQ_TO_RESP = {
 }
 RESP_TYPES = set(REQ_TO_RESP.values())
 
-# Message types that carry USBL angles, range, and depth fields
 HAS_USBL = {"OWAYU", "MSG_REQU", "MSG_RESPU", "MSG_REQX", "MSG_RESPX"}
 HAS_RANGE = {"MSG_RESP", "MSG_RESPU", "MSG_RESPX"}
 HAS_Z = {"MSG_RESPU", "MSG_RESPX"}

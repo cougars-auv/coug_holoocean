@@ -189,7 +189,6 @@ class DvlOdomConverterNode(Node):
         if self.ref_stamp is None:
             self.ref_stamp = stamp
 
-        # The yaw estimate drifts from truth over time, dragging the position with it
         ref_R_ned = self.ref_rotation.inv()
         elapsed_minutes = (stamp - self.ref_stamp) / 60.0
         yaw_error = Rotation.from_euler(

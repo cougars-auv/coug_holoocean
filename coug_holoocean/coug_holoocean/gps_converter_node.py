@@ -103,9 +103,9 @@ class GpsConverterNode(Node):
         navsat_msg.longitude = lon
         navsat_msg.altitude = alt
 
-        navsat_msg.position_covariance[0] = self.noise_sigmas[0] ** 2  # East
-        navsat_msg.position_covariance[4] = self.noise_sigmas[1] ** 2  # North
-        navsat_msg.position_covariance[8] = self.noise_sigmas[2] ** 2  # Up
+        navsat_msg.position_covariance[0] = self.noise_sigmas[0] ** 2
+        navsat_msg.position_covariance[4] = self.noise_sigmas[1] ** 2
+        navsat_msg.position_covariance[8] = self.noise_sigmas[2] ** 2
         navsat_msg.position_covariance_type = navsat_msg.COVARIANCE_TYPE_DIAGONAL_KNOWN
 
         self.output_pub.publish(navsat_msg)
