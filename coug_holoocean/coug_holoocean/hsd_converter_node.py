@@ -74,7 +74,7 @@ class HsdConverterNode(Node):
         self.output_heading_pub.publish(self.create_desired_command_msg(msg.heading))
         self.output_speed_pub.publish(
             self.create_desired_command_msg(
-                max(MIN_SPEED_RPM, min(MAX_SPEED_RPM, msg.speed))
+                max(MIN_SPEED_RPM, min(MAX_SPEED_RPM, msg.speed_rpm))
             )
         )
         self.output_depth_pub.publish(
