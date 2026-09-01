@@ -34,14 +34,14 @@ def generate_launch_description() -> LaunchDescription:
     agent_ns = LaunchConfiguration("agent_ns")
     add_noise = LaunchConfiguration("add_noise")
 
-    fleet_params = PathJoinSubstitution(
+    fleet_param_file = PathJoinSubstitution(
         [
             EnvironmentVariable("CONFIG_DIR"),
             "fleet",
             "coug_holoocean_params.yaml",
         ]
     )
-    agent_params = PathJoinSubstitution(
+    agent_param_file = PathJoinSubstitution(
         [
             EnvironmentVariable("CONFIG_DIR"),
             PythonExpression(["'", agent_ns, "' + '_params.yaml'"]),
@@ -84,8 +84,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="depth_converter",
                 name="depth_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "depth_frame": depth_link_frame,
@@ -99,8 +99,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="pressure_converter",
                 name="pressure_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "depth_frame": depth_link_frame,
@@ -113,8 +113,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="gps_converter",
                 name="gps_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "gps_frame": gps_link_frame,
@@ -127,8 +127,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="cmd_vel_converter",
                 name="cmd_vel_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {"use_sim_time": use_sim_time, "agent_name": agent_name},
                 ],
             ),
@@ -137,8 +137,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="dvl_converter",
                 name="dvl_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "dvl_frame": dvl_link_frame,
@@ -151,8 +151,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="fin_state_publisher",
                 name="fin_state_publisher_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {"use_sim_time": use_sim_time},
                 ],
             ),
@@ -161,8 +161,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="truth_converter",
                 name="truth_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "base_frame": base_link_frame,
@@ -175,8 +175,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="dvl_odom_converter",
                 name="dvl_odom_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "base_frame": base_link_frame,
@@ -191,8 +191,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="hsd_converter",
                 name="hsd_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {"use_sim_time": use_sim_time, "agent_name": agent_name},
                 ],
             ),
@@ -201,8 +201,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="imu_converter",
                 name="imu_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "imu_frame": imu_link_frame,
@@ -216,8 +216,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="mag_converter",
                 name="mag_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "mag_frame": imu_link_frame,
@@ -231,8 +231,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="wrench_converter",
                 name="wrench_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "wrench_frame": com_link_frame,
@@ -244,8 +244,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="imu_converter",
                 name="modem_imu_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "imu_frame": modem_link_frame,
@@ -259,8 +259,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="depth_converter",
                 name="modem_depth_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "depth_frame": modem_link_frame,
@@ -274,8 +274,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="modem_status_converter",
                 name="modem_status_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                     },
@@ -286,8 +286,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="modem_converter",
                 name="modem_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "modem_frame": modem_link_frame,
@@ -300,8 +300,8 @@ def generate_launch_description() -> LaunchDescription:
                 executable="stereo_converter",
                 name="stereo_converter_node",
                 parameters=[
-                    fleet_params,
-                    agent_params,
+                    fleet_param_file,
+                    agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "front_stereo_frame": front_stereo_link_frame,
