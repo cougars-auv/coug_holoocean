@@ -23,6 +23,12 @@ from launch.substitutions import (
 from launch_ros.actions import Node
 
 
+def agent_frame(agent_ns: LaunchConfiguration, frame: str) -> PythonExpression:
+    return PythonExpression(
+        ["'", agent_ns, f"/{frame}' if '", agent_ns, f"' != '' else '{frame}'"]
+    )
+
+
 def generate_launch_description() -> LaunchDescription:
     use_sim_time = LaunchConfiguration("use_sim_time")
     agent_ns = LaunchConfiguration("agent_ns")
@@ -42,95 +48,15 @@ def generate_launch_description() -> LaunchDescription:
         ]
     )
 
-    base_link_frame = PythonExpression(
-        [
-            "'",
-            agent_ns,
-            "/base_link' if '",
-            agent_ns,
-            "' != '' else 'base_link'",
-        ]
-    )
-
-    com_link_frame = PythonExpression(
-        [
-            "'",
-            agent_ns,
-            "/com_link' if '",
-            agent_ns,
-            "' != '' else 'com_link'",
-        ]
-    )
-
-    imu_link_frame = PythonExpression(
-        [
-            "'",
-            agent_ns,
-            "/imu_link' if '",
-            agent_ns,
-            "' != '' else 'imu_link'",
-        ]
-    )
-
-    depth_link_frame = PythonExpression(
-        [
-            "'",
-            agent_ns,
-            "/depth_link' if '",
-            agent_ns,
-            "' != '' else 'depth_link'",
-        ]
-    )
-
-    modem_link_frame = PythonExpression(
-        [
-            "'",
-            agent_ns,
-            "/modem_link' if '",
-            agent_ns,
-            "' != '' else 'modem_link'",
-        ]
-    )
-
-    dvl_link_frame = PythonExpression(
-        [
-            "'",
-            agent_ns,
-            "/dvl_link' if '",
-            agent_ns,
-            "' != '' else 'dvl_link'",
-        ]
-    )
-
-    gps_link_frame = PythonExpression(
-        [
-            "'",
-            agent_ns,
-            "/gps_link' if '",
-            agent_ns,
-            "' != '' else 'gps_link'",
-        ]
-    )
-
-    front_stereo_link_frame = PythonExpression(
-        [
-            "'",
-            agent_ns,
-            "/front_stereo_link' if '",
-            agent_ns,
-            "' != '' else 'front_stereo_link'",
-        ]
-    )
-
-    back_stereo_link_frame = PythonExpression(
-        [
-            "'",
-            agent_ns,
-            "/back_stereo_link' if '",
-            agent_ns,
-            "' != '' else 'back_stereo_link'",
-        ]
-    )
+    base_link_frame = agent_frame(agent_ns, "base_link")
+    com_link_frame = agent_frame(agent_ns, "com_link")
+    imu_link_frame = agent_frame(agent_ns, "imu_link")
+    depth_link_frame = agent_frame(agent_ns, "depth_link")
+    modem_link_frame = agent_frame(agent_ns, "modem_link")
+    dvl_link_frame = agent_frame(agent_ns, "dvl_link")
+    gps_link_frame = agent_frame(agent_ns, "gps_link")
+    front_stereo_link_frame = agent_frame(agent_ns, "front_stereo_link")
+    back_stereo_link_frame = agent_frame(agent_ns, "back_stereo_link")
 
     agent_name = PythonExpression(
         ["'", agent_ns, "' if '", agent_ns, "' != '' else 'auv0'"]
