@@ -26,12 +26,8 @@ class FinStatePublisherNode(Node):
         self.declare_parameter("input_topic", "ControlCommand")
         self.declare_parameter("output_topic", "joint_states")
 
-        input_topic = (
-            self.get_parameter("input_topic").get_parameter_value().string_value
-        )
-        output_topic = (
-            self.get_parameter("output_topic").get_parameter_value().string_value
-        )
+        input_topic = self.get_parameter("input_topic").value
+        output_topic = self.get_parameter("output_topic").value
 
         self.joint_names = ["top_fin_joint", "left_fin_joint", "right_fin_joint"]
 

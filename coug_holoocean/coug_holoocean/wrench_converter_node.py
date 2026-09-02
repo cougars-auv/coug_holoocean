@@ -51,19 +51,11 @@ class WrenchConverterNode(Node):
         self.declare_parameter("wrench_topic", "cmd_wrench")
         self.declare_parameter("wrench_frame", "com_link")
 
-        control_topic = (
-            self.get_parameter("control_topic").get_parameter_value().string_value
-        )
-        odom_topic = self.get_parameter("odom_topic").get_parameter_value().string_value
-        wrench_raw_topic = (
-            self.get_parameter("wrench_raw_topic").get_parameter_value().string_value
-        )
-        wrench_topic = (
-            self.get_parameter("wrench_topic").get_parameter_value().string_value
-        )
-        self.wrench_frame = (
-            self.get_parameter("wrench_frame").get_parameter_value().string_value
-        )
+        control_topic = self.get_parameter("control_topic").value
+        odom_topic = self.get_parameter("odom_topic").value
+        wrench_raw_topic = self.get_parameter("wrench_raw_topic").value
+        wrench_topic = self.get_parameter("wrench_topic").value
+        self.wrench_frame = self.get_parameter("wrench_frame").value
 
         self.control_sub = self.create_subscription(
             AgentCommand,

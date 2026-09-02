@@ -33,23 +33,11 @@ class HsdConverterNode(Node):
         self.declare_parameter("output_speed_topic", "/speed")
         self.declare_parameter("output_depth_topic", "/depth")
 
-        self.agent_name = (
-            self.get_parameter("agent_name").get_parameter_value().string_value
-        )
-        self.hsd_topic = (
-            self.get_parameter("hsd_topic").get_parameter_value().string_value
-        )
-        self.output_heading_topic = (
-            self.get_parameter("output_heading_topic")
-            .get_parameter_value()
-            .string_value
-        )
-        self.output_speed_topic = (
-            self.get_parameter("output_speed_topic").get_parameter_value().string_value
-        )
-        self.output_depth_topic = (
-            self.get_parameter("output_depth_topic").get_parameter_value().string_value
-        )
+        self.agent_name = self.get_parameter("agent_name").value
+        self.hsd_topic = self.get_parameter("hsd_topic").value
+        self.output_heading_topic = self.get_parameter("output_heading_topic").value
+        self.output_speed_topic = self.get_parameter("output_speed_topic").value
+        self.output_depth_topic = self.get_parameter("output_depth_topic").value
 
         self.output_heading_pub = self.create_publisher(
             DesiredCommand, self.output_heading_topic, qos_profile_system_default

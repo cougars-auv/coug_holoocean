@@ -39,39 +39,15 @@ class DvlConverterNode(Node):
         self.declare_parameter("config_command_topic", "dvl/config/command")
         self.declare_parameter("dvl_frame", "dvl_link")
 
-        self.velocity_noise_sigmas = (
-            self.get_parameter("velocity_noise_sigmas")
-            .get_parameter_value()
-            .double_array_value
-        )
-        self.range_noise_sigma = (
-            self.get_parameter("range_noise_sigma").get_parameter_value().double_value
-        )
-        self.max_range = (
-            self.get_parameter("max_range").get_parameter_value().double_value
-        )
-        self.add_noise = (
-            self.get_parameter("add_noise").get_parameter_value().bool_value
-        )
-        velocity_input_topic = (
-            self.get_parameter("velocity_input_topic")
-            .get_parameter_value()
-            .string_value
-        )
-        range_input_topic = (
-            self.get_parameter("range_input_topic").get_parameter_value().string_value
-        )
-        output_topic = (
-            self.get_parameter("output_topic").get_parameter_value().string_value
-        )
-        config_command_topic = (
-            self.get_parameter("config_command_topic")
-            .get_parameter_value()
-            .string_value
-        )
-        self.dvl_frame = (
-            self.get_parameter("dvl_frame").get_parameter_value().string_value
-        )
+        self.velocity_noise_sigmas = self.get_parameter("velocity_noise_sigmas").value
+        self.range_noise_sigma = self.get_parameter("range_noise_sigma").value
+        self.max_range = self.get_parameter("max_range").value
+        self.add_noise = self.get_parameter("add_noise").value
+        velocity_input_topic = self.get_parameter("velocity_input_topic").value
+        range_input_topic = self.get_parameter("range_input_topic").value
+        output_topic = self.get_parameter("output_topic").value
+        config_command_topic = self.get_parameter("config_command_topic").value
+        self.dvl_frame = self.get_parameter("dvl_frame").value
 
         self.acoustic_enabled = True
         self.beam_ranges = None

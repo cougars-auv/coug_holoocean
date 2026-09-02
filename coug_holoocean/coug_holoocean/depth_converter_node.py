@@ -31,24 +31,12 @@ class DepthConverterNode(Node):
         self.declare_parameter("depth_frame", "depth_link")
         self.declare_parameter("map_frame", "map")
 
-        self.noise_sigma = (
-            self.get_parameter("noise_sigma").get_parameter_value().double_value
-        )
-        self.add_noise = (
-            self.get_parameter("add_noise").get_parameter_value().bool_value
-        )
-        input_topic = (
-            self.get_parameter("input_topic").get_parameter_value().string_value
-        )
-        output_topic = (
-            self.get_parameter("output_topic").get_parameter_value().string_value
-        )
-        self.depth_frame = (
-            self.get_parameter("depth_frame").get_parameter_value().string_value
-        )
-        self.map_frame = (
-            self.get_parameter("map_frame").get_parameter_value().string_value
-        )
+        self.noise_sigma = self.get_parameter("noise_sigma").value
+        self.add_noise = self.get_parameter("add_noise").value
+        input_topic = self.get_parameter("input_topic").value
+        output_topic = self.get_parameter("output_topic").value
+        self.depth_frame = self.get_parameter("depth_frame").value
+        self.map_frame = self.get_parameter("map_frame").value
 
         self.input_sub = self.create_subscription(
             Odometry, input_topic, self.odom_callback, qos_profile_system_default

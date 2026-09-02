@@ -60,16 +60,10 @@ class CmdVelConverterNode(Node):
         self.declare_parameter("input_topic", "cmd_vel_out")
         self.declare_parameter("output_topic", "/command/agent")
 
-        self.agent_name = (
-            self.get_parameter("agent_name").get_parameter_value().string_value
-        )
-        agent_type = self.get_parameter("agent_type").get_parameter_value().string_value
-        input_topic = (
-            self.get_parameter("input_topic").get_parameter_value().string_value
-        )
-        output_topic = (
-            self.get_parameter("output_topic").get_parameter_value().string_value
-        )
+        self.agent_name = self.get_parameter("agent_name").value
+        agent_type = self.get_parameter("agent_type").value
+        input_topic = self.get_parameter("input_topic").value
+        output_topic = self.get_parameter("output_topic").value
 
         try:
             self.agent_type = AgentType(agent_type)

@@ -44,38 +44,16 @@ class DvlOdomConverterNode(Node):
         self.declare_parameter("dvl_frame", "dvl_link")
         self.declare_parameter("map_frame", "map")
 
-        self.noise_sigma_scale = (
-            self.get_parameter("noise_sigma_scale").get_parameter_value().double_value
-        )
-        self.yaw_drift_sigma = (
-            self.get_parameter("yaw_drift_sigma").get_parameter_value().double_value
-        )
-        self.add_noise = (
-            self.get_parameter("add_noise").get_parameter_value().bool_value
-        )
-        self.tf_timeout_sec = (
-            self.get_parameter("tf_timeout_sec").get_parameter_value().double_value
-        )
-        input_topic = (
-            self.get_parameter("input_topic").get_parameter_value().string_value
-        )
-        output_topic = (
-            self.get_parameter("output_topic").get_parameter_value().string_value
-        )
-        config_command_topic = (
-            self.get_parameter("config_command_topic")
-            .get_parameter_value()
-            .string_value
-        )
-        self.base_frame = (
-            self.get_parameter("base_frame").get_parameter_value().string_value
-        )
-        self.dvl_frame = (
-            self.get_parameter("dvl_frame").get_parameter_value().string_value
-        )
-        self.map_frame = (
-            self.get_parameter("map_frame").get_parameter_value().string_value
-        )
+        self.noise_sigma_scale = self.get_parameter("noise_sigma_scale").value
+        self.yaw_drift_sigma = self.get_parameter("yaw_drift_sigma").value
+        self.add_noise = self.get_parameter("add_noise").value
+        self.tf_timeout_sec = self.get_parameter("tf_timeout_sec").value
+        input_topic = self.get_parameter("input_topic").value
+        output_topic = self.get_parameter("output_topic").value
+        config_command_topic = self.get_parameter("config_command_topic").value
+        self.base_frame = self.get_parameter("base_frame").value
+        self.dvl_frame = self.get_parameter("dvl_frame").value
+        self.map_frame = self.get_parameter("map_frame").value
 
         self.ref_position = (0.0, 0.0, 0.0)
         self.ref_rotation = Rotation.identity()

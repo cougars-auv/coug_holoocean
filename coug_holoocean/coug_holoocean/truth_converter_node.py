@@ -32,24 +32,12 @@ class TruthConverterNode(Node):
         self.declare_parameter("base_frame", "base_link")
         self.declare_parameter("map_frame", "map")
 
-        self.publish_tf = (
-            self.get_parameter("publish_tf").get_parameter_value().bool_value
-        )
-        self.tf_timeout_sec = (
-            self.get_parameter("tf_timeout_sec").get_parameter_value().double_value
-        )
-        input_topic = (
-            self.get_parameter("input_topic").get_parameter_value().string_value
-        )
-        output_topic = (
-            self.get_parameter("output_topic").get_parameter_value().string_value
-        )
-        self.base_frame = (
-            self.get_parameter("base_frame").get_parameter_value().string_value
-        )
-        self.map_frame = (
-            self.get_parameter("map_frame").get_parameter_value().string_value
-        )
+        self.publish_tf = self.get_parameter("publish_tf").value
+        self.tf_timeout_sec = self.get_parameter("tf_timeout_sec").value
+        input_topic = self.get_parameter("input_topic").value
+        output_topic = self.get_parameter("output_topic").value
+        self.base_frame = self.get_parameter("base_frame").value
+        self.map_frame = self.get_parameter("map_frame").value
 
         self.output_pub = self.create_publisher(
             Odometry, output_topic, qos_profile_system_default

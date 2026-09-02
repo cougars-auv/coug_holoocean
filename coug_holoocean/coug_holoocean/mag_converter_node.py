@@ -34,29 +34,15 @@ class MagConverterNode(Node):
         self.declare_parameter("bias_topic", "imu/mag/bias")
         self.declare_parameter("mag_frame", "imu_link")
 
-        self.au_to_tesla = (
-            self.get_parameter("au_to_tesla").get_parameter_value().double_value
-        )
-        self.noise_sigmas = (
-            self.get_parameter("noise_sigmas").get_parameter_value().double_array_value
-        )
-        self.add_noise = (
-            self.get_parameter("add_noise").get_parameter_value().bool_value
-        )
-        self.add_bias = self.get_parameter("add_bias").get_parameter_value().bool_value
-        self.bias_sigmas = (
-            self.get_parameter("bias_sigmas").get_parameter_value().double_array_value
-        )
-        input_topic = (
-            self.get_parameter("input_topic").get_parameter_value().string_value
-        )
-        output_topic = (
-            self.get_parameter("output_topic").get_parameter_value().string_value
-        )
-        bias_topic = self.get_parameter("bias_topic").get_parameter_value().string_value
-        self.mag_frame = (
-            self.get_parameter("mag_frame").get_parameter_value().string_value
-        )
+        self.au_to_tesla = self.get_parameter("au_to_tesla").value
+        self.noise_sigmas = self.get_parameter("noise_sigmas").value
+        self.add_noise = self.get_parameter("add_noise").value
+        self.add_bias = self.get_parameter("add_bias").value
+        self.bias_sigmas = self.get_parameter("bias_sigmas").value
+        input_topic = self.get_parameter("input_topic").value
+        output_topic = self.get_parameter("output_topic").value
+        bias_topic = self.get_parameter("bias_topic").value
+        self.mag_frame = self.get_parameter("mag_frame").value
 
         self.mag_bias = [
             random.gauss(0, sigma) if self.add_bias else 0.0

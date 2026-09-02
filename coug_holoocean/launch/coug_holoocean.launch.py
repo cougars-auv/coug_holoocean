@@ -57,6 +57,7 @@ def generate_launch_description() -> LaunchDescription:
     gps_link_frame = agent_frame(agent_ns, "gps_link")
     front_stereo_link_frame = agent_frame(agent_ns, "front_stereo_link")
     back_stereo_link_frame = agent_frame(agent_ns, "back_stereo_link")
+    depth_camera_link_frame = agent_frame(agent_ns, "depth_camera_link")
 
     agent_name = PythonExpression(
         ["'", agent_ns, "' if '", agent_ns, "' != '' else 'auv0'"]
@@ -306,6 +307,19 @@ def generate_launch_description() -> LaunchDescription:
                         "use_sim_time": use_sim_time,
                         "front_stereo_frame": front_stereo_link_frame,
                         "back_stereo_frame": back_stereo_link_frame,
+                    },
+                ],
+            ),
+            Node(
+                package="coug_holoocean",
+                executable="depth_camera_converter",
+                name="depth_camera_converter_node",
+                parameters=[
+                    fleet_param_file,
+                    agent_param_file,
+                    {
+                        "use_sim_time": use_sim_time,
+                        "depth_camera_frame": depth_camera_link_frame,
                     },
                 ],
             ),

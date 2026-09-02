@@ -35,30 +35,14 @@ class GpsConverterNode(Node):
         self.declare_parameter("output_topic", "gps/fix")
         self.declare_parameter("gps_frame", "gps_link")
 
-        self.origin_lat = (
-            self.get_parameter("origin_latitude").get_parameter_value().double_value
-        )
-        self.origin_lon = (
-            self.get_parameter("origin_longitude").get_parameter_value().double_value
-        )
-        self.origin_alt = (
-            self.get_parameter("origin_altitude").get_parameter_value().double_value
-        )
-        self.noise_sigmas = (
-            self.get_parameter("noise_sigmas").get_parameter_value().double_array_value
-        )
-        self.add_noise = (
-            self.get_parameter("add_noise").get_parameter_value().bool_value
-        )
-        input_topic = (
-            self.get_parameter("input_topic").get_parameter_value().string_value
-        )
-        output_topic = (
-            self.get_parameter("output_topic").get_parameter_value().string_value
-        )
-        self.gps_frame = (
-            self.get_parameter("gps_frame").get_parameter_value().string_value
-        )
+        self.origin_lat = self.get_parameter("origin_latitude").value
+        self.origin_lon = self.get_parameter("origin_longitude").value
+        self.origin_alt = self.get_parameter("origin_altitude").value
+        self.noise_sigmas = self.get_parameter("noise_sigmas").value
+        self.add_noise = self.get_parameter("add_noise").value
+        input_topic = self.get_parameter("input_topic").value
+        output_topic = self.get_parameter("output_topic").value
+        self.gps_frame = self.get_parameter("gps_frame").value
 
         self.input_sub = self.create_subscription(
             Odometry, input_topic, self.odom_callback, qos_profile_system_default

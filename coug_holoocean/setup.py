@@ -38,6 +38,7 @@ setup(
             "dvl_odom_converter = coug_holoocean.dvl_odom_converter_node:main",
             "wrench_converter = coug_holoocean.wrench_converter_node:main",
             "stereo_converter = coug_holoocean.stereo_converter_node:main",
+            "depth_camera_converter = coug_holoocean.depth_camera_converter_node:main",
             "truth_converter = coug_holoocean.truth_converter_node:main",
             "fin_state_publisher = coug_holoocean.fin_state_publisher_node:main",
             "cmd_vel_converter = coug_holoocean.cmd_vel_converter_node:main",

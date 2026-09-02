@@ -45,55 +45,21 @@ class ModemConverterNode(Node):
         self.declare_parameter("depth_topic", "modem/depth/odometry")
         self.declare_parameter("modem_frame", "modem_link")
 
-        self.tick_period_sec = (
-            self.get_parameter("tick_period_sec").get_parameter_value().double_value
-        )
-        self.send_delay_sec = (
-            self.get_parameter("send_delay_sec").get_parameter_value().double_value
-        )
-        self.resp_delay_sec = (
-            self.get_parameter("resp_delay_sec").get_parameter_value().double_value
-        )
-        self.resp_timeout_sec = (
-            self.get_parameter("resp_timeout_sec").get_parameter_value().double_value
-        )
-        self.beacon_id = (
-            self.get_parameter("beacon_id").get_parameter_value().integer_value
-        )
-        self.bearing_noise_sigmas = (
-            self.get_parameter("bearing_noise_sigmas")
-            .get_parameter_value()
-            .double_array_value
-        )
-        self.range_noise_sigma = (
-            self.get_parameter("range_noise_sigma").get_parameter_value().double_value
-        )
-        self.add_noise = (
-            self.get_parameter("add_noise").get_parameter_value().bool_value
-        )
-        beacon_rec_topic = (
-            self.get_parameter("beacon_rec_topic").get_parameter_value().string_value
-        )
-        beacon_send_topic = (
-            self.get_parameter("beacon_send_topic").get_parameter_value().string_value
-        )
-        modem_rec_topic = (
-            self.get_parameter("modem_rec_topic").get_parameter_value().string_value
-        )
-        modem_send_topic = (
-            self.get_parameter("modem_send_topic").get_parameter_value().string_value
-        )
-        modem_cmd_update_topic = (
-            self.get_parameter("modem_cmd_update_topic")
-            .get_parameter_value()
-            .string_value
-        )
-        depth_topic = (
-            self.get_parameter("depth_topic").get_parameter_value().string_value
-        )
-        self.modem_frame = (
-            self.get_parameter("modem_frame").get_parameter_value().string_value
-        )
+        self.tick_period_sec = self.get_parameter("tick_period_sec").value
+        self.send_delay_sec = self.get_parameter("send_delay_sec").value
+        self.resp_delay_sec = self.get_parameter("resp_delay_sec").value
+        self.resp_timeout_sec = self.get_parameter("resp_timeout_sec").value
+        self.beacon_id = self.get_parameter("beacon_id").value
+        self.bearing_noise_sigmas = self.get_parameter("bearing_noise_sigmas").value
+        self.range_noise_sigma = self.get_parameter("range_noise_sigma").value
+        self.add_noise = self.get_parameter("add_noise").value
+        beacon_rec_topic = self.get_parameter("beacon_rec_topic").value
+        beacon_send_topic = self.get_parameter("beacon_send_topic").value
+        modem_rec_topic = self.get_parameter("modem_rec_topic").value
+        modem_send_topic = self.get_parameter("modem_send_topic").value
+        modem_cmd_update_topic = self.get_parameter("modem_cmd_update_topic").value
+        depth_topic = self.get_parameter("depth_topic").value
+        self.modem_frame = self.get_parameter("modem_frame").value
 
         self.send_delay_ticks = max(
             1, round(self.send_delay_sec / self.tick_period_sec)

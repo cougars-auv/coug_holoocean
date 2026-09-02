@@ -42,51 +42,19 @@ class ImuConverterNode(Node):
         self.declare_parameter("bias_topic", "imu/bias")
         self.declare_parameter("imu_frame", "imu_link")
 
-        sync_slop_sec = (
-            self.get_parameter("sync_slop_sec").get_parameter_value().double_value
-        )
-        self.accel_noise_sigmas = (
-            self.get_parameter("accel_noise_sigmas")
-            .get_parameter_value()
-            .double_array_value
-        )
-        self.gyro_noise_sigmas = (
-            self.get_parameter("gyro_noise_sigmas")
-            .get_parameter_value()
-            .double_array_value
-        )
-        self.ahrs_noise_sigmas = (
-            self.get_parameter("ahrs_noise_sigmas")
-            .get_parameter_value()
-            .double_array_value
-        )
-        self.add_noise = (
-            self.get_parameter("add_noise").get_parameter_value().bool_value
-        )
-        self.add_bias = self.get_parameter("add_bias").get_parameter_value().bool_value
-        self.accel_bias_rw_sigmas = (
-            self.get_parameter("accel_bias_rw_sigmas")
-            .get_parameter_value()
-            .double_array_value
-        )
-        self.gyro_bias_rw_sigmas = (
-            self.get_parameter("gyro_bias_rw_sigmas")
-            .get_parameter_value()
-            .double_array_value
-        )
-        imu_input_topic = (
-            self.get_parameter("imu_input_topic").get_parameter_value().string_value
-        )
-        ahrs_input_topic = (
-            self.get_parameter("ahrs_input_topic").get_parameter_value().string_value
-        )
-        output_topic = (
-            self.get_parameter("output_topic").get_parameter_value().string_value
-        )
-        bias_topic = self.get_parameter("bias_topic").get_parameter_value().string_value
-        self.imu_frame = (
-            self.get_parameter("imu_frame").get_parameter_value().string_value
-        )
+        sync_slop_sec = self.get_parameter("sync_slop_sec").value
+        self.accel_noise_sigmas = self.get_parameter("accel_noise_sigmas").value
+        self.gyro_noise_sigmas = self.get_parameter("gyro_noise_sigmas").value
+        self.ahrs_noise_sigmas = self.get_parameter("ahrs_noise_sigmas").value
+        self.add_noise = self.get_parameter("add_noise").value
+        self.add_bias = self.get_parameter("add_bias").value
+        self.accel_bias_rw_sigmas = self.get_parameter("accel_bias_rw_sigmas").value
+        self.gyro_bias_rw_sigmas = self.get_parameter("gyro_bias_rw_sigmas").value
+        imu_input_topic = self.get_parameter("imu_input_topic").value
+        ahrs_input_topic = self.get_parameter("ahrs_input_topic").value
+        output_topic = self.get_parameter("output_topic").value
+        bias_topic = self.get_parameter("bias_topic").value
+        self.imu_frame = self.get_parameter("imu_frame").value
 
         self.accel_bias = [0.0, 0.0, 0.0]
         self.gyro_bias = [0.0, 0.0, 0.0]
