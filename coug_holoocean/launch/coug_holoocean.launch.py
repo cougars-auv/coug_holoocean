@@ -48,16 +48,16 @@ def generate_launch_description() -> LaunchDescription:
         ]
     )
 
-    base_link_frame = agent_frame(agent_ns, "base_link")
-    com_link_frame = agent_frame(agent_ns, "com_link")
-    imu_link_frame = agent_frame(agent_ns, "imu_link")
+    depth_camera_link_frame = agent_frame(agent_ns, "depth_camera_link")
     depth_link_frame = agent_frame(agent_ns, "depth_link")
-    modem_link_frame = agent_frame(agent_ns, "modem_link")
     dvl_link_frame = agent_frame(agent_ns, "dvl_link")
+    base_link_frame = agent_frame(agent_ns, "base_link")
     gps_link_frame = agent_frame(agent_ns, "gps_link")
+    imu_link_frame = agent_frame(agent_ns, "imu_link")
+    modem_link_frame = agent_frame(agent_ns, "modem_link")
     front_stereo_link_frame = agent_frame(agent_ns, "front_stereo_link")
     back_stereo_link_frame = agent_frame(agent_ns, "back_stereo_link")
-    depth_camera_link_frame = agent_frame(agent_ns, "depth_camera_link")
+    com_link_frame = agent_frame(agent_ns, "com_link")
 
     agent_name = PythonExpression(
         ["'", agent_ns, "' if '", agent_ns, "' != '' else 'auv0'"]
@@ -82,6 +82,29 @@ def generate_launch_description() -> LaunchDescription:
             ),
             Node(
                 package="coug_holoocean",
+                executable="cmd_vel_converter",
+                name="cmd_vel_converter_node",
+                parameters=[
+                    fleet_param_file,
+                    agent_param_file,
+                    {"use_sim_time": use_sim_time, "agent_name": agent_name},
+                ],
+            ),
+            Node(
+                package="coug_holoocean",
+                executable="depth_camera_converter",
+                name="depth_camera_converter_node",
+                parameters=[
+                    fleet_param_file,
+                    agent_param_file,
+                    {
+                        "use_sim_time": use_sim_time,
+                        "depth_camera_frame": depth_camera_link_frame,
+                    },
+                ],
+            ),
+            Node(
+                package="coug_holoocean",
                 executable="depth_converter",
                 name="depth_converter_node",
                 parameters=[
@@ -93,44 +116,6 @@ def generate_launch_description() -> LaunchDescription:
                         "map_frame": "map",
                         "add_noise": add_noise,
                     },
-                ],
-            ),
-            Node(
-                package="coug_holoocean",
-                executable="pressure_converter",
-                name="pressure_converter_node",
-                parameters=[
-                    fleet_param_file,
-                    agent_param_file,
-                    {
-                        "use_sim_time": use_sim_time,
-                        "depth_frame": depth_link_frame,
-                        "add_noise": add_noise,
-                    },
-                ],
-            ),
-            Node(
-                package="coug_holoocean",
-                executable="gps_converter",
-                name="gps_converter_node",
-                parameters=[
-                    fleet_param_file,
-                    agent_param_file,
-                    {
-                        "use_sim_time": use_sim_time,
-                        "gps_frame": gps_link_frame,
-                        "add_noise": add_noise,
-                    },
-                ],
-            ),
-            Node(
-                package="coug_holoocean",
-                executable="cmd_vel_converter",
-                name="cmd_vel_converter_node",
-                parameters=[
-                    fleet_param_file,
-                    agent_param_file,
-                    {"use_sim_time": use_sim_time, "agent_name": agent_name},
                 ],
             ),
             Node(
@@ -149,30 +134,6 @@ def generate_launch_description() -> LaunchDescription:
             ),
             Node(
                 package="coug_holoocean",
-                executable="fin_state_publisher",
-                name="fin_state_publisher_node",
-                parameters=[
-                    fleet_param_file,
-                    agent_param_file,
-                    {"use_sim_time": use_sim_time},
-                ],
-            ),
-            Node(
-                package="coug_holoocean",
-                executable="truth_converter",
-                name="truth_converter_node",
-                parameters=[
-                    fleet_param_file,
-                    agent_param_file,
-                    {
-                        "use_sim_time": use_sim_time,
-                        "base_frame": base_link_frame,
-                        "map_frame": "map",
-                    },
-                ],
-            ),
-            Node(
-                package="coug_holoocean",
                 executable="dvl_odom_converter",
                 name="dvl_odom_converter_node",
                 parameters=[
@@ -183,6 +144,30 @@ def generate_launch_description() -> LaunchDescription:
                         "base_frame": base_link_frame,
                         "dvl_frame": dvl_link_frame,
                         "map_frame": "map",
+                        "add_noise": add_noise,
+                    },
+                ],
+            ),
+            Node(
+                package="coug_holoocean",
+                executable="fin_state_publisher",
+                name="fin_state_publisher_node",
+                parameters=[
+                    fleet_param_file,
+                    agent_param_file,
+                    {"use_sim_time": use_sim_time},
+                ],
+            ),
+            Node(
+                package="coug_holoocean",
+                executable="gps_converter",
+                name="gps_converter_node",
+                parameters=[
+                    fleet_param_file,
+                    agent_param_file,
+                    {
+                        "use_sim_time": use_sim_time,
+                        "gps_frame": gps_link_frame,
                         "add_noise": add_noise,
                     },
                 ],
@@ -229,29 +214,15 @@ def generate_launch_description() -> LaunchDescription:
             ),
             Node(
                 package="coug_holoocean",
-                executable="wrench_converter",
-                name="wrench_converter_node",
+                executable="modem_converter",
+                name="modem_converter_node",
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
-                        "wrench_frame": com_link_frame,
-                    },
-                ],
-            ),
-            Node(
-                package="coug_holoocean",
-                executable="imu_converter",
-                name="modem_imu_converter_node",
-                parameters=[
-                    fleet_param_file,
-                    agent_param_file,
-                    {
-                        "use_sim_time": use_sim_time,
-                        "imu_frame": modem_link_frame,
+                        "modem_frame": modem_link_frame,
                         "add_noise": add_noise,
-                        "add_bias": add_noise,
                     },
                 ],
             ),
@@ -272,6 +243,21 @@ def generate_launch_description() -> LaunchDescription:
             ),
             Node(
                 package="coug_holoocean",
+                executable="imu_converter",
+                name="modem_imu_converter_node",
+                parameters=[
+                    fleet_param_file,
+                    agent_param_file,
+                    {
+                        "use_sim_time": use_sim_time,
+                        "imu_frame": modem_link_frame,
+                        "add_noise": add_noise,
+                        "add_bias": add_noise,
+                    },
+                ],
+            ),
+            Node(
+                package="coug_holoocean",
                 executable="modem_status_converter",
                 name="modem_status_converter_node",
                 parameters=[
@@ -284,14 +270,14 @@ def generate_launch_description() -> LaunchDescription:
             ),
             Node(
                 package="coug_holoocean",
-                executable="modem_converter",
-                name="modem_converter_node",
+                executable="pressure_converter",
+                name="pressure_converter_node",
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
-                        "modem_frame": modem_link_frame,
+                        "depth_frame": depth_link_frame,
                         "add_noise": add_noise,
                     },
                 ],
@@ -312,14 +298,28 @@ def generate_launch_description() -> LaunchDescription:
             ),
             Node(
                 package="coug_holoocean",
-                executable="depth_camera_converter",
-                name="depth_camera_converter_node",
+                executable="truth_converter",
+                name="truth_converter_node",
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
-                        "depth_camera_frame": depth_camera_link_frame,
+                        "base_frame": base_link_frame,
+                        "map_frame": "map",
+                    },
+                ],
+            ),
+            Node(
+                package="coug_holoocean",
+                executable="wrench_converter",
+                name="wrench_converter_node",
+                parameters=[
+                    fleet_param_file,
+                    agent_param_file,
+                    {
+                        "use_sim_time": use_sim_time,
+                        "wrench_frame": com_link_frame,
                     },
                 ],
             ),
