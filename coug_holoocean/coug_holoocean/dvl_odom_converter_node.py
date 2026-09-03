@@ -175,11 +175,17 @@ class DvlOdomConverterNode(Node):
 
         if self.last_position is None:
             self.dr_position = ref_R_ned.apply(
-                [pos - ref for pos, ref in zip(ned_position, self.ref_position)]
+                [
+                    pos - ref
+                    for pos, ref in zip(ned_position, self.ref_position, strict=True)
+                ]
             )
         else:
             delta_position = ref_R_ned.apply(
-                [pos - last for pos, last in zip(ned_position, self.last_position)]
+                [
+                    pos - last
+                    for pos, last in zip(ned_position, self.last_position, strict=True)
+                ]
             )
             self.distance_traveled += math.dist(ned_position, self.last_position)
             self.dr_position += yaw_error.apply(delta_position) * (

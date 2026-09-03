@@ -87,10 +87,7 @@ class WrenchConverterNode(Node):
 
         # Assuming no spool up/down delays
         force_x_raw = C1 * abs(n_rps) * n_rps
-        if n_rps > 0:
-            force_x = force_x_raw + C2 * n_rps * self.speed
-        else:
-            force_x = force_x_raw
+        force_x = force_x_raw + C2 * n_rps * self.speed if n_rps > 0 else force_x_raw
 
         raw_wrench_msg = WrenchStamped()
         raw_wrench_msg.header.stamp = msg.header.stamp
