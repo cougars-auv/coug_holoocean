@@ -23,7 +23,7 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data, qos_profile_system_default
 from scipy.spatial.transform import Rotation
 from tf2_geometry_msgs import do_transform_pose
-from tf2_ros import Buffer, TransformListener
+from tf2_ros import Buffer, TransformException, TransformListener
 
 _NED_R_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv()
 _FLU_R_FRD = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
@@ -109,7 +109,7 @@ class DvlOdomConverterNode(Node):
                 self.map_frame,
                 timeout=rclpy.duration.Duration(seconds=self.tf_timeout_sec),
             )
-        except Exception as e:  # noqa: BLE001
+        except TransformException as e:
             self.get_logger().warn(
                 f"Could not transform {msg.header.frame_id} to {self.map_frame}: {e}",
                 throttle_duration_sec=1.0,
@@ -120,7 +120,7 @@ class DvlOdomConverterNode(Node):
             base_T_dvl_tf = self.tf_buffer.lookup_transform(
                 self.base_frame, self.dvl_frame, rclpy.time.Time()
             )
-        except Exception as e:  # noqa: BLE001
+        except TransformException as e:
             self.get_logger().warn(
                 f"Could not transform {self.base_frame} to {self.dvl_frame}: {e}",
                 throttle_duration_sec=1.0,

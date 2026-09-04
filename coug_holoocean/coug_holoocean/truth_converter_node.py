@@ -18,7 +18,7 @@ from geometry_msgs.msg import PoseStamped, TransformStamped
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
-from tf2_ros import Buffer, TransformBroadcaster, TransformListener
+from tf2_ros import Buffer, TransformBroadcaster, TransformException, TransformListener
 
 
 class TruthConverterNode(Node):
@@ -64,7 +64,7 @@ class TruthConverterNode(Node):
                 self.map_frame,
                 timeout=rclpy.duration.Duration(seconds=self.tf_timeout_sec),
             )
-        except Exception as e:  # noqa: BLE001
+        except TransformException as e:
             self.get_logger().warn(
                 f"Could not transform {msg.header.frame_id} to {self.map_frame}: {e}",
                 throttle_duration_sec=1.0,
