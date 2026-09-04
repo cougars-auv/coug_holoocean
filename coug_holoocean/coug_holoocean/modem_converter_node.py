@@ -113,10 +113,10 @@ class ModemConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def depth_callback(self, msg: Odometry) -> None:
+    def _depth_callback(self, msg: Odometry) -> None:
         self._agent_depth = -msg.pose.pose.position.z
 
-    def beacon_callback(self, msg: AcousticBeaconSensor) -> None:
+    def _beacon_callback(self, msg: AcousticBeaconSensor) -> None:
         self._publish_modem_rec(msg)
 
         # The real beacon firmware answers REQ messages with the queued data
@@ -132,7 +132,7 @@ class ModemConverterNode(Node):
             self._pending_resp_ticker = 0
             self._attempt_send()
 
-    def publish_modem_rec(self, msg: AcousticBeaconSensor) -> None:
+    def _publish_modem_rec(self, msg: AcousticBeaconSensor) -> None:
         modem_rec = ModemRec()
         modem_rec.header.stamp = msg.header.stamp
         modem_rec.header.frame_id = self._modem_frame
@@ -186,7 +186,7 @@ class ModemConverterNode(Node):
 
         self._modem_rec_pub.publish(modem_rec)
 
-    def queue_auto_response(self, msg: AcousticBeaconSensor) -> None:
+    def _queue_auto_response(self, msg: AcousticBeaconSensor) -> None:
         # Consume any payload staged for the requester (or for all beacons)
         queued = self._dat_queue.pop(int(msg.from_beacon), None) or self._dat_queue.pop(
             0, None
@@ -206,7 +206,7 @@ class ModemConverterNode(Node):
             self._pending_auto_responses.append([resp, self._resp_delay_ticks])
         self._attempt_send()
 
-    def modem_send_callback(self, msg: ModemSend) -> None:
+    def _modem_send_callback(self, msg: ModemSend) -> None:
         if msg.msg_id == seatrac.CommandId.DAT_QUEUE_SET:
             self._set_dat_queue(msg)
             return
@@ -229,7 +229,7 @@ class ModemConverterNode(Node):
         self._send_queue.append((beacon_send, True))
         self._attempt_send()
 
-    def set_dat_queue(self, msg: ModemSend) -> None:
+    def _set_dat_queue(self, msg: ModemSend) -> None:
         payload = list(msg.packet_data[: msg.packet_len])
         if payload:
             self._dat_queue[int(msg.dest_id)] = payload
@@ -238,7 +238,7 @@ class ModemConverterNode(Node):
 
         self._publish_cmd_update(seatrac.CommandId.DAT_QUEUE_SET, msg.dest_id)
 
-    def tick_callback(self) -> None:
+    def _tick_callback(self) -> None:
         # A REQ that never gets a RESP eventually times out and frees the channel
         if self._pending_resp_target is not None:
             self._pending_resp_ticker += 1
@@ -257,7 +257,7 @@ class ModemConverterNode(Node):
         if self._send_delay_ticker > 0:
             self._send_delay_ticker -= 1
 
-    def release_auto_responses(self) -> None:
+    def _release_auto_responses(self) -> None:
         ready = []
         for item in self._pending_auto_responses:
             item[1] -= 1
@@ -268,7 +268,7 @@ class ModemConverterNode(Node):
             self._pending_auto_responses.remove(item)
             self._send_queue.append((item[0], False))
 
-    def attempt_send(self) -> None:
+    def _attempt_send(self) -> None:
         if not self._send_queue or self._send_delay_ticker > 0:
             return
 
@@ -299,7 +299,7 @@ class ModemConverterNode(Node):
 
         self._send_delay_ticker = self._send_delay_ticks
 
-    def publish_cmd_update(
+    def _publish_cmd_update(
         self,
         msg_id: seatrac.CommandId,
         target_id: int,

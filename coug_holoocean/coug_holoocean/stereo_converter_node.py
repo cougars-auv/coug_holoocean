@@ -74,7 +74,7 @@ class StereoConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def sync_callback(self, front_msg: Image, back_msg: Image) -> None:
+    def _sync_callback(self, front_msg: Image, back_msg: Image) -> None:
         back_msg.header.stamp = front_msg.header.stamp
 
         front_msg.header.frame_id = self._front_stereo_frame
@@ -89,7 +89,7 @@ class StereoConverterNode(Node):
         back_info_msg = self._create_camera_info_msg(back_msg)
         self._back_info_pub.publish(back_info_msg)
 
-    def create_camera_info_msg(self, image_msg: Image) -> CameraInfo:
+    def _create_camera_info_msg(self, image_msg: Image) -> CameraInfo:
         info = CameraInfo()
         info.header = image_msg.header
         info.height = image_msg.height

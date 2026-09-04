@@ -53,7 +53,7 @@ class PressureConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def odom_callback(self, msg: Odometry) -> None:
+    def _odom_callback(self, msg: Odometry) -> None:
         depth = -msg.pose.pose.position.z
 
         # pressure [Pa] = depth [m] * rho [kg/m^3] * g [m/s^2] + atmospheric_pressure [Pa]

@@ -84,7 +84,7 @@ class ImuConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def sync_callback(self, imu_msg: Imu, ahrs_msg: Vector3Stamped) -> None:
+    def _sync_callback(self, imu_msg: Imu, ahrs_msg: Vector3Stamped) -> None:
         roll_rad = math.radians(ahrs_msg.vector.x)
         pitch_rad = math.radians(ahrs_msg.vector.y)
         yaw_rad = math.radians(ahrs_msg.vector.z)

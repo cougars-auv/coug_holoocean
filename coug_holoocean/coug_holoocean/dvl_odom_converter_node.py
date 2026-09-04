@@ -82,7 +82,7 @@ class DvlOdomConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def reset_drift(self) -> None:
+    def _reset_drift(self) -> None:
         self._distance_traveled = 0.0
         self._scale_error = 0.0
         self._yaw_drift_rate = 0.0
@@ -91,14 +91,14 @@ class DvlOdomConverterNode(Node):
             self._scale_error = random.gauss(0, self._noise_sigma_scale)
             self._yaw_drift_rate = random.gauss(0, self._yaw_drift_sigma)
 
-    def config_callback(self, msg: ConfigCommand) -> None:
+    def _config_callback(self, msg: ConfigCommand) -> None:
         if msg.command != "reset_dead_reckoning":
             return
 
         self._reset_pending = True
         self.get_logger().info("DVL dead reckoning reset.")
 
-    def odom_callback(self, msg: Odometry) -> None:
+    def _odom_callback(self, msg: Odometry) -> None:
         holo_T_base = PoseStamped()
         holo_T_base.header = msg.header
         holo_T_base.pose = msg.pose.pose

@@ -53,7 +53,7 @@ class TruthConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def odom_callback(self, msg: Odometry) -> None:
+    def _odom_callback(self, msg: Odometry) -> None:
         holo_T_base = PoseStamped()
         holo_T_base.header = msg.header
         holo_T_base.pose = msg.pose.pose

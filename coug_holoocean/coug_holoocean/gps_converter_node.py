@@ -54,7 +54,7 @@ class GpsConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def odom_callback(self, msg: Odometry) -> None:
+    def _odom_callback(self, msg: Odometry) -> None:
         navsat_msg = NavSatFix()
         navsat_msg.header.stamp = msg.header.stamp
         navsat_msg.header.frame_id = self._gps_frame

@@ -47,7 +47,7 @@ class DepthConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def odom_callback(self, msg: Odometry) -> None:
+    def _odom_callback(self, msg: Odometry) -> None:
         msg.header.frame_id = self._map_frame
         msg.child_frame_id = self._depth_frame
 

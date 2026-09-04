@@ -80,7 +80,7 @@ class WrenchConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def control_callback(self, msg: AgentCommand) -> None:
+    def _control_callback(self, msg: AgentCommand) -> None:
         thruster_rpm = msg.command[-1]
 
         n_rps = thruster_rpm / 60.0
@@ -101,7 +101,7 @@ class WrenchConverterNode(Node):
         wrench_msg.wrench.force.x = force_x
         self._wrench_pub.publish(wrench_msg)
 
-    def odom_callback(self, msg: Odometry) -> None:
+    def _odom_callback(self, msg: Odometry) -> None:
         linear = msg.twist.twist.linear
         self._speed = math.sqrt(linear.x**2 + linear.y**2 + linear.z**2)
 

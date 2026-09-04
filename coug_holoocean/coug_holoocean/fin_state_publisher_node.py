@@ -43,10 +43,10 @@ class FinStatePublisherNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def command_callback(self, msg: AgentCommand) -> None:
+    def _command_callback(self, msg: AgentCommand) -> None:
         self._output_pub.publish(self._create_joint_state_msg(msg))
 
-    def create_joint_state_msg(self, msg: AgentCommand) -> JointState:
+    def _create_joint_state_msg(self, msg: AgentCommand) -> JointState:
         joint_state = JointState()
         joint_state.header.stamp = msg.header.stamp
         joint_state.name = self._joint_names

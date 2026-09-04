@@ -76,10 +76,10 @@ class DvlConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def range_callback(self, msg: DVLSensorRange) -> None:
+    def _range_callback(self, msg: DVLSensorRange) -> None:
         self._beam_ranges = msg.range
 
-    def config_callback(self, msg: ConfigCommand) -> None:
+    def _config_callback(self, msg: ConfigCommand) -> None:
         if msg.command != "set_config" or msg.parameter_name != "acoustic_enabled":
             return
 
@@ -88,7 +88,7 @@ class DvlConverterNode(Node):
             f"DVL acoustics {'enabled' if self._acoustic_enabled else 'disabled'}."
         )
 
-    def twist_callback(self, msg: TwistWithCovarianceStamped) -> None:
+    def _twist_callback(self, msg: TwistWithCovarianceStamped) -> None:
         if not self._acoustic_enabled:
             return
 
@@ -137,7 +137,7 @@ class DvlConverterNode(Node):
 
         self._output_pub.publish(dvl_msg)
 
-    def create_beam_msgs(self, ranges: list[float]) -> list[DVLBeam]:
+    def _create_beam_msgs(self, ranges: list[float]) -> list[DVLBeam]:
         beams = []
         for beam_id, beam_range in enumerate(ranges):
             beam = DVLBeam()

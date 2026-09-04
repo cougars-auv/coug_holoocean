@@ -66,7 +66,7 @@ class MagConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def mag_callback(self, msg: MagneticField) -> None:
+    def _mag_callback(self, msg: MagneticField) -> None:
         msg.header.frame_id = self._mag_frame
 
         if self._add_bias:

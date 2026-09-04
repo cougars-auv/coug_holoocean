@@ -98,10 +98,10 @@ class CmdVelConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def twist_callback(self, msg: TwistStamped) -> None:
+    def _twist_callback(self, msg: TwistStamped) -> None:
         self._output_pub.publish(self._create_agent_command_msg(msg))
 
-    def create_agent_command_msg(self, msg: TwistStamped) -> AgentCommand:
+    def _create_agent_command_msg(self, msg: TwistStamped) -> AgentCommand:
         agent_cmd = AgentCommand()
         agent_cmd.header.stamp = self.get_clock().now().to_msg()
         agent_cmd.header.frame_id = self._agent_name
@@ -121,7 +121,7 @@ class CmdVelConverterNode(Node):
         agent_cmd.command = final_cmds
         return agent_cmd
 
-    def bluerov2_command(self, msg: TwistStamped) -> list[float]:
+    def _bluerov2_command(self, msg: TwistStamped) -> list[float]:
         # Assuming no quadratic drag
         fwd = msg.twist.linear.x * self._h_scale
         lat = msg.twist.linear.y * self._h_scale
@@ -141,7 +141,7 @@ class CmdVelConverterNode(Node):
 
         return [cmd_0, cmd_1, cmd_2, cmd_3, cmd_4, cmd_5, cmd_6, cmd_7]
 
-    def surface_vessel_command(self, msg: TwistStamped) -> list[float]:
+    def _surface_vessel_command(self, msg: TwistStamped) -> list[float]:
         # Assuming no quadratic drag
         fwd = msg.twist.linear.x * self._h_scale
         yaw = msg.twist.angular.z * self._y_scale
