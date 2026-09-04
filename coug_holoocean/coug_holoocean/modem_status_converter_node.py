@@ -43,36 +43,36 @@ class ModemStatusConverterNode(Node):
         depth_input_topic = self.get_parameter("depth_input_topic").value
         output_topic = self.get_parameter("output_topic").value
 
-        self.start_time = self.get_clock().now()
+        self._start_time = self.get_clock().now()
 
-        self.imu_sub = message_filters.Subscriber(
+        self._imu_sub = message_filters.Subscriber(
             self, Imu, imu_input_topic, qos_profile=qos_profile_system_default
         )
-        self.depth_sub = message_filters.Subscriber(
+        self._depth_sub = message_filters.Subscriber(
             self, Odometry, depth_input_topic, qos_profile=qos_profile_system_default
         )
 
-        self.time_sync = message_filters.ApproximateTimeSynchronizer(
-            [self.imu_sub, self.depth_sub], queue_size=10, slop=sync_slop_sec
+        self._time_sync = message_filters.ApproximateTimeSynchronizer(
+            [self._imu_sub, self._depth_sub], queue_size=10, slop=sync_slop_sec
         )
-        self.time_sync.registerCallback(self.sync_callback)
+        self._time_sync.registerCallback(self._sync_callback)
 
         # Reliable QoS to match BYU-FROST-Lab/seatrac-ros2
-        self.output_pub = self.create_publisher(
+        self._output_pub = self.create_publisher(
             ModemStatus, output_topic, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
 
     def sync_callback(self, imu_msg: Imu, depth_msg: Odometry) -> None:
-        self.output_pub.publish(self.create_modem_status_msg(imu_msg, depth_msg))
+        self._output_pub.publish(self._create_modem_status_msg(imu_msg, depth_msg))
 
     def create_modem_status_msg(self, imu_msg: Imu, depth_msg: Odometry) -> ModemStatus:
         modem_status_msg = ModemStatus()
         modem_status_msg.header = imu_msg.header
 
         modem_status_msg.msg_id = seatrac.CommandId.STATUS
-        elapsed_ns = (self.get_clock().now() - self.start_time).nanoseconds
+        elapsed_ns = (self.get_clock().now() - self._start_time).nanoseconds
         modem_status_msg.timestamp = elapsed_ns // 1_000_000  # ms since start
 
         # Convert ENU -> NED and FLU -> FRD

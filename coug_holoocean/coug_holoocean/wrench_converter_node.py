@@ -55,28 +55,28 @@ class WrenchConverterNode(Node):
         odom_topic = self.get_parameter("odom_topic").value
         wrench_raw_topic = self.get_parameter("wrench_raw_topic").value
         wrench_topic = self.get_parameter("wrench_topic").value
-        self.wrench_frame = self.get_parameter("wrench_frame").value
+        self._wrench_frame = self.get_parameter("wrench_frame").value
 
-        self.control_sub = self.create_subscription(
+        self._control_sub = self.create_subscription(
             AgentCommand,
             control_topic,
-            self.control_callback,
+            self._control_callback,
             qos_profile_system_default,
         )
-        self.odom_sub = self.create_subscription(
+        self._odom_sub = self.create_subscription(
             Odometry,
             odom_topic,
-            self.odom_callback,
+            self._odom_callback,
             qos_profile_system_default,
         )
-        self.wrench_raw_pub = self.create_publisher(
+        self._wrench_raw_pub = self.create_publisher(
             WrenchStamped, wrench_raw_topic, qos_profile_system_default
         )
-        self.wrench_pub = self.create_publisher(
+        self._wrench_pub = self.create_publisher(
             WrenchStamped, wrench_topic, qos_profile_system_default
         )
 
-        self.speed = 0.0
+        self._speed = 0.0
 
         self.get_logger().info("Initialization complete.")
 
@@ -87,23 +87,23 @@ class WrenchConverterNode(Node):
 
         # Assuming no spool up/down delays
         force_x_raw = C1 * abs(n_rps) * n_rps
-        force_x = force_x_raw + C2 * n_rps * self.speed if n_rps > 0 else force_x_raw
+        force_x = force_x_raw + C2 * n_rps * self._speed if n_rps > 0 else force_x_raw
 
         raw_wrench_msg = WrenchStamped()
         raw_wrench_msg.header.stamp = msg.header.stamp
-        raw_wrench_msg.header.frame_id = self.wrench_frame
+        raw_wrench_msg.header.frame_id = self._wrench_frame
         raw_wrench_msg.wrench.force.x = force_x_raw
-        self.wrench_raw_pub.publish(raw_wrench_msg)
+        self._wrench_raw_pub.publish(raw_wrench_msg)
 
         wrench_msg = WrenchStamped()
         wrench_msg.header.stamp = msg.header.stamp
-        wrench_msg.header.frame_id = self.wrench_frame
+        wrench_msg.header.frame_id = self._wrench_frame
         wrench_msg.wrench.force.x = force_x
-        self.wrench_pub.publish(wrench_msg)
+        self._wrench_pub.publish(wrench_msg)
 
     def odom_callback(self, msg: Odometry) -> None:
         linear = msg.twist.twist.linear
-        self.speed = math.sqrt(linear.x**2 + linear.y**2 + linear.z**2)
+        self._speed = math.sqrt(linear.x**2 + linear.y**2 + linear.z**2)
 
 
 def main(args: list[str] | None = None) -> None:

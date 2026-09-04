@@ -32,23 +32,23 @@ class TruthConverterNode(Node):
         self.declare_parameter("base_frame", "base_link")
         self.declare_parameter("map_frame", "map")
 
-        self.publish_tf = self.get_parameter("publish_tf").value
-        self.tf_timeout_sec = self.get_parameter("tf_timeout_sec").value
+        self._publish_tf = self.get_parameter("publish_tf").value
+        self._tf_timeout_sec = self.get_parameter("tf_timeout_sec").value
         input_topic = self.get_parameter("input_topic").value
         output_topic = self.get_parameter("output_topic").value
-        self.base_frame = self.get_parameter("base_frame").value
-        self.map_frame = self.get_parameter("map_frame").value
+        self._base_frame = self.get_parameter("base_frame").value
+        self._map_frame = self.get_parameter("map_frame").value
 
-        self.output_pub = self.create_publisher(
+        self._output_pub = self.create_publisher(
             Odometry, output_topic, qos_profile_system_default
         )
 
-        self.tf_buffer = Buffer()
-        self.tf_listener = TransformListener(self.tf_buffer, self)
-        self.tf_broadcaster = TransformBroadcaster(self)
+        self._tf_buffer = Buffer()
+        self._tf_listener = TransformListener(self._tf_buffer, self)
+        self._tf_broadcaster = TransformBroadcaster(self)
 
-        self.input_sub = self.create_subscription(
-            Odometry, input_topic, self.odom_callback, qos_profile_system_default
+        self._input_sub = self.create_subscription(
+            Odometry, input_topic, self._odom_callback, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
@@ -59,38 +59,38 @@ class TruthConverterNode(Node):
         holo_T_base.pose = msg.pose.pose
 
         try:
-            map_T_base = self.tf_buffer.transform(
+            map_T_base = self._tf_buffer.transform(
                 holo_T_base,
-                self.map_frame,
-                timeout=rclpy.duration.Duration(seconds=self.tf_timeout_sec),
+                self._map_frame,
+                timeout=rclpy.duration.Duration(seconds=self._tf_timeout_sec),
             )
         except TransformException as e:
             self.get_logger().warn(
-                f"Could not transform {msg.header.frame_id} to {self.map_frame}: {e}",
+                f"Could not transform {msg.header.frame_id} to {self._map_frame}: {e}",
                 throttle_duration_sec=1.0,
             )
             return
 
         odom_msg = Odometry()
         odom_msg.header.stamp = msg.header.stamp
-        odom_msg.header.frame_id = self.map_frame
-        odom_msg.child_frame_id = self.base_frame
+        odom_msg.header.frame_id = self._map_frame
+        odom_msg.child_frame_id = self._base_frame
         odom_msg.pose.pose = map_T_base.pose
         odom_msg.pose.covariance = msg.pose.covariance
         odom_msg.twist.covariance = msg.twist.covariance
 
-        self.output_pub.publish(odom_msg)
+        self._output_pub.publish(odom_msg)
 
-        if self.publish_tf:
+        if self._publish_tf:
             map_T_base_tf = TransformStamped()
             map_T_base_tf.header.stamp = msg.header.stamp
-            map_T_base_tf.header.frame_id = self.map_frame
-            map_T_base_tf.child_frame_id = self.base_frame
+            map_T_base_tf.header.frame_id = self._map_frame
+            map_T_base_tf.child_frame_id = self._base_frame
             map_T_base_tf.transform.translation.x = map_T_base.pose.position.x
             map_T_base_tf.transform.translation.y = map_T_base.pose.position.y
             map_T_base_tf.transform.translation.z = map_T_base.pose.position.z
             map_T_base_tf.transform.rotation = map_T_base.pose.orientation
-            self.tf_broadcaster.sendTransform(map_T_base_tf)
+            self._tf_broadcaster.sendTransform(map_T_base_tf)
 
 
 def main(args: list[str] | None = None) -> None:

@@ -44,58 +44,58 @@ class DvlOdomConverterNode(Node):
         self.declare_parameter("dvl_frame", "dvl_link")
         self.declare_parameter("map_frame", "map")
 
-        self.noise_sigma_scale = self.get_parameter("noise_sigma_scale").value
-        self.yaw_drift_sigma = self.get_parameter("yaw_drift_sigma").value
-        self.add_noise = self.get_parameter("add_noise").value
-        self.tf_timeout_sec = self.get_parameter("tf_timeout_sec").value
+        self._noise_sigma_scale = self.get_parameter("noise_sigma_scale").value
+        self._yaw_drift_sigma = self.get_parameter("yaw_drift_sigma").value
+        self._add_noise = self.get_parameter("add_noise").value
+        self._tf_timeout_sec = self.get_parameter("tf_timeout_sec").value
         input_topic = self.get_parameter("input_topic").value
         output_topic = self.get_parameter("output_topic").value
         config_command_topic = self.get_parameter("config_command_topic").value
-        self.base_frame = self.get_parameter("base_frame").value
-        self.dvl_frame = self.get_parameter("dvl_frame").value
-        self.map_frame = self.get_parameter("map_frame").value
+        self._base_frame = self.get_parameter("base_frame").value
+        self._dvl_frame = self.get_parameter("dvl_frame").value
+        self._map_frame = self.get_parameter("map_frame").value
 
-        self.ref_position = (0.0, 0.0, 0.0)
-        self.ref_rotation = Rotation.identity()
-        self.ref_stamp = None
-        self.last_position = None
-        self.dr_position = (0.0, 0.0, 0.0)
-        self.reset_pending = False
-        self.reset_drift()
+        self._ref_position = (0.0, 0.0, 0.0)
+        self._ref_rotation = Rotation.identity()
+        self._ref_stamp = None
+        self._last_position = None
+        self._dr_position = (0.0, 0.0, 0.0)
+        self._reset_pending = False
+        self._reset_drift()
 
-        self.output_pub = self.create_publisher(
+        self._output_pub = self.create_publisher(
             DVLDR, output_topic, qos_profile_sensor_data
         )
 
-        self.tf_buffer = Buffer()
-        self.tf_listener = TransformListener(self.tf_buffer, self)
+        self._tf_buffer = Buffer()
+        self._tf_listener = TransformListener(self._tf_buffer, self)
 
-        self.input_sub = self.create_subscription(
-            Odometry, input_topic, self.odom_callback, qos_profile_system_default
+        self._input_sub = self.create_subscription(
+            Odometry, input_topic, self._odom_callback, qos_profile_system_default
         )
-        self.config_sub = self.create_subscription(
+        self._config_sub = self.create_subscription(
             ConfigCommand,
             config_command_topic,
-            self.config_callback,
+            self._config_callback,
             qos_profile_sensor_data,
         )
 
         self.get_logger().info("Initialization complete.")
 
     def reset_drift(self) -> None:
-        self.distance_traveled = 0.0
-        self.scale_error = 0.0
-        self.yaw_drift_rate = 0.0
+        self._distance_traveled = 0.0
+        self._scale_error = 0.0
+        self._yaw_drift_rate = 0.0
 
-        if self.add_noise:
-            self.scale_error = random.gauss(0, self.noise_sigma_scale)
-            self.yaw_drift_rate = random.gauss(0, self.yaw_drift_sigma)
+        if self._add_noise:
+            self._scale_error = random.gauss(0, self._noise_sigma_scale)
+            self._yaw_drift_rate = random.gauss(0, self._yaw_drift_sigma)
 
     def config_callback(self, msg: ConfigCommand) -> None:
         if msg.command != "reset_dead_reckoning":
             return
 
-        self.reset_pending = True
+        self._reset_pending = True
         self.get_logger().info("DVL dead reckoning reset.")
 
     def odom_callback(self, msg: Odometry) -> None:
@@ -104,25 +104,25 @@ class DvlOdomConverterNode(Node):
         holo_T_base.pose = msg.pose.pose
 
         try:
-            map_T_base = self.tf_buffer.transform(
+            map_T_base = self._tf_buffer.transform(
                 holo_T_base,
-                self.map_frame,
-                timeout=rclpy.duration.Duration(seconds=self.tf_timeout_sec),
+                self._map_frame,
+                timeout=rclpy.duration.Duration(seconds=self._tf_timeout_sec),
             )
         except TransformException as e:
             self.get_logger().warn(
-                f"Could not transform {msg.header.frame_id} to {self.map_frame}: {e}",
+                f"Could not transform {msg.header.frame_id} to {self._map_frame}: {e}",
                 throttle_duration_sec=1.0,
             )
             return
 
         try:
-            base_T_dvl_tf = self.tf_buffer.lookup_transform(
-                self.base_frame, self.dvl_frame, rclpy.time.Time()
+            base_T_dvl_tf = self._tf_buffer.lookup_transform(
+                self._base_frame, self._dvl_frame, rclpy.time.Time()
             )
         except TransformException as e:
             self.get_logger().warn(
-                f"Could not transform {self.base_frame} to {self.dvl_frame}: {e}",
+                f"Could not transform {self._base_frame} to {self._dvl_frame}: {e}",
                 throttle_duration_sec=1.0,
             )
             return
@@ -130,7 +130,7 @@ class DvlOdomConverterNode(Node):
         # Transform the base pose to the DVL pose, both in the map frame
         map_T_base_tf = TransformStamped()
         map_T_base_tf.header = map_T_base.header
-        map_T_base_tf.child_frame_id = self.base_frame
+        map_T_base_tf.child_frame_id = self._base_frame
         map_T_base_tf.transform.translation.x = map_T_base.pose.position.x
         map_T_base_tf.transform.translation.y = map_T_base.pose.position.y
         map_T_base_tf.transform.translation.z = map_T_base.pose.position.z
@@ -156,45 +156,45 @@ class DvlOdomConverterNode(Node):
         stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
         ned_position = (ned_x, ned_y, ned_z)
 
-        if self.reset_pending:
-            self.ref_position = ned_position
-            self.ref_rotation = ned_R_dvl
-            self.ref_stamp = stamp
-            self.last_position = None
-            self.reset_drift()
-            self.reset_pending = False
+        if self._reset_pending:
+            self._ref_position = ned_position
+            self._ref_rotation = ned_R_dvl
+            self._ref_stamp = stamp
+            self._last_position = None
+            self._reset_drift()
+            self._reset_pending = False
 
-        if self.ref_stamp is None:
-            self.ref_stamp = stamp
+        if self._ref_stamp is None:
+            self._ref_stamp = stamp
 
-        ref_R_ned = self.ref_rotation.inv()
-        elapsed_minutes = (stamp - self.ref_stamp) / 60.0
+        ref_R_ned = self._ref_rotation.inv()
+        elapsed_minutes = (stamp - self._ref_stamp) / 60.0
         yaw_error = Rotation.from_euler(
-            "z", self.yaw_drift_rate * elapsed_minutes, degrees=True
+            "z", self._yaw_drift_rate * elapsed_minutes, degrees=True
         )
 
-        if self.last_position is None:
-            self.dr_position = ref_R_ned.apply(
+        if self._last_position is None:
+            self._dr_position = ref_R_ned.apply(
                 [
                     pos - ref
-                    for pos, ref in zip(ned_position, self.ref_position, strict=True)
+                    for pos, ref in zip(ned_position, self._ref_position, strict=True)
                 ]
             )
         else:
             delta_position = ref_R_ned.apply(
                 [
                     pos - last
-                    for pos, last in zip(ned_position, self.last_position, strict=True)
+                    for pos, last in zip(ned_position, self._last_position, strict=True)
                 ]
             )
-            self.distance_traveled += math.dist(ned_position, self.last_position)
-            self.dr_position += yaw_error.apply(delta_position) * (
-                1.0 + self.scale_error
+            self._distance_traveled += math.dist(ned_position, self._last_position)
+            self._dr_position += yaw_error.apply(delta_position) * (
+                1.0 + self._scale_error
             )
 
-        self.last_position = ned_position
+        self._last_position = ned_position
 
-        ned_x, ned_y, ned_z = self.dr_position
+        ned_x, ned_y, ned_z = self._dr_position
         ned_R_dvl = yaw_error * ref_R_ned * ned_R_dvl
 
         # Convert FLU -> FRD
@@ -204,18 +204,18 @@ class DvlOdomConverterNode(Node):
 
         dvl_msg = DVLDR()
         dvl_msg.header.stamp = msg.header.stamp
-        dvl_msg.header.frame_id = self.dvl_frame
+        dvl_msg.header.frame_id = self._dvl_frame
         dvl_msg.time = stamp
         dvl_msg.position.x = ned_x
         dvl_msg.position.y = ned_y
         dvl_msg.position.z = ned_z
-        dvl_msg.pos_std = self.noise_sigma_scale * self.distance_traveled
+        dvl_msg.pos_std = self._noise_sigma_scale * self._distance_traveled
         dvl_msg.roll = ned_roll
         dvl_msg.pitch = ned_pitch
         dvl_msg.yaw = ned_yaw
         dvl_msg.status = 0
 
-        self.output_pub.publish(dvl_msg)
+        self._output_pub.publish(dvl_msg)
 
 
 def main(args: list[str] | None = None) -> None:

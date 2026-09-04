@@ -35,20 +35,20 @@ class GpsConverterNode(Node):
         self.declare_parameter("output_topic", "gps/fix")
         self.declare_parameter("gps_frame", "gps_link")
 
-        self.origin_lat = self.get_parameter("origin_latitude").value
-        self.origin_lon = self.get_parameter("origin_longitude").value
-        self.origin_alt = self.get_parameter("origin_altitude").value
-        self.noise_sigmas = self.get_parameter("noise_sigmas").value
-        self.add_noise = self.get_parameter("add_noise").value
+        self._origin_lat = self.get_parameter("origin_latitude").value
+        self._origin_lon = self.get_parameter("origin_longitude").value
+        self._origin_alt = self.get_parameter("origin_altitude").value
+        self._noise_sigmas = self.get_parameter("noise_sigmas").value
+        self._add_noise = self.get_parameter("add_noise").value
         input_topic = self.get_parameter("input_topic").value
         output_topic = self.get_parameter("output_topic").value
-        self.gps_frame = self.get_parameter("gps_frame").value
+        self._gps_frame = self.get_parameter("gps_frame").value
 
-        self.input_sub = self.create_subscription(
-            Odometry, input_topic, self.odom_callback, qos_profile_system_default
+        self._input_sub = self.create_subscription(
+            Odometry, input_topic, self._odom_callback, qos_profile_system_default
         )
         # Reliable QoS to match SBG-SYSTEMS/sbg_ros2_driver
-        self.output_pub = self.create_publisher(
+        self._output_pub = self.create_publisher(
             NavSatFix, output_topic, qos_profile_system_default
         )
 
@@ -57,14 +57,14 @@ class GpsConverterNode(Node):
     def odom_callback(self, msg: Odometry) -> None:
         navsat_msg = NavSatFix()
         navsat_msg.header.stamp = msg.header.stamp
-        navsat_msg.header.frame_id = self.gps_frame
+        navsat_msg.header.frame_id = self._gps_frame
         navsat_msg.status.status = navsat_msg.status.STATUS_FIX
         navsat_msg.status.service = navsat_msg.status.SERVICE_GPS
 
-        if self.add_noise:
-            d_east = msg.pose.pose.position.x + random.gauss(0, self.noise_sigmas[0])
-            d_north = msg.pose.pose.position.y + random.gauss(0, self.noise_sigmas[1])
-            d_up = msg.pose.pose.position.z + random.gauss(0, self.noise_sigmas[2])
+        if self._add_noise:
+            d_east = msg.pose.pose.position.x + random.gauss(0, self._noise_sigmas[0])
+            d_north = msg.pose.pose.position.y + random.gauss(0, self._noise_sigmas[1])
+            d_up = msg.pose.pose.position.z + random.gauss(0, self._noise_sigmas[2])
         else:
             d_east = msg.pose.pose.position.x
             d_north = msg.pose.pose.position.y
@@ -75,9 +75,9 @@ class GpsConverterNode(Node):
                 e=d_east,
                 n=d_north,
                 u=d_up,
-                lat0=self.origin_lat,
-                lon0=self.origin_lon,
-                h0=self.origin_alt,
+                lat0=self._origin_lat,
+                lon0=self._origin_lon,
+                h0=self._origin_alt,
             )
         except (TypeError, ValueError) as e:
             self.get_logger().error(f"Failed ENU to geodetic conversion: {e}")
@@ -87,12 +87,12 @@ class GpsConverterNode(Node):
         navsat_msg.longitude = lon
         navsat_msg.altitude = alt
 
-        navsat_msg.position_covariance[0] = self.noise_sigmas[0] ** 2
-        navsat_msg.position_covariance[4] = self.noise_sigmas[1] ** 2
-        navsat_msg.position_covariance[8] = self.noise_sigmas[2] ** 2
+        navsat_msg.position_covariance[0] = self._noise_sigmas[0] ** 2
+        navsat_msg.position_covariance[4] = self._noise_sigmas[1] ** 2
+        navsat_msg.position_covariance[8] = self._noise_sigmas[2] ** 2
         navsat_msg.position_covariance_type = navsat_msg.COVARIANCE_TYPE_DIAGONAL_KNOWN
 
-        self.output_pub.publish(navsat_msg)
+        self._output_pub.publish(navsat_msg)
 
 
 def main(args: list[str] | None = None) -> None:

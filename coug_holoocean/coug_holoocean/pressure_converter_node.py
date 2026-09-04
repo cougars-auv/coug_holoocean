@@ -34,20 +34,20 @@ class PressureConverterNode(Node):
         self.declare_parameter("output_topic", "pressure/data")
         self.declare_parameter("depth_frame", "depth_link")
 
-        self.water_density = self.get_parameter("water_density").value
-        self.gravity = self.get_parameter("gravity").value
-        self.atmospheric_pressure = self.get_parameter("atmospheric_pressure").value
-        self.noise_sigma = self.get_parameter("noise_sigma").value
-        self.add_noise = self.get_parameter("add_noise").value
+        self._water_density = self.get_parameter("water_density").value
+        self._gravity = self.get_parameter("gravity").value
+        self._atmospheric_pressure = self.get_parameter("atmospheric_pressure").value
+        self._noise_sigma = self.get_parameter("noise_sigma").value
+        self._add_noise = self.get_parameter("add_noise").value
         input_topic = self.get_parameter("input_topic").value
         output_topic = self.get_parameter("output_topic").value
-        self.depth_frame = self.get_parameter("depth_frame").value
+        self._depth_frame = self.get_parameter("depth_frame").value
 
-        self.input_sub = self.create_subscription(
-            Odometry, input_topic, self.odom_callback, qos_profile_system_default
+        self._input_sub = self.create_subscription(
+            Odometry, input_topic, self._odom_callback, qos_profile_system_default
         )
         # Reliable QoS to match BYU-FROST-Lab/pressure_sensor_ros2
-        self.output_pub = self.create_publisher(
+        self._output_pub = self.create_publisher(
             FluidPressure, output_topic, qos_profile_system_default
         )
 
@@ -57,19 +57,19 @@ class PressureConverterNode(Node):
         depth = -msg.pose.pose.position.z
 
         # pressure [Pa] = depth [m] * rho [kg/m^3] * g [m/s^2] + atmospheric_pressure [Pa]
-        rho_g = self.water_density * self.gravity
-        pressure = depth * rho_g + self.atmospheric_pressure
+        rho_g = self._water_density * self._gravity
+        pressure = depth * rho_g + self._atmospheric_pressure
 
         pressure_msg = FluidPressure()
         pressure_msg.header.stamp = msg.header.stamp
-        pressure_msg.header.frame_id = self.depth_frame
+        pressure_msg.header.frame_id = self._depth_frame
         pressure_msg.fluid_pressure = pressure
-        pressure_msg.variance = self.noise_sigma * self.noise_sigma
+        pressure_msg.variance = self._noise_sigma * self._noise_sigma
 
-        if self.add_noise:
-            pressure_msg.fluid_pressure += random.gauss(0, self.noise_sigma)
+        if self._add_noise:
+            pressure_msg.fluid_pressure += random.gauss(0, self._noise_sigma)
 
-        self.output_pub.publish(pressure_msg)
+        self._output_pub.publish(pressure_msg)
 
 
 def main(args: list[str] | None = None) -> None:

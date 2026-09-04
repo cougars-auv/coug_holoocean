@@ -34,72 +34,72 @@ class MagConverterNode(Node):
         self.declare_parameter("bias_topic", "imu/mag/bias")
         self.declare_parameter("mag_frame", "imu_link")
 
-        self.au_to_tesla = self.get_parameter("au_to_tesla").value
-        self.noise_sigmas = self.get_parameter("noise_sigmas").value
-        self.add_noise = self.get_parameter("add_noise").value
-        self.add_bias = self.get_parameter("add_bias").value
-        self.bias_sigmas = self.get_parameter("bias_sigmas").value
+        self._au_to_tesla = self.get_parameter("au_to_tesla").value
+        self._noise_sigmas = self.get_parameter("noise_sigmas").value
+        self._add_noise = self.get_parameter("add_noise").value
+        self._add_bias = self.get_parameter("add_bias").value
+        self._bias_sigmas = self.get_parameter("bias_sigmas").value
         input_topic = self.get_parameter("input_topic").value
         output_topic = self.get_parameter("output_topic").value
         bias_topic = self.get_parameter("bias_topic").value
-        self.mag_frame = self.get_parameter("mag_frame").value
+        self._mag_frame = self.get_parameter("mag_frame").value
 
-        self.mag_bias = [
-            random.gauss(0, sigma) if self.add_bias else 0.0
-            for sigma in self.bias_sigmas
+        self._mag_bias = [
+            random.gauss(0, sigma) if self._add_bias else 0.0
+            for sigma in self._bias_sigmas
         ]
 
-        self.input_sub = self.create_subscription(
+        self._input_sub = self.create_subscription(
             MagneticField,
             input_topic,
-            self.mag_callback,
+            self._mag_callback,
             qos_profile_system_default,
         )
         # Reliable QoS to match SBG-SYSTEMS/sbg_ros2_driver
-        self.output_pub = self.create_publisher(
+        self._output_pub = self.create_publisher(
             MagneticField, output_topic, qos_profile_system_default
         )
 
-        self.bias_pub = self.create_publisher(
+        self._bias_pub = self.create_publisher(
             MagneticField, bias_topic, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
 
     def mag_callback(self, msg: MagneticField) -> None:
-        msg.header.frame_id = self.mag_frame
+        msg.header.frame_id = self._mag_frame
 
-        if self.add_bias:
-            msg.magnetic_field.x += self.mag_bias[0]
-            msg.magnetic_field.y += self.mag_bias[1]
-            msg.magnetic_field.z += self.mag_bias[2]
+        if self._add_bias:
+            msg.magnetic_field.x += self._mag_bias[0]
+            msg.magnetic_field.y += self._mag_bias[1]
+            msg.magnetic_field.z += self._mag_bias[2]
 
-        if self.add_noise:
-            msg.magnetic_field.x += random.gauss(0, self.noise_sigmas[0])
-            msg.magnetic_field.y += random.gauss(0, self.noise_sigmas[1])
-            msg.magnetic_field.z += random.gauss(0, self.noise_sigmas[2])
+        if self._add_noise:
+            msg.magnetic_field.x += random.gauss(0, self._noise_sigmas[0])
+            msg.magnetic_field.y += random.gauss(0, self._noise_sigmas[1])
+            msg.magnetic_field.z += random.gauss(0, self._noise_sigmas[2])
 
-        msg.magnetic_field_covariance[0] = self.noise_sigmas[0] ** 2
-        msg.magnetic_field_covariance[4] = self.noise_sigmas[1] ** 2
-        msg.magnetic_field_covariance[8] = self.noise_sigmas[2] ** 2
+        msg.magnetic_field_covariance[0] = self._noise_sigmas[0] ** 2
+        msg.magnetic_field_covariance[4] = self._noise_sigmas[1] ** 2
+        msg.magnetic_field_covariance[8] = self._noise_sigmas[2] ** 2
 
-        if self.au_to_tesla != 1.0:
-            msg.magnetic_field.x /= self.au_to_tesla
-            msg.magnetic_field.y /= self.au_to_tesla
-            msg.magnetic_field.z /= self.au_to_tesla
+        if self._au_to_tesla != 1.0:
+            msg.magnetic_field.x /= self._au_to_tesla
+            msg.magnetic_field.y /= self._au_to_tesla
+            msg.magnetic_field.z /= self._au_to_tesla
 
             for i in range(len(msg.magnetic_field_covariance)):
-                msg.magnetic_field_covariance[i] /= self.au_to_tesla**2
+                msg.magnetic_field_covariance[i] /= self._au_to_tesla**2
 
-        self.output_pub.publish(msg)
+        self._output_pub.publish(msg)
 
         bias_msg = MagneticField()
         bias_msg.header = msg.header
-        bias_msg.magnetic_field.x = self.mag_bias[0]
-        bias_msg.magnetic_field.y = self.mag_bias[1]
-        bias_msg.magnetic_field.z = self.mag_bias[2]
+        bias_msg.magnetic_field.x = self._mag_bias[0]
+        bias_msg.magnetic_field.y = self._mag_bias[1]
+        bias_msg.magnetic_field.z = self._mag_bias[2]
 
-        self.bias_pub.publish(bias_msg)
+        self._bias_pub.publish(bias_msg)
 
 
 def main(args: list[str] | None = None) -> None:

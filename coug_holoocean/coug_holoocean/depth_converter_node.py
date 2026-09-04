@@ -31,32 +31,32 @@ class DepthConverterNode(Node):
         self.declare_parameter("depth_frame", "depth_link")
         self.declare_parameter("map_frame", "map")
 
-        self.noise_sigma = self.get_parameter("noise_sigma").value
-        self.add_noise = self.get_parameter("add_noise").value
+        self._noise_sigma = self.get_parameter("noise_sigma").value
+        self._add_noise = self.get_parameter("add_noise").value
         input_topic = self.get_parameter("input_topic").value
         output_topic = self.get_parameter("output_topic").value
-        self.depth_frame = self.get_parameter("depth_frame").value
-        self.map_frame = self.get_parameter("map_frame").value
+        self._depth_frame = self.get_parameter("depth_frame").value
+        self._map_frame = self.get_parameter("map_frame").value
 
-        self.input_sub = self.create_subscription(
-            Odometry, input_topic, self.odom_callback, qos_profile_system_default
+        self._input_sub = self.create_subscription(
+            Odometry, input_topic, self._odom_callback, qos_profile_system_default
         )
-        self.output_pub = self.create_publisher(
+        self._output_pub = self.create_publisher(
             Odometry, output_topic, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
 
     def odom_callback(self, msg: Odometry) -> None:
-        msg.header.frame_id = self.map_frame
-        msg.child_frame_id = self.depth_frame
+        msg.header.frame_id = self._map_frame
+        msg.child_frame_id = self._depth_frame
 
-        msg.pose.covariance[14] = self.noise_sigma * self.noise_sigma
+        msg.pose.covariance[14] = self._noise_sigma * self._noise_sigma
 
-        if self.add_noise:
-            msg.pose.pose.position.z += random.gauss(0, self.noise_sigma)
+        if self._add_noise:
+            msg.pose.pose.position.z += random.gauss(0, self._noise_sigma)
 
-        self.output_pub.publish(msg)
+        self._output_pub.publish(msg)
 
 
 def main(args: list[str] | None = None) -> None:

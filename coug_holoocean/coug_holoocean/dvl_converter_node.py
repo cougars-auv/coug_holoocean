@@ -39,69 +39,69 @@ class DvlConverterNode(Node):
         self.declare_parameter("config_command_topic", "dvl/config/command")
         self.declare_parameter("dvl_frame", "dvl_link")
 
-        self.velocity_noise_sigmas = self.get_parameter("velocity_noise_sigmas").value
-        self.range_noise_sigma = self.get_parameter("range_noise_sigma").value
-        self.max_range = self.get_parameter("max_range").value
-        self.add_noise = self.get_parameter("add_noise").value
+        self._velocity_noise_sigmas = self.get_parameter("velocity_noise_sigmas").value
+        self._range_noise_sigma = self.get_parameter("range_noise_sigma").value
+        self._max_range = self.get_parameter("max_range").value
+        self._add_noise = self.get_parameter("add_noise").value
         velocity_input_topic = self.get_parameter("velocity_input_topic").value
         range_input_topic = self.get_parameter("range_input_topic").value
         output_topic = self.get_parameter("output_topic").value
         config_command_topic = self.get_parameter("config_command_topic").value
-        self.dvl_frame = self.get_parameter("dvl_frame").value
+        self._dvl_frame = self.get_parameter("dvl_frame").value
 
-        self.acoustic_enabled = True
-        self.beam_ranges = None
+        self._acoustic_enabled = True
+        self._beam_ranges = None
 
-        self.input_sub = self.create_subscription(
+        self._input_sub = self.create_subscription(
             TwistWithCovarianceStamped,
             velocity_input_topic,
-            self.twist_callback,
+            self._twist_callback,
             qos_profile_system_default,
         )
-        self.range_sub = self.create_subscription(
+        self._range_sub = self.create_subscription(
             DVLSensorRange,
             range_input_topic,
-            self.range_callback,
+            self._range_callback,
             qos_profile_system_default,
         )
-        self.config_sub = self.create_subscription(
+        self._config_sub = self.create_subscription(
             ConfigCommand,
             config_command_topic,
-            self.config_callback,
+            self._config_callback,
             qos_profile_sensor_data,
         )
-        self.output_pub = self.create_publisher(
+        self._output_pub = self.create_publisher(
             DVL, output_topic, qos_profile_sensor_data
         )
 
         self.get_logger().info("Initialization complete.")
 
     def range_callback(self, msg: DVLSensorRange) -> None:
-        self.beam_ranges = msg.range
+        self._beam_ranges = msg.range
 
     def config_callback(self, msg: ConfigCommand) -> None:
         if msg.command != "set_config" or msg.parameter_name != "acoustic_enabled":
             return
 
-        self.acoustic_enabled = msg.parameter_value.strip().lower() == "true"
+        self._acoustic_enabled = msg.parameter_value.strip().lower() == "true"
         self.get_logger().info(
-            f"DVL acoustics {'enabled' if self.acoustic_enabled else 'disabled'}."
+            f"DVL acoustics {'enabled' if self._acoustic_enabled else 'disabled'}."
         )
 
     def twist_callback(self, msg: TwistWithCovarianceStamped) -> None:
-        if not self.acoustic_enabled:
+        if not self._acoustic_enabled:
             return
 
-        msg.header.frame_id = self.dvl_frame
+        msg.header.frame_id = self._dvl_frame
 
         dvl_msg = DVL()
         dvl_msg.header.stamp = msg.header.stamp
-        dvl_msg.header.frame_id = self.dvl_frame
+        dvl_msg.header.frame_id = self._dvl_frame
 
-        if self.add_noise:
-            noise_x = random.gauss(0, self.velocity_noise_sigmas[0])
-            noise_y = random.gauss(0, self.velocity_noise_sigmas[1])
-            noise_z = random.gauss(0, self.velocity_noise_sigmas[2])
+        if self._add_noise:
+            noise_x = random.gauss(0, self._velocity_noise_sigmas[0])
+            noise_y = random.gauss(0, self._velocity_noise_sigmas[1])
+            noise_z = random.gauss(0, self._velocity_noise_sigmas[2])
         else:
             noise_x = 0.0
             noise_y = 0.0
@@ -128,14 +128,14 @@ class DvlConverterNode(Node):
         )
 
         dvl_msg.covariance = [0.0] * 9
-        dvl_msg.covariance[0] = self.velocity_noise_sigmas[0] ** 2
-        dvl_msg.covariance[4] = self.velocity_noise_sigmas[1] ** 2
-        dvl_msg.covariance[8] = self.velocity_noise_sigmas[2] ** 2
+        dvl_msg.covariance[0] = self._velocity_noise_sigmas[0] ** 2
+        dvl_msg.covariance[4] = self._velocity_noise_sigmas[1] ** 2
+        dvl_msg.covariance[8] = self._velocity_noise_sigmas[2] ** 2
 
-        if self.beam_ranges is not None:
-            dvl_msg.beams = self.create_beam_msgs(self.beam_ranges)
+        if self._beam_ranges is not None:
+            dvl_msg.beams = self._create_beam_msgs(self._beam_ranges)
 
-        self.output_pub.publish(dvl_msg)
+        self._output_pub.publish(dvl_msg)
 
     def create_beam_msgs(self, ranges: list[float]) -> list[DVLBeam]:
         beams = []
@@ -143,12 +143,12 @@ class DvlConverterNode(Node):
             beam = DVLBeam()
             beam.id = beam_id
 
-            beam.valid = bool(beam_range < self.max_range)
+            beam.valid = bool(beam_range < self._max_range)
             if not beam.valid:
                 beam.distance = -1.0
-            elif self.add_noise:
+            elif self._add_noise:
                 beam.distance = float(beam_range) + random.gauss(
-                    0, self.range_noise_sigma
+                    0, self._range_noise_sigma
                 )
             else:
                 beam.distance = float(beam_range)

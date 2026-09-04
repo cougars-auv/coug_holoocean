@@ -35,51 +35,51 @@ class DepthCameraConverterNode(Node):
         self.declare_parameter("color_output_topic", "depth/image_rect_color")
         self.declare_parameter("depth_camera_frame", "depth_camera_link")
 
-        self.min_range = self.get_parameter("min_range").value
-        self.max_range = self.get_parameter("max_range").value
-        self.depth_camera_frame = self.get_parameter("depth_camera_frame").value
+        self._min_range = self.get_parameter("min_range").value
+        self._max_range = self.get_parameter("max_range").value
+        self._depth_camera_frame = self.get_parameter("depth_camera_frame").value
 
-        self.depth_pub = self.create_publisher(
+        self._depth_pub = self.create_publisher(
             Image,
             self.get_parameter("depth_output_topic").value,
             qos_profile_sensor_data,
         )
-        self.info_pub = self.create_publisher(
+        self._info_pub = self.create_publisher(
             CameraInfo,
             self.get_parameter("info_output_topic").value,
             qos_profile_sensor_data,
         )
-        self.color_pub = self.create_publisher(
+        self._color_pub = self.create_publisher(
             Image,
             self.get_parameter("color_output_topic").value,
             qos_profile_sensor_data,
         )
 
-        self.depth_sub = message_filters.Subscriber(
+        self._depth_sub = message_filters.Subscriber(
             self,
             Image,
             self.get_parameter("depth_input_topic").value,
             qos_profile=qos_profile_system_default,
         )
-        self.info_sub = message_filters.Subscriber(
+        self._info_sub = message_filters.Subscriber(
             self,
             CameraInfo,
             self.get_parameter("info_input_topic").value,
             qos_profile=qos_profile_system_default,
         )
-        self.color_sub = message_filters.Subscriber(
+        self._color_sub = message_filters.Subscriber(
             self,
             Image,
             self.get_parameter("color_input_topic").value,
             qos_profile=qos_profile_system_default,
         )
 
-        self.time_sync = message_filters.ApproximateTimeSynchronizer(
-            [self.depth_sub, self.info_sub, self.color_sub],
+        self._time_sync = message_filters.ApproximateTimeSynchronizer(
+            [self._depth_sub, self._info_sub, self._color_sub],
             queue_size=10,
             slop=self.get_parameter("sync_slop_sec").value,
         )
-        self.time_sync.registerCallback(self.sync_callback)
+        self._time_sync.registerCallback(self._sync_callback)
 
         self.get_logger().info("Initialization complete.")
 
@@ -87,7 +87,7 @@ class DepthCameraConverterNode(Node):
         self, depth_msg: Image, info_msg: CameraInfo, color_msg: Image
     ) -> None:
         for msg in (depth_msg, info_msg, color_msg):
-            msg.header.frame_id = self.depth_camera_frame
+            msg.header.frame_id = self._depth_camera_frame
         for msg in (info_msg, color_msg):
             msg.header.stamp = depth_msg.header.stamp
 
@@ -96,12 +96,12 @@ class DepthCameraConverterNode(Node):
             .reshape(depth_msg.height, depth_msg.width)
             .copy()
         )
-        depth[(depth < self.min_range) | (depth > self.max_range)] = np.nan
+        depth[(depth < self._min_range) | (depth > self._max_range)] = np.nan
         depth_msg.data = depth.tobytes()
 
-        self.depth_pub.publish(depth_msg)
-        self.info_pub.publish(info_msg)
-        self.color_pub.publish(color_msg)
+        self._depth_pub.publish(depth_msg)
+        self._info_pub.publish(info_msg)
+        self._color_pub.publish(color_msg)
 
 
 def main(args: list[str] | None = None) -> None:

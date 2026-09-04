@@ -60,60 +60,60 @@ class CmdVelConverterNode(Node):
         self.declare_parameter("input_topic", "cmd_vel_out")
         self.declare_parameter("output_topic", "/command/agent")
 
-        self.agent_name = self.get_parameter("agent_name").value
+        self._agent_name = self.get_parameter("agent_name").value
         agent_type = self.get_parameter("agent_type").value
         input_topic = self.get_parameter("input_topic").value
         output_topic = self.get_parameter("output_topic").value
 
         try:
-            self.agent_type = AgentType(agent_type)
+            self._agent_type = AgentType(agent_type)
         except ValueError as error:
             raise ValueError(
                 f"Unknown agent_type '{agent_type}' "
                 f"(expected '{AgentType.BLUEROV2}' or '{AgentType.SURFACE_VESSEL}')"
             ) from error
 
-        self.input_sub = self.create_subscription(
+        self._input_sub = self.create_subscription(
             TwistStamped,
             input_topic,
-            self.twist_callback,
+            self._twist_callback,
             qos_profile_system_default,
         )
-        self.output_pub = self.create_publisher(
+        self._output_pub = self.create_publisher(
             AgentCommand, output_topic, qos_profile_system_default
         )
 
-        if self.agent_type == AgentType.BLUEROV2:
-            self.thruster_limit = BR_MAX_THRUST
-            self.h_scale = BR_H_SCALE
-            self.v_scale = BR_V_SCALE
-            self.r_scale = BR_R_SCALE
-            self.p_scale = BR_P_SCALE
-            self.y_scale = BR_Y_SCALE
+        if self._agent_type == AgentType.BLUEROV2:
+            self._thruster_limit = BR_MAX_THRUST
+            self._h_scale = BR_H_SCALE
+            self._v_scale = BR_V_SCALE
+            self._r_scale = BR_R_SCALE
+            self._p_scale = BR_P_SCALE
+            self._y_scale = BR_Y_SCALE
         else:
-            self.thruster_limit = SV_MAX_THRUST
-            self.thruster_y = SV_THRUSTER_Y
-            self.h_scale = SV_H_SCALE
-            self.y_scale = SV_Y_SCALE
+            self._thruster_limit = SV_MAX_THRUST
+            self._thruster_y = SV_THRUSTER_Y
+            self._h_scale = SV_H_SCALE
+            self._y_scale = SV_Y_SCALE
 
         self.get_logger().info("Initialization complete.")
 
     def twist_callback(self, msg: TwistStamped) -> None:
-        self.output_pub.publish(self.create_agent_command_msg(msg))
+        self._output_pub.publish(self._create_agent_command_msg(msg))
 
     def create_agent_command_msg(self, msg: TwistStamped) -> AgentCommand:
         agent_cmd = AgentCommand()
         agent_cmd.header.stamp = self.get_clock().now().to_msg()
-        agent_cmd.header.frame_id = self.agent_name
+        agent_cmd.header.frame_id = self._agent_name
 
-        if self.agent_type == AgentType.BLUEROV2:
-            raw_cmds = self.bluerov2_command(msg)
+        if self._agent_type == AgentType.BLUEROV2:
+            raw_cmds = self._bluerov2_command(msg)
         else:
-            raw_cmds = self.surface_vessel_command(msg)
+            raw_cmds = self._surface_vessel_command(msg)
 
         max_req = max([abs(x) for x in raw_cmds])
-        if max_req > self.thruster_limit:
-            scale_factor = self.thruster_limit / max_req
+        if max_req > self._thruster_limit:
+            scale_factor = self._thruster_limit / max_req
             final_cmds = [x * scale_factor for x in raw_cmds]
         else:
             final_cmds = raw_cmds
@@ -123,12 +123,12 @@ class CmdVelConverterNode(Node):
 
     def bluerov2_command(self, msg: TwistStamped) -> list[float]:
         # Assuming no quadratic drag
-        fwd = msg.twist.linear.x * self.h_scale
-        lat = msg.twist.linear.y * self.h_scale
-        vert = msg.twist.linear.z * self.v_scale
-        roll = msg.twist.angular.x * self.r_scale
-        pitch = msg.twist.angular.y * self.p_scale
-        yaw = msg.twist.angular.z * self.y_scale
+        fwd = msg.twist.linear.x * self._h_scale
+        lat = msg.twist.linear.y * self._h_scale
+        vert = msg.twist.linear.z * self._v_scale
+        roll = msg.twist.angular.x * self._r_scale
+        pitch = msg.twist.angular.y * self._p_scale
+        yaw = msg.twist.angular.z * self._y_scale
 
         cmd_0 = vert - pitch - roll
         cmd_1 = vert - pitch + roll
@@ -143,11 +143,11 @@ class CmdVelConverterNode(Node):
 
     def surface_vessel_command(self, msg: TwistStamped) -> list[float]:
         # Assuming no quadratic drag
-        fwd = msg.twist.linear.x * self.h_scale
-        yaw = msg.twist.angular.z * self.y_scale
+        fwd = msg.twist.linear.x * self._h_scale
+        yaw = msg.twist.angular.z * self._y_scale
 
-        cmd_left = fwd / 2.0 - yaw / (2.0 * self.thruster_y)
-        cmd_right = fwd / 2.0 + yaw / (2.0 * self.thruster_y)
+        cmd_left = fwd / 2.0 - yaw / (2.0 * self._thruster_y)
+        cmd_right = fwd / 2.0 + yaw / (2.0 * self._thruster_y)
 
         return [cmd_left, cmd_right]
 

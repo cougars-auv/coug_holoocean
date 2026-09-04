@@ -34,58 +34,60 @@ class StereoConverterNode(Node):
         self.declare_parameter("back_stereo_frame", "back_stereo_link")
 
         sync_slop_sec = self.get_parameter("sync_slop_sec").value
-        self.front_input_topic = self.get_parameter("front_input_topic").value
-        self.back_input_topic = self.get_parameter("back_input_topic").value
-        self.front_output_topic = self.get_parameter("front_output_topic").value
-        self.back_output_topic = self.get_parameter("back_output_topic").value
-        self.front_stereo_info_topic = self.get_parameter(
+        self._front_input_topic = self.get_parameter("front_input_topic").value
+        self._back_input_topic = self.get_parameter("back_input_topic").value
+        self._front_output_topic = self.get_parameter("front_output_topic").value
+        self._back_output_topic = self.get_parameter("back_output_topic").value
+        self._front_stereo_info_topic = self.get_parameter(
             "front_stereo_info_topic"
         ).value
-        self.back_stereo_info_topic = self.get_parameter("back_stereo_info_topic").value
-        self.front_stereo_frame = self.get_parameter("front_stereo_frame").value
-        self.back_stereo_frame = self.get_parameter("back_stereo_frame").value
+        self._back_stereo_info_topic = self.get_parameter(
+            "back_stereo_info_topic"
+        ).value
+        self._front_stereo_frame = self.get_parameter("front_stereo_frame").value
+        self._back_stereo_frame = self.get_parameter("back_stereo_frame").value
 
-        self.front_pub = self.create_publisher(
-            Image, self.front_output_topic, qos_profile_sensor_data
+        self._front_pub = self.create_publisher(
+            Image, self._front_output_topic, qos_profile_sensor_data
         )
-        self.back_pub = self.create_publisher(
-            Image, self.back_output_topic, qos_profile_sensor_data
+        self._back_pub = self.create_publisher(
+            Image, self._back_output_topic, qos_profile_sensor_data
         )
-        self.front_info_pub = self.create_publisher(
-            CameraInfo, self.front_stereo_info_topic, qos_profile_sensor_data
+        self._front_info_pub = self.create_publisher(
+            CameraInfo, self._front_stereo_info_topic, qos_profile_sensor_data
         )
-        self.back_info_pub = self.create_publisher(
-            CameraInfo, self.back_stereo_info_topic, qos_profile_sensor_data
-        )
-
-        self.front_sub = message_filters.Subscriber(
-            self, Image, self.front_input_topic, qos_profile=qos_profile_system_default
-        )
-        self.back_sub = message_filters.Subscriber(
-            self, Image, self.back_input_topic, qos_profile=qos_profile_system_default
+        self._back_info_pub = self.create_publisher(
+            CameraInfo, self._back_stereo_info_topic, qos_profile_sensor_data
         )
 
-        self.time_sync = message_filters.ApproximateTimeSynchronizer(
-            [self.front_sub, self.back_sub], queue_size=10, slop=sync_slop_sec
+        self._front_sub = message_filters.Subscriber(
+            self, Image, self._front_input_topic, qos_profile=qos_profile_system_default
         )
-        self.time_sync.registerCallback(self.sync_callback)
+        self._back_sub = message_filters.Subscriber(
+            self, Image, self._back_input_topic, qos_profile=qos_profile_system_default
+        )
+
+        self._time_sync = message_filters.ApproximateTimeSynchronizer(
+            [self._front_sub, self._back_sub], queue_size=10, slop=sync_slop_sec
+        )
+        self._time_sync.registerCallback(self._sync_callback)
 
         self.get_logger().info("Initialization complete.")
 
     def sync_callback(self, front_msg: Image, back_msg: Image) -> None:
         back_msg.header.stamp = front_msg.header.stamp
 
-        front_msg.header.frame_id = self.front_stereo_frame
-        back_msg.header.frame_id = self.back_stereo_frame
+        front_msg.header.frame_id = self._front_stereo_frame
+        back_msg.header.frame_id = self._back_stereo_frame
 
-        self.front_pub.publish(front_msg)
-        self.back_pub.publish(back_msg)
+        self._front_pub.publish(front_msg)
+        self._back_pub.publish(back_msg)
 
-        front_info_msg = self.create_camera_info_msg(front_msg)
-        self.front_info_pub.publish(front_info_msg)
+        front_info_msg = self._create_camera_info_msg(front_msg)
+        self._front_info_pub.publish(front_info_msg)
 
-        back_info_msg = self.create_camera_info_msg(back_msg)
-        self.back_info_pub.publish(back_info_msg)
+        back_info_msg = self._create_camera_info_msg(back_msg)
+        self._back_info_pub.publish(back_info_msg)
 
     def create_camera_info_msg(self, image_msg: Image) -> CameraInfo:
         info = CameraInfo()
