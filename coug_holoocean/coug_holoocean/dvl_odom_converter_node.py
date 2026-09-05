@@ -58,7 +58,7 @@ class DvlOdomConverterNode(Node):
         self._ref_position = (0.0, 0.0, 0.0)
         self._ref_rotation = Rotation.identity()
         self._ref_stamp = None
-        self._last_position = None
+        self._last_position: tuple[float, float, float] | None = None
         self._dr_position = (0.0, 0.0, 0.0)
         self._reset_pending = False
         self._reset_drift()

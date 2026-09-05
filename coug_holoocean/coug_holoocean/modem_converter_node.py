@@ -14,6 +14,7 @@
 
 import math
 import random
+from typing import Any
 
 import rclpy
 from holoocean_interfaces.msg import AcousticBeaconSend, AcousticBeaconSensor
@@ -71,12 +72,12 @@ class ModemConverterNode(Node):
             1, round(self._resp_timeout_sec / self._tick_period_sec)
         )
 
-        self._send_queue = []
-        self._pending_auto_responses = []
-        self._pending_resp_target = None
+        self._send_queue: list[tuple[AcousticBeaconSend, bool]] = []
+        self._pending_auto_responses: list[list[Any]] = []
+        self._pending_resp_target: int | None = None
         self._send_delay_ticker = 0
         self._pending_resp_ticker = 0
-        self._dat_queue = {}
+        self._dat_queue: dict[int, list[int]] = {}
 
         self._agent_depth = 0.0
 
