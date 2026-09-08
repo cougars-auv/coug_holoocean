@@ -63,9 +63,7 @@ class DvlOdomConverterNode(Node):
         self._reset_pending = False
         self._reset_drift()
 
-        self._output_pub = self.create_publisher(
-            DVLDR, output_topic, qos_profile_sensor_data
-        )
+        self._output_pub = self.create_publisher(DVLDR, output_topic, qos_profile_sensor_data)
 
         self._tf_buffer = Buffer()
         self._tf_listener = TransformListener(self._tf_buffer, self)
@@ -169,28 +167,18 @@ class DvlOdomConverterNode(Node):
 
         ref_R_ned = self._ref_rotation.inv()
         elapsed_minutes = (stamp - self._ref_stamp) / 60.0
-        yaw_error = Rotation.from_euler(
-            "z", self._yaw_drift_rate * elapsed_minutes, degrees=True
-        )
+        yaw_error = Rotation.from_euler("z", self._yaw_drift_rate * elapsed_minutes, degrees=True)
 
         if self._last_position is None:
             self._dr_position = ref_R_ned.apply(
-                [
-                    pos - ref
-                    for pos, ref in zip(ned_position, self._ref_position, strict=True)
-                ]
+                [pos - ref for pos, ref in zip(ned_position, self._ref_position, strict=True)]
             )
         else:
             delta_position = ref_R_ned.apply(
-                [
-                    pos - last
-                    for pos, last in zip(ned_position, self._last_position, strict=True)
-                ]
+                [pos - last for pos, last in zip(ned_position, self._last_position, strict=True)]
             )
             self._distance_traveled += math.dist(ned_position, self._last_position)
-            self._dr_position += yaw_error.apply(delta_position) * (
-                1.0 + self._scale_error
-            )
+            self._dr_position += yaw_error.apply(delta_position) * (1.0 + self._scale_error)
 
         self._last_position = ned_position
 
@@ -198,9 +186,7 @@ class DvlOdomConverterNode(Node):
         ned_R_dvl = yaw_error * ref_R_ned * ned_R_dvl
 
         # Convert FLU -> FRD
-        ned_roll, ned_pitch, ned_yaw = (ned_R_dvl * _FLU_R_FRD).as_euler(
-            "xyz", degrees=True
-        )
+        ned_roll, ned_pitch, ned_yaw = (ned_R_dvl * _FLU_R_FRD).as_euler("xyz", degrees=True)
 
         dvl_msg = DVLDR()
         dvl_msg.header.stamp = msg.header.stamp

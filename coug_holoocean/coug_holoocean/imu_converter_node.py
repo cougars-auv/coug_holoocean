@@ -75,9 +75,7 @@ class ImuConverterNode(Node):
         self._time_sync.registerCallback(self._sync_callback)
 
         # Reliable QoS to match SBG-SYSTEMS/sbg_ros2_driver
-        self._output_pub = self.create_publisher(
-            Imu, output_topic, qos_profile_system_default
-        )
+        self._output_pub = self.create_publisher(Imu, output_topic, qos_profile_system_default)
         self._bias_pub = self.create_publisher(
             TwistWithCovarianceStamped, bias_topic, qos_profile_system_default
         )
@@ -101,9 +99,7 @@ class ImuConverterNode(Node):
         imu_msg.header.frame_id = self._imu_frame
 
         if self._add_bias:
-            current_stamp = (
-                imu_msg.header.stamp.sec + imu_msg.header.stamp.nanosec * 1e-9
-            )
+            current_stamp = imu_msg.header.stamp.sec + imu_msg.header.stamp.nanosec * 1e-9
             if self._last_stamp is not None:
                 dt = current_stamp - self._last_stamp
                 if dt > 0.0:
@@ -126,15 +122,9 @@ class ImuConverterNode(Node):
             imu_msg.angular_velocity.z += self._gyro_bias[2]
 
         if self._add_noise:
-            imu_msg.linear_acceleration.x += random.gauss(
-                0, self._accel_noise_sigmas[0]
-            )
-            imu_msg.linear_acceleration.y += random.gauss(
-                0, self._accel_noise_sigmas[1]
-            )
-            imu_msg.linear_acceleration.z += random.gauss(
-                0, self._accel_noise_sigmas[2]
-            )
+            imu_msg.linear_acceleration.x += random.gauss(0, self._accel_noise_sigmas[0])
+            imu_msg.linear_acceleration.y += random.gauss(0, self._accel_noise_sigmas[1])
+            imu_msg.linear_acceleration.z += random.gauss(0, self._accel_noise_sigmas[2])
 
             imu_msg.angular_velocity.x += random.gauss(0, self._gyro_noise_sigmas[0])
             imu_msg.angular_velocity.y += random.gauss(0, self._gyro_noise_sigmas[1])

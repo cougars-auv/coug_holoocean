@@ -61,13 +61,9 @@ class HsdConverterNode(Node):
     def _hsd_callback(self, msg: ControlSetpoint) -> None:
         self._output_heading_pub.publish(self._create_desired_command_msg(msg.heading))
         self._output_speed_pub.publish(
-            self._create_desired_command_msg(
-                max(MIN_SPEED_RPM, min(MAX_SPEED_RPM, msg.speed_rpm))
-            )
+            self._create_desired_command_msg(max(MIN_SPEED_RPM, min(MAX_SPEED_RPM, msg.speed_rpm)))
         )
-        self._output_depth_pub.publish(
-            self._create_desired_command_msg(max(-msg.depth, 0.0))
-        )
+        self._output_depth_pub.publish(self._create_desired_command_msg(max(-msg.depth, 0.0)))
 
     def _create_desired_command_msg(self, value: float) -> DesiredCommand:
         msg = DesiredCommand()

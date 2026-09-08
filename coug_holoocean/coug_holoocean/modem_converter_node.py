@@ -62,15 +62,9 @@ class ModemConverterNode(Node):
         depth_topic = self.get_parameter("depth_topic").value
         self._modem_frame = self.get_parameter("modem_frame").value
 
-        self._send_delay_ticks = max(
-            1, round(self._send_delay_sec / self._tick_period_sec)
-        )
-        self._resp_delay_ticks = max(
-            0, round(self._resp_delay_sec / self._tick_period_sec)
-        )
-        self._resp_timeout_ticks = max(
-            1, round(self._resp_timeout_sec / self._tick_period_sec)
-        )
+        self._send_delay_ticks = max(1, round(self._send_delay_sec / self._tick_period_sec))
+        self._resp_delay_ticks = max(0, round(self._resp_delay_sec / self._tick_period_sec))
+        self._resp_timeout_ticks = max(1, round(self._resp_timeout_sec / self._tick_period_sec))
 
         self._send_queue: list[tuple[AcousticBeaconSend, bool]] = []
         self._pending_auto_responses: list[list[Any]] = []
@@ -125,10 +119,7 @@ class ModemConverterNode(Node):
             self._queue_auto_response(msg)
 
         # A RESP from the queried beacon frees the channel
-        if (
-            msg.msg_type in seatrac.RESP_TYPES
-            and msg.from_beacon == self._pending_resp_target
-        ):
+        if msg.msg_type in seatrac.RESP_TYPES and msg.from_beacon == self._pending_resp_target:
             self._pending_resp_target = None
             self._pending_resp_ticker = 0
             self._attempt_send()
@@ -168,9 +159,7 @@ class ModemConverterNode(Node):
             range_dist = msg.range
             if self._add_noise:
                 range_dist += random.gauss(0, self._range_noise_sigma)
-            modem_rec.range_dist = seatrac.clamp_uint16(
-                range_dist * seatrac.METERS_TO_DECIMETERS
-            )
+            modem_rec.range_dist = seatrac.clamp_uint16(range_dist * seatrac.METERS_TO_DECIMETERS)
 
         modem_rec.includes_position = msg.msg_type in seatrac.HAS_Z
         if modem_rec.includes_position:
@@ -189,9 +178,7 @@ class ModemConverterNode(Node):
 
     def _queue_auto_response(self, msg: AcousticBeaconSensor) -> None:
         # Consume any payload staged for the requester (or for all beacons)
-        queued = self._dat_queue.pop(int(msg.from_beacon), None) or self._dat_queue.pop(
-            0, None
-        )
+        queued = self._dat_queue.pop(int(msg.from_beacon), None) or self._dat_queue.pop(0, None)
 
         resp = AcousticBeaconSend()
         resp.header.stamp = self.get_clock().now().to_msg()
@@ -213,9 +200,7 @@ class ModemConverterNode(Node):
             return
 
         if msg.msg_id != seatrac.CommandId.DAT_SEND:
-            self.get_logger().warning(
-                f"Unsupported send CID 0x{msg.msg_id:02X}. Dropping message."
-            )
+            self.get_logger().warning(f"Unsupported send CID 0x{msg.msg_id:02X}. Dropping message.")
             return
 
         beacon_send = AcousticBeaconSend()

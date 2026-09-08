@@ -31,14 +31,7 @@ JA_MAX = 0.6632
 W = 0.056
 
 C1 = (1.0 - T_PROP) * RHO * pow(D_PROP, 4) * KT_0
-C2 = (
-    (1.0 - T_PROP)
-    * RHO
-    * pow(D_PROP, 4)
-    * (KT_MAX - KT_0)
-    / JA_MAX
-    * ((1 - W) / D_PROP)
-)
+C2 = (1.0 - T_PROP) * RHO * pow(D_PROP, 4) * (KT_MAX - KT_0) / JA_MAX * ((1 - W) / D_PROP)
 
 
 class WrenchConverterNode(Node):

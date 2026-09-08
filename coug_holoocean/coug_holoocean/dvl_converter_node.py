@@ -70,9 +70,7 @@ class DvlConverterNode(Node):
             self._config_callback,
             qos_profile_sensor_data,
         )
-        self._output_pub = self.create_publisher(
-            DVL, output_topic, qos_profile_sensor_data
-        )
+        self._output_pub = self.create_publisher(DVL, output_topic, qos_profile_sensor_data)
 
         self.get_logger().info("Initialization complete.")
 
@@ -123,9 +121,7 @@ class DvlConverterNode(Node):
         dvl_msg.velocity_valid = True
 
         # Convert nanoseconds to microseconds
-        dvl_msg.time_of_validity = int(
-            msg.header.stamp.sec * 1e6 + msg.header.stamp.nanosec / 1e3
-        )
+        dvl_msg.time_of_validity = int(msg.header.stamp.sec * 1e6 + msg.header.stamp.nanosec / 1e3)
 
         dvl_msg.covariance = [0.0] * 9
         dvl_msg.covariance[0] = self._velocity_noise_sigmas[0] ** 2
@@ -147,9 +143,7 @@ class DvlConverterNode(Node):
             if not beam.valid:
                 beam.distance = -1.0
             elif self._add_noise:
-                beam.distance = float(beam_range) + random.gauss(
-                    0, self._range_noise_sigma
-                )
+                beam.distance = float(beam_range) + random.gauss(0, self._range_noise_sigma)
             else:
                 beam.distance = float(beam_range)
 

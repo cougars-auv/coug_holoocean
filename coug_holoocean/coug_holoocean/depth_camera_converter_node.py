@@ -83,9 +83,7 @@ class DepthCameraConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def _sync_callback(
-        self, depth_msg: Image, info_msg: CameraInfo, color_msg: Image
-    ) -> None:
+    def _sync_callback(self, depth_msg: Image, info_msg: CameraInfo, color_msg: Image) -> None:
         for msg in (depth_msg, info_msg, color_msg):
             msg.header.frame_id = self._depth_camera_frame
         for msg in (info_msg, color_msg):

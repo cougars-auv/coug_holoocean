@@ -45,8 +45,7 @@ class MagConverterNode(Node):
         self._mag_frame = self.get_parameter("mag_frame").value
 
         self._mag_bias = [
-            random.gauss(0, sigma) if self._add_bias else 0.0
-            for sigma in self._bias_sigmas
+            random.gauss(0, sigma) if self._add_bias else 0.0 for sigma in self._bias_sigmas
         ]
 
         self._input_sub = self.create_subscription(

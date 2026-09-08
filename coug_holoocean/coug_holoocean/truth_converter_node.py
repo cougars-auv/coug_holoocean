@@ -39,9 +39,7 @@ class TruthConverterNode(Node):
         self._base_frame = self.get_parameter("base_frame").value
         self._map_frame = self.get_parameter("map_frame").value
 
-        self._output_pub = self.create_publisher(
-            Odometry, output_topic, qos_profile_system_default
-        )
+        self._output_pub = self.create_publisher(Odometry, output_topic, qos_profile_system_default)
 
         self._tf_buffer = Buffer()
         self._tf_listener = TransformListener(self._tf_buffer, self)

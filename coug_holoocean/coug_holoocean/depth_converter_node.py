@@ -41,9 +41,7 @@ class DepthConverterNode(Node):
         self._input_sub = self.create_subscription(
             Odometry, input_topic, self._odom_callback, qos_profile_system_default
         )
-        self._output_pub = self.create_publisher(
-            Odometry, output_topic, qos_profile_system_default
-        )
+        self._output_pub = self.create_publisher(Odometry, output_topic, qos_profile_system_default)
 
         self.get_logger().info("Initialization complete.")
 

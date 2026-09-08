@@ -38,12 +38,8 @@ class StereoConverterNode(Node):
         self._back_input_topic = self.get_parameter("back_input_topic").value
         self._front_output_topic = self.get_parameter("front_output_topic").value
         self._back_output_topic = self.get_parameter("back_output_topic").value
-        self._front_stereo_info_topic = self.get_parameter(
-            "front_stereo_info_topic"
-        ).value
-        self._back_stereo_info_topic = self.get_parameter(
-            "back_stereo_info_topic"
-        ).value
+        self._front_stereo_info_topic = self.get_parameter("front_stereo_info_topic").value
+        self._back_stereo_info_topic = self.get_parameter("back_stereo_info_topic").value
         self._front_stereo_frame = self.get_parameter("front_stereo_frame").value
         self._back_stereo_frame = self.get_parameter("back_stereo_frame").value
 
