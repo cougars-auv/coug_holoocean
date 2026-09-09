@@ -87,8 +87,7 @@ class MagConverterNode(Node):
             msg.magnetic_field.y /= self._au_to_tesla
             msg.magnetic_field.z /= self._au_to_tesla
 
-            for i in range(len(msg.magnetic_field_covariance)):
-                msg.magnetic_field_covariance[i] /= self._au_to_tesla**2
+            msg.magnetic_field_covariance /= self._au_to_tesla**2
 
         self._output_pub.publish(msg)
 

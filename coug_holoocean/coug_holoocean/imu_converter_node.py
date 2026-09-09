@@ -104,13 +104,18 @@ class ImuConverterNode(Node):
                 dt = current_stamp - self._last_stamp
                 if dt > 0.0:
                     sqrt_dt = math.sqrt(dt)
-                    for i in range(3):
-                        self._accel_bias[i] += random.gauss(
-                            0, self._accel_bias_rw_sigmas[i] * sqrt_dt
+                    self._accel_bias = [
+                        bias + random.gauss(0, sigma * sqrt_dt)
+                        for bias, sigma in zip(
+                            self._accel_bias, self._accel_bias_rw_sigmas, strict=True
                         )
-                        self._gyro_bias[i] += random.gauss(
-                            0, self._gyro_bias_rw_sigmas[i] * sqrt_dt
+                    ]
+                    self._gyro_bias = [
+                        bias + random.gauss(0, sigma * sqrt_dt)
+                        for bias, sigma in zip(
+                            self._gyro_bias, self._gyro_bias_rw_sigmas, strict=True
                         )
+                    ]
             self._last_stamp = current_stamp
 
             imu_msg.linear_acceleration.x += self._accel_bias[0]

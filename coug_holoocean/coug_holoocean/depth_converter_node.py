@@ -49,7 +49,7 @@ class DepthConverterNode(Node):
         msg.header.frame_id = self._map_frame
         msg.child_frame_id = self._depth_frame
 
-        msg.pose.covariance[14] = self._noise_sigma * self._noise_sigma
+        msg.pose.covariance[14] = self._noise_sigma**2
 
         if self._add_noise:
             msg.pose.pose.position.z += random.gauss(0, self._noise_sigma)

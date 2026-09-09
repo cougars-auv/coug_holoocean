@@ -49,6 +49,10 @@ def generate_launch_description() -> LaunchDescription:
     depth_camera_link_frame = agent_frame(agent_ns, "depth_camera_link")
     depth_link_frame = agent_frame(agent_ns, "depth_link")
     dvl_link_frame = agent_frame(agent_ns, "dvl_link")
+    beam0_link_frame = agent_frame(agent_ns, "beam0_link")
+    beam1_link_frame = agent_frame(agent_ns, "beam1_link")
+    beam2_link_frame = agent_frame(agent_ns, "beam2_link")
+    beam3_link_frame = agent_frame(agent_ns, "beam3_link")
     base_link_frame = agent_frame(agent_ns, "base_link")
     gps_link_frame = agent_frame(agent_ns, "gps_link")
     imu_link_frame = agent_frame(agent_ns, "imu_link")
@@ -124,6 +128,10 @@ def generate_launch_description() -> LaunchDescription:
                     {
                         "use_sim_time": use_sim_time,
                         "dvl_frame": dvl_link_frame,
+                        "beam0_frame": beam0_link_frame,
+                        "beam1_frame": beam1_link_frame,
+                        "beam2_frame": beam2_link_frame,
+                        "beam3_frame": beam3_link_frame,
                         "add_noise": add_noise,
                     },
                 ],

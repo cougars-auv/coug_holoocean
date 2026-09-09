@@ -96,7 +96,7 @@ class WrenchConverterNode(Node):
 
     def _odom_callback(self, msg: Odometry) -> None:
         linear = msg.twist.twist.linear
-        self._speed = math.sqrt(linear.x**2 + linear.y**2 + linear.z**2)
+        self._speed = math.hypot(linear.x, linear.y, linear.z)
 
 
 def main(args: list[str] | None = None) -> None:

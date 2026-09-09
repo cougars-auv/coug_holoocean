@@ -64,7 +64,7 @@ class PressureConverterNode(Node):
         pressure_msg.header.stamp = msg.header.stamp
         pressure_msg.header.frame_id = self._depth_frame
         pressure_msg.fluid_pressure = pressure
-        pressure_msg.variance = self._noise_sigma * self._noise_sigma
+        pressure_msg.variance = self._noise_sigma**2
 
         if self._add_noise:
             pressure_msg.fluid_pressure += random.gauss(0, self._noise_sigma)

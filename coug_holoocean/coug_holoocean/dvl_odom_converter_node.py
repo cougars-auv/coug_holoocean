@@ -15,6 +15,7 @@
 import math
 import random
 
+import numpy as np
 import rclpy
 from dvl_msgs.msg import DVLDR, ConfigCommand
 from geometry_msgs.msg import PoseStamped, TransformStamped
@@ -55,11 +56,11 @@ class DvlOdomConverterNode(Node):
         self._dvl_frame = self.get_parameter("dvl_frame").value
         self._map_frame = self.get_parameter("map_frame").value
 
-        self._ref_position = (0.0, 0.0, 0.0)
+        self._ref_position = np.zeros(3)
         self._ref_rotation = Rotation.identity()
         self._ref_stamp = None
-        self._last_position: tuple[float, float, float] | None = None
-        self._dr_position = (0.0, 0.0, 0.0)
+        self._last_position: np.ndarray | None = None
+        self._dr_position = np.zeros(3)
         self._reset_pending = False
         self._reset_drift()
 
@@ -152,7 +153,7 @@ class DvlOdomConverterNode(Node):
         ned_R_dvl = _NED_R_ENU * enu_R_dvl
 
         stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
-        ned_position = (ned_x, ned_y, ned_z)
+        ned_position = np.array([ned_x, ned_y, ned_z])
 
         if self._reset_pending:
             self._ref_position = ned_position
@@ -170,13 +171,9 @@ class DvlOdomConverterNode(Node):
         yaw_error = Rotation.from_euler("z", self._yaw_drift_rate * elapsed_minutes, degrees=True)
 
         if self._last_position is None:
-            self._dr_position = ref_R_ned.apply(
-                [pos - ref for pos, ref in zip(ned_position, self._ref_position, strict=True)]
-            )
+            self._dr_position = ref_R_ned.apply(ned_position - self._ref_position)
         else:
-            delta_position = ref_R_ned.apply(
-                [pos - last for pos, last in zip(ned_position, self._last_position, strict=True)]
-            )
+            delta_position = ref_R_ned.apply(ned_position - self._last_position)
             self._distance_traveled += math.dist(ned_position, self._last_position)
             self._dr_position += yaw_error.apply(delta_position) * (1.0 + self._scale_error)
 
