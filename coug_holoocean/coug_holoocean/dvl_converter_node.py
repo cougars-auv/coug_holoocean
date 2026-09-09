@@ -32,7 +32,7 @@ class DvlConverterNode(Node):
         super().__init__("dvl_converter_node")
 
         self.declare_parameter("velocity_noise_sigmas", [0.02, 0.02, 0.02])
-        self.declare_parameter("beam_velocity_noise_sigma", 0.02)
+        self.declare_parameter("beam_velocity_noise_sigma", 0.011)
         self.declare_parameter("range_noise_sigma", 0.1)
         self.declare_parameter("beam0_frame", "beam0_link")
         self.declare_parameter("beam1_frame", "beam1_link")
