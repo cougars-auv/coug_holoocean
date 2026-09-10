@@ -25,13 +25,13 @@ from scipy.spatial.transform import Rotation
 from tf2_ros import Buffer, TransformException, TransformListener
 
 _FRD_R_FLU = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
+_LOST_LOCK_VELOCITY_VARIANCE = 100.01
 
 
 class DvlConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("dvl_converter_node")
 
-        self.declare_parameter("velocity_noise_sigmas", [0.02, 0.02, 0.02])
         self.declare_parameter("beam_velocity_noise_sigma", 0.011)
         self.declare_parameter("range_noise_sigma", 0.1)
         self.declare_parameter("beam0_frame", "beam0_link")
@@ -46,7 +46,6 @@ class DvlConverterNode(Node):
         self.declare_parameter("config_command_topic", "dvl/config/command")
         self.declare_parameter("dvl_frame", "dvl_link")
 
-        self._velocity_noise_sigmas = self.get_parameter("velocity_noise_sigmas").value
         self._beam_velocity_noise_sigma = self.get_parameter("beam_velocity_noise_sigma").value
         self._range_noise_sigma = self.get_parameter("range_noise_sigma").value
         self._beam_frames = [
@@ -113,15 +112,6 @@ class DvlConverterNode(Node):
         dvl_msg.header.stamp = msg.header.stamp
         dvl_msg.header.frame_id = self._dvl_frame
 
-        if self._add_noise:
-            noise_x = random.gauss(0, self._velocity_noise_sigmas[0])
-            noise_y = random.gauss(0, self._velocity_noise_sigmas[1])
-            noise_z = random.gauss(0, self._velocity_noise_sigmas[2])
-        else:
-            noise_x = 0.0
-            noise_y = 0.0
-            noise_z = 0.0
-
         # Convert FLU -> FRD
         frd_velocity = _FRD_R_FLU.apply(
             [
@@ -131,24 +121,13 @@ class DvlConverterNode(Node):
             ]
         )
 
-        dvl_msg.velocity.x = frd_velocity[0] + noise_x
-        dvl_msg.velocity.y = frd_velocity[1] + noise_y
-        dvl_msg.velocity.z = frd_velocity[2] + noise_z
-
-        dvl_msg.velocity_valid = True
-
         # Convert nanoseconds to microseconds
         dvl_msg.time_of_validity = int(msg.header.stamp.sec * 1e6 + msg.header.stamp.nanosec / 1e3)
 
-        dvl_msg.covariance = [0.0] * 9
-        dvl_msg.covariance[0] = self._velocity_noise_sigmas[0] ** 2
-        dvl_msg.covariance[4] = self._velocity_noise_sigmas[1] ** 2
-        dvl_msg.covariance[8] = self._velocity_noise_sigmas[2] ** 2
-
         dvl_msg.altitude = -1.0
 
+        frd_beam_axes: list[np.ndarray] = []
         if self._beam_ranges is not None:
-            frd_beam_axes = []
             for beam_frame in self._beam_frames:
                 try:
                     dvl_T_beam_tf = self._tf_buffer.lookup_transform(
@@ -181,14 +160,38 @@ class DvlConverterNode(Node):
                 if beam_altitudes:
                     dvl_msg.altitude = sum(beam_altitudes) / len(beam_altitudes)
 
+        frd_beam_axis_matrix = np.array(
+            [frd_beam_axes[beam.id] for beam in dvl_msg.beams if beam.valid]
+        )
+
+        if len(frd_beam_axis_matrix) >= 3 and np.linalg.matrix_rank(frd_beam_axis_matrix) == 3:
+            beam_velocities = np.array([beam.velocity for beam in dvl_msg.beams if beam.valid])
+            gram_inverse = np.linalg.inv(frd_beam_axis_matrix.T @ frd_beam_axis_matrix)
+
+            dvl_msg.velocity_valid = True
+            frd_velocity = gram_inverse @ frd_beam_axis_matrix.T @ beam_velocities
+            frd_velocity_covariance = gram_inverse * self._beam_velocity_noise_sigma**2
+        else:
+            dvl_msg.velocity_valid = False
+            dvl_msg.altitude = -1.0
+            frd_velocity = np.zeros(3)
+            frd_velocity_covariance = _LOST_LOCK_VELOCITY_VARIANCE * np.eye(3)
+
+        dvl_msg.velocity.x = float(frd_velocity[0])
+        dvl_msg.velocity.y = float(frd_velocity[1])
+        dvl_msg.velocity.z = float(frd_velocity[2])
+
+        dvl_msg.covariance = frd_velocity_covariance.flatten().tolist()
+        dvl_msg.fom = float(np.sqrt(np.linalg.eigvalsh(frd_velocity_covariance).max()))
+
         self._output_pub.publish(dvl_msg)
 
     def _create_beam_msgs(
-        self, ranges: np.ndarray, frd_velocity: np.ndarray, frd_beam_axes: list[np.ndarray]
+        self, beam_ranges: np.ndarray, frd_velocity: np.ndarray, frd_beam_axes: list[np.ndarray]
     ) -> list[DVLBeam]:
         beams = []
         for beam_id, (beam_range, frd_beam_axis) in enumerate(
-            zip(ranges, frd_beam_axes, strict=True)
+            zip(beam_ranges, frd_beam_axes, strict=True)
         ):
             beam = DVLBeam()
             beam.id = beam_id
