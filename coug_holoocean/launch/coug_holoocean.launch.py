@@ -68,17 +68,14 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument(
                 "use_sim_time",
                 default_value="true",
-                description="Use simulation/rosbag clock if true",
             ),
             DeclareLaunchArgument(
                 "agent_ns",
                 default_value="auv0",
-                description="Namespace for the agent (e.g. auv0)",
             ),
             DeclareLaunchArgument(
                 "add_noise",
                 default_value="true",
-                description="Whether to add noise to sensor data",
             ),
             Node(
                 package="coug_holoocean",
