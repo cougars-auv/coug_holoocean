@@ -3,7 +3,7 @@
 <package format="3">
   <name>coug_holoocean</name>
   <version>0.0.0</version>
-  <description>HoloOcean simulator bridge and message converters.</description>
+  <description>ROS 2 bridge for the HoloOcean simulator.</description>
   <maintainer email="snelsond@byu.edu">snelsondurrant</maintainer>
   <license>Apache-2.0</license>
 
