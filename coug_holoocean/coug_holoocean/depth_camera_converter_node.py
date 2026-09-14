@@ -16,7 +16,7 @@ import message_filters
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data, qos_profile_system_default
+from rclpy.qos import qos_profile_system_default
 from sensor_msgs.msg import CameraInfo, Image
 
 
@@ -42,17 +42,17 @@ class DepthCameraConverterNode(Node):
         self._depth_pub = self.create_publisher(
             Image,
             self.get_parameter("depth_output_topic").value,
-            qos_profile_sensor_data,
+            qos_profile_system_default,
         )
         self._info_pub = self.create_publisher(
             CameraInfo,
             self.get_parameter("info_output_topic").value,
-            qos_profile_sensor_data,
+            qos_profile_system_default,
         )
         self._color_pub = self.create_publisher(
             Image,
             self.get_parameter("color_output_topic").value,
-            qos_profile_sensor_data,
+            qos_profile_system_default,
         )
 
         self._depth_sub = message_filters.Subscriber(
