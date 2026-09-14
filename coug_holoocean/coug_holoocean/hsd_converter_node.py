@@ -19,7 +19,7 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 from std_msgs.msg import Header
 
-MIN_SPEED_RPM = 0.0
+MIN_SPEED_RPM = -1525.0
 MAX_SPEED_RPM = 1525.0
 
 
