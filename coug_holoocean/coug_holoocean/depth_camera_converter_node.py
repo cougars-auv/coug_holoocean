@@ -17,6 +17,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
+from rclpy.time import Time
 from sensor_msgs.msg import CameraInfo, Image
 
 
@@ -25,6 +26,7 @@ class DepthCameraConverterNode(Node):
         super().__init__("depth_camera_converter_node")
 
         self.declare_parameter("sync_slop_sec", 0.05)
+        self.declare_parameter("stamp_offset_sec", 0.0)
         self.declare_parameter("min_range", 0.2)
         self.declare_parameter("max_range", 20.0)
         self.declare_parameter("depth_input_topic", "DepthCameraDepth")
@@ -35,6 +37,9 @@ class DepthCameraConverterNode(Node):
         self.declare_parameter("color_output_topic", "depth/image_rect_color")
         self.declare_parameter("depth_camera_frame", "depth_camera_link")
 
+        self._stamp_offset_ns = round(
+            self.get_parameter("stamp_offset_sec").get_parameter_value().double_value * 1e9
+        )
         self._min_range = self.get_parameter("min_range").value
         self._max_range = self.get_parameter("max_range").value
         self._depth_camera_frame = self.get_parameter("depth_camera_frame").value
@@ -84,10 +89,13 @@ class DepthCameraConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _sync_callback(self, depth_msg: Image, info_msg: CameraInfo, color_msg: Image) -> None:
+        captured_ns = max(
+            Time.from_msg(depth_msg.header.stamp).nanoseconds - self._stamp_offset_ns, 0
+        )
+        stamp = Time(nanoseconds=captured_ns).to_msg()
         for msg in (depth_msg, info_msg, color_msg):
             msg.header.frame_id = self._depth_camera_frame
-        for msg in (info_msg, color_msg):
-            msg.header.stamp = depth_msg.header.stamp
+            msg.header.stamp = stamp
 
         depth = (
             np.frombuffer(depth_msg.data, np.float32)
