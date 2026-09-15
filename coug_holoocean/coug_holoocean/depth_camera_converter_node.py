@@ -35,7 +35,7 @@ class DepthCameraConverterNode(Node):
         self.declare_parameter("depth_output_topic", "depth/image_rect")
         self.declare_parameter("info_output_topic", "depth/camera_info")
         self.declare_parameter("color_output_topic", "depth/image_rect_color")
-        self.declare_parameter("depth_camera_frame", "depth_camera_link")
+        self.declare_parameter("depth_camera_frame", "depth_camera_optical_link")
 
         self._stamp_offset_ns = round(
             self.get_parameter("stamp_offset_sec").get_parameter_value().double_value * 1e9

@@ -30,8 +30,8 @@ class StereoConverterNode(Node):
         self.declare_parameter("back_output_topic", "stereo/back/image_raw")
         self.declare_parameter("front_stereo_info_topic", "stereo/front/camera_info")
         self.declare_parameter("back_stereo_info_topic", "stereo/back/camera_info")
-        self.declare_parameter("front_stereo_frame", "front_stereo_link")
-        self.declare_parameter("back_stereo_frame", "back_stereo_link")
+        self.declare_parameter("front_stereo_frame", "front_stereo_optical_link")
+        self.declare_parameter("back_stereo_frame", "back_stereo_optical_link")
 
         sync_slop_sec = self.get_parameter("sync_slop_sec").value
         self._front_input_topic = self.get_parameter("front_input_topic").value

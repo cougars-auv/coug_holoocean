@@ -46,7 +46,7 @@ def generate_launch_description() -> LaunchDescription:
         ]
     )
 
-    depth_camera_link_frame = agent_frame(agent_ns, "depth_camera_link")
+    depth_camera_optical_frame = agent_frame(agent_ns, "depth_camera_optical_link")
     depth_link_frame = agent_frame(agent_ns, "depth_link")
     dvl_link_frame = agent_frame(agent_ns, "dvl_link")
     beam0_link_frame = agent_frame(agent_ns, "beam0_link")
@@ -57,8 +57,8 @@ def generate_launch_description() -> LaunchDescription:
     gps_link_frame = agent_frame(agent_ns, "gps_link")
     imu_link_frame = agent_frame(agent_ns, "imu_link")
     modem_link_frame = agent_frame(agent_ns, "modem_link")
-    front_stereo_link_frame = agent_frame(agent_ns, "front_stereo_link")
-    back_stereo_link_frame = agent_frame(agent_ns, "back_stereo_link")
+    front_stereo_optical_frame = agent_frame(agent_ns, "front_stereo_optical_link")
+    back_stereo_optical_frame = agent_frame(agent_ns, "back_stereo_optical_link")
     com_link_frame = agent_frame(agent_ns, "com_link")
 
     agent_name = PythonExpression(["'", agent_ns, "' if '", agent_ns, "' != '' else 'auv0'"])
@@ -96,7 +96,7 @@ def generate_launch_description() -> LaunchDescription:
                     agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
-                        "depth_camera_frame": depth_camera_link_frame,
+                        "depth_camera_frame": depth_camera_optical_frame,
                     },
                 ],
             ),
@@ -292,8 +292,8 @@ def generate_launch_description() -> LaunchDescription:
                     agent_param_file,
                     {
                         "use_sim_time": use_sim_time,
-                        "front_stereo_frame": front_stereo_link_frame,
-                        "back_stereo_frame": back_stereo_link_frame,
+                        "front_stereo_frame": front_stereo_optical_frame,
+                        "back_stereo_frame": back_stereo_optical_frame,
                     },
                 ],
             ),
