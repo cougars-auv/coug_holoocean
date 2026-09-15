@@ -29,12 +29,13 @@ class DepthCameraConverterNode(Node):
         self.declare_parameter("stamp_offset_sec", 0.0)
         self.declare_parameter("min_range", 0.2)
         self.declare_parameter("max_range", 20.0)
+        self.declare_parameter("color_input_topic", "RGBCameraDepth")
         self.declare_parameter("depth_input_topic", "DepthCameraDepth")
         self.declare_parameter("info_input_topic", "DepthCameraInfo")
-        self.declare_parameter("color_input_topic", "RGBCameraDepth")
-        self.declare_parameter("depth_output_topic", "camera/depth/image_rect_raw")
-        self.declare_parameter("info_output_topic", "camera/rgb/camera_info")
         self.declare_parameter("color_output_topic", "camera/rgb/image_rect_color")
+        self.declare_parameter("color_info_output_topic", "camera/rgb/camera_info")
+        self.declare_parameter("depth_output_topic", "camera/depth/depth_registered")
+        self.declare_parameter("depth_info_output_topic", "camera/depth/camera_info")
         self.declare_parameter("depth_camera_frame", "depth_camera_optical_link")
 
         self._stamp_offset_ns = round(
@@ -44,19 +45,24 @@ class DepthCameraConverterNode(Node):
         self._max_range = self.get_parameter("max_range").value
         self._depth_camera_frame = self.get_parameter("depth_camera_frame").value
 
+        self._color_pub = self.create_publisher(
+            Image,
+            self.get_parameter("color_output_topic").value,
+            qos_profile_system_default,
+        )
+        self._color_info_pub = self.create_publisher(
+            CameraInfo,
+            self.get_parameter("color_info_output_topic").value,
+            qos_profile_system_default,
+        )
         self._depth_pub = self.create_publisher(
             Image,
             self.get_parameter("depth_output_topic").value,
             qos_profile_system_default,
         )
-        self._info_pub = self.create_publisher(
+        self._depth_info_pub = self.create_publisher(
             CameraInfo,
-            self.get_parameter("info_output_topic").value,
-            qos_profile_system_default,
-        )
-        self._color_pub = self.create_publisher(
-            Image,
-            self.get_parameter("color_output_topic").value,
+            self.get_parameter("depth_info_output_topic").value,
             qos_profile_system_default,
         )
 
@@ -105,9 +111,10 @@ class DepthCameraConverterNode(Node):
         depth[(depth < self._min_range) | (depth > self._max_range)] = np.nan
         depth_msg.data = depth.tobytes()
 
-        self._depth_pub.publish(depth_msg)
-        self._info_pub.publish(info_msg)
         self._color_pub.publish(color_msg)
+        self._color_info_pub.publish(info_msg)
+        self._depth_pub.publish(depth_msg)
+        self._depth_info_pub.publish(info_msg)
 
 
 def main(args: list[str] | None = None) -> None:
