@@ -45,6 +45,7 @@ def generate_launch_description() -> LaunchDescription:
             [agent_ns, "_params.yaml"],
         ]
     )
+    scenario_param_file = LaunchConfiguration("scenario_param_file")
 
     depth_camera_optical_frame = agent_frame(agent_ns, "depth_camera_optical_link")
     depth_link_frame = agent_frame(agent_ns, "depth_link")
@@ -74,6 +75,10 @@ def generate_launch_description() -> LaunchDescription:
                 default_value="auv0",
             ),
             DeclareLaunchArgument(
+                "scenario_param_file",
+                default_value=agent_param_file,
+            ),
+            DeclareLaunchArgument(
                 "add_noise",
                 default_value="true",
             ),
@@ -84,6 +89,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {"use_sim_time": use_sim_time, "agent_name": agent_name},
                 ],
             ),
@@ -94,6 +100,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "depth_camera_frame": depth_camera_optical_frame,
@@ -119,6 +126,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "depth_frame": depth_link_frame,
@@ -134,6 +142,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "dvl_frame": dvl_link_frame,
@@ -152,6 +161,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "base_frame": base_link_frame,
@@ -168,6 +178,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {"use_sim_time": use_sim_time},
                 ],
             ),
@@ -178,6 +189,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "gps_frame": gps_link_frame,
@@ -192,6 +204,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {"use_sim_time": use_sim_time, "agent_name": agent_name},
                 ],
             ),
@@ -202,6 +215,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "imu_frame": imu_link_frame,
@@ -217,6 +231,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "mag_frame": imu_link_frame,
@@ -232,6 +247,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "modem_frame": modem_link_frame,
@@ -246,6 +262,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "depth_frame": modem_link_frame,
@@ -261,6 +278,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "imu_frame": modem_link_frame,
@@ -276,6 +294,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {"use_sim_time": use_sim_time},
                 ],
             ),
@@ -286,6 +305,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "depth_frame": depth_link_frame,
@@ -300,6 +320,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "front_stereo_frame": front_stereo_optical_frame,
@@ -314,6 +335,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "base_frame": base_link_frame,
@@ -328,6 +350,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
+                    scenario_param_file,
                     {
                         "use_sim_time": use_sim_time,
                         "wrench_frame": com_link_frame,
