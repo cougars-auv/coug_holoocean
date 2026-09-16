@@ -22,7 +22,11 @@ from holoocean_interfaces.msg import DVLSensorRange
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data, qos_profile_system_default
 from scipy.spatial.transform import Rotation
-from tf2_ros import Buffer, TransformException, TransformListener
+from tf2_ros import (  # type: ignore[attr-defined, unused-ignore]
+    Buffer,
+    TransformException,
+    TransformListener,
+)
 
 _FRD_R_FLU = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
 _LOST_LOCK_VELOCITY_VARIANCE = 100.01

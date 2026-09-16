@@ -90,7 +90,7 @@ class GpsConverterNode(Node):
         navsat_msg.position_covariance[0] = self._noise_sigmas[0] ** 2
         navsat_msg.position_covariance[4] = self._noise_sigmas[1] ** 2
         navsat_msg.position_covariance[8] = self._noise_sigmas[2] ** 2
-        navsat_msg.position_covariance_type = navsat_msg.COVARIANCE_TYPE_DIAGONAL_KNOWN
+        navsat_msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_DIAGONAL_KNOWN
 
         self._output_pub.publish(navsat_msg)
 

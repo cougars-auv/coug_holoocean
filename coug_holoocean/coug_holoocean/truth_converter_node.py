@@ -12,13 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import cast
+
 import rclpy
 import tf2_geometry_msgs  # noqa: F401
 from geometry_msgs.msg import PoseStamped, TransformStamped
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
-from tf2_ros import Buffer, TransformBroadcaster, TransformException, TransformListener
+from tf2_ros import (  # type: ignore[attr-defined, unused-ignore]
+    Buffer,
+    TransformBroadcaster,
+    TransformException,
+    TransformListener,
+)
 
 
 class TruthConverterNode(Node):
@@ -57,10 +64,13 @@ class TruthConverterNode(Node):
         holo_T_base.pose = msg.pose.pose
 
         try:
-            map_T_base = self._tf_buffer.transform(
-                holo_T_base,
-                self._map_frame,
-                timeout=rclpy.duration.Duration(seconds=self._tf_timeout_sec),
+            map_T_base = cast(
+                PoseStamped,
+                self._tf_buffer.transform(
+                    holo_T_base,
+                    self._map_frame,
+                    timeout=rclpy.duration.Duration(seconds=self._tf_timeout_sec),
+                ),
             )
         except TransformException as e:
             self.get_logger().warn(

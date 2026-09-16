@@ -14,6 +14,7 @@
 
 import math
 import random
+from typing import cast
 
 import numpy as np
 import rclpy
@@ -24,7 +25,11 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data, qos_profile_system_default
 from scipy.spatial.transform import Rotation
 from tf2_geometry_msgs import do_transform_pose
-from tf2_ros import Buffer, TransformException, TransformListener
+from tf2_ros import (  # type: ignore[attr-defined, unused-ignore]
+    Buffer,
+    TransformException,
+    TransformListener,
+)
 
 _NED_R_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv()
 _FLU_R_FRD = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
@@ -103,10 +108,13 @@ class DvlOdomConverterNode(Node):
         holo_T_base.pose = msg.pose.pose
 
         try:
-            map_T_base = self._tf_buffer.transform(
-                holo_T_base,
-                self._map_frame,
-                timeout=rclpy.duration.Duration(seconds=self._tf_timeout_sec),
+            map_T_base = cast(
+                PoseStamped,
+                self._tf_buffer.transform(
+                    holo_T_base,
+                    self._map_frame,
+                    timeout=rclpy.duration.Duration(seconds=self._tf_timeout_sec),
+                ),
             )
         except TransformException as e:
             self.get_logger().warn(
