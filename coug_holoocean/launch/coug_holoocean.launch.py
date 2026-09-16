@@ -45,7 +45,9 @@ def generate_launch_description() -> LaunchDescription:
             [agent_ns, "_params.yaml"],
         ]
     )
-    scenario_param_file = LaunchConfiguration("scenario_param_file")
+    scenario_param_file = PythonExpression(
+        ["'", LaunchConfiguration("scenario_param_file"), "' or '", agent_param_file, "'"]
+    )
 
     depth_camera_optical_frame = agent_frame(agent_ns, "depth_camera_optical_link")
     depth_link_frame = agent_frame(agent_ns, "depth_link")
@@ -76,7 +78,7 @@ def generate_launch_description() -> LaunchDescription:
             ),
             DeclareLaunchArgument(
                 "scenario_param_file",
-                default_value=agent_param_file,
+                default_value="",
             ),
             DeclareLaunchArgument(
                 "add_noise",
