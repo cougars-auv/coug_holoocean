@@ -42,7 +42,7 @@ def generate_launch_description() -> LaunchDescription:
     agent_param_file = PathJoinSubstitution(
         [
             EnvironmentVariable("CONFIG_DIR"),
-            PythonExpression(["'", agent_ns, "' + '_params.yaml'"]),
+            [agent_ns, "_params.yaml"],
         ]
     )
 
@@ -99,6 +99,18 @@ def generate_launch_description() -> LaunchDescription:
                         "depth_camera_frame": depth_camera_optical_frame,
                     },
                 ],
+            ),
+            Node(
+                package="depth_image_proc",
+                executable="point_cloud_xyzrgb_node",
+                name="depth_camera_cloud_node",
+                remappings=[
+                    ("depth_registered/image_rect", "camera/depth/depth_registered"),
+                    ("rgb/image_rect_color", "camera/rgb/image_rect_color"),
+                    ("rgb/camera_info", "camera/rgb/camera_info"),
+                    ("points", "camera/point_cloud/cloud_registered"),
+                ],
+                parameters=[{"use_sim_time": use_sim_time}],
             ),
             Node(
                 package="coug_holoocean",
@@ -264,9 +276,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
-                    {
-                        "use_sim_time": use_sim_time,
-                    },
+                    {"use_sim_time": use_sim_time},
                 ],
             ),
             Node(
