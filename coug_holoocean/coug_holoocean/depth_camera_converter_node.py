@@ -94,7 +94,7 @@ class DepthCameraConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def _sync_callback(self, depth_msg: Image, info_msg: CameraInfo, color_msg: Image) -> None:
+    def _sync_callback(self, depth_msg: Image, info_msg: CameraInfo, color_msg: Image, /) -> None:
         captured_ns = max(
             Time.from_msg(depth_msg.header.stamp).nanoseconds - self._stamp_offset_ns, 0
         )

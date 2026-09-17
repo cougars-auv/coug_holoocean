@@ -17,6 +17,7 @@ import random
 from typing import cast
 
 import numpy as np
+import numpy.typing as npt
 import rclpy
 from dvl_msgs.msg import DVLDR, ConfigCommand
 from geometry_msgs.msg import PoseStamped, TransformStamped
@@ -64,7 +65,7 @@ class DvlOdomConverterNode(Node):
         self._ref_position = np.zeros(3)
         self._ref_rotation = Rotation.identity()
         self._ref_stamp = None
-        self._last_position: np.ndarray | None = None
+        self._last_position: npt.NDArray[np.float64] | None = None
         self._dr_position = np.zeros(3)
         self._reset_pending = False
         self._reset_drift()

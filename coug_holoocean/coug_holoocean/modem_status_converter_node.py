@@ -64,7 +64,7 @@ class ModemStatusConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def _sync_callback(self, imu_msg: Imu, depth_msg: Odometry) -> None:
+    def _sync_callback(self, imu_msg: Imu, depth_msg: Odometry, /) -> None:
         self._output_pub.publish(self._create_modem_status_msg(imu_msg, depth_msg))
 
     def _create_modem_status_msg(self, imu_msg: Imu, depth_msg: Odometry) -> ModemStatus:

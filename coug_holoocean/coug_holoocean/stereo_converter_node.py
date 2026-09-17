@@ -70,7 +70,7 @@ class StereoConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def _sync_callback(self, front_msg: Image, back_msg: Image) -> None:
+    def _sync_callback(self, front_msg: Image, back_msg: Image, /) -> None:
         back_msg.header.stamp = front_msg.header.stamp
 
         front_msg.header.frame_id = self._front_stereo_frame

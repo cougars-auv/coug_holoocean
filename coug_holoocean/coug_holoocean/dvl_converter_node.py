@@ -15,6 +15,7 @@
 import random
 
 import numpy as np
+import numpy.typing as npt
 import rclpy
 from dvl_msgs.msg import DVL, ConfigCommand, DVLBeam
 from geometry_msgs.msg import TwistWithCovarianceStamped
@@ -130,7 +131,7 @@ class DvlConverterNode(Node):
 
         dvl_msg.altitude = -1.0
 
-        frd_beam_axes: list[np.ndarray] = []
+        frd_beam_axes: list[npt.NDArray[np.float64]] = []
         if self._beam_ranges is not None:
             for beam_frame in self._beam_frames:
                 try:
@@ -191,7 +192,10 @@ class DvlConverterNode(Node):
         self._output_pub.publish(dvl_msg)
 
     def _create_beam_msgs(
-        self, beam_ranges: np.ndarray, frd_velocity: np.ndarray, frd_beam_axes: list[np.ndarray]
+        self,
+        beam_ranges: npt.NDArray[np.float64],
+        frd_velocity: npt.NDArray[np.float64],
+        frd_beam_axes: list[npt.NDArray[np.float64]],
     ) -> list[DVLBeam]:
         beams = []
         for beam_id, (beam_range, frd_beam_axis) in enumerate(

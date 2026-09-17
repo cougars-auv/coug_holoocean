@@ -82,7 +82,7 @@ class ImuConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def _sync_callback(self, imu_msg: Imu, ahrs_msg: Vector3Stamped) -> None:
+    def _sync_callback(self, imu_msg: Imu, ahrs_msg: Vector3Stamped, /) -> None:
         roll_rad = math.radians(ahrs_msg.vector.x)
         pitch_rad = math.radians(ahrs_msg.vector.y)
         yaw_rad = math.radians(ahrs_msg.vector.z)
@@ -94,7 +94,7 @@ class ImuConverterNode(Node):
             map_noise = [random.gauss(0, sigma) for sigma in self._ahrs_noise_sigmas]
             map_R_ahrs = Rotation.from_rotvec(map_noise) * map_R_ahrs
 
-        q = map_R_ahrs.as_quat()
+        q = map_R_ahrs.as_quat(canonical=False)
 
         imu_msg.header.frame_id = self._imu_frame
 
