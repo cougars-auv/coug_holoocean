@@ -112,7 +112,12 @@ def generate_launch_description() -> LaunchDescription:
                     ("rgb/camera_info", "camera/rgb/camera_info"),
                     ("points", "camera/point_cloud/cloud_registered"),
                 ],
-                parameters=[{"use_sim_time": use_sim_time}],
+                parameters=[
+                    fleet_param_file,
+                    agent_param_file,
+                    scenario_param_file,
+                    {"use_sim_time": use_sim_time},
+                ],
             ),
             Node(
                 package="coug_holoocean",
