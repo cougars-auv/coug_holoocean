@@ -17,7 +17,6 @@ from coug_interfaces.msg import ControlSetpoint
 from holoocean_interfaces.msg import DesiredCommand
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
-from std_msgs.msg import Header
 
 MIN_SPEED_RPM = -1525.0
 MAX_SPEED_RPM = 1525.0
@@ -67,7 +66,6 @@ class HsdConverterNode(Node):
 
     def _create_desired_command_msg(self, value: float) -> DesiredCommand:
         msg = DesiredCommand()
-        msg.header = Header()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self._agent_name
         msg.data = float(value)

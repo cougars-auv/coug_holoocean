@@ -29,7 +29,7 @@ class GpsConverterNode(Node):
         self.declare_parameter("origin_latitude", 40.33940)
         self.declare_parameter("origin_longitude", -111.90721)
         self.declare_parameter("origin_altitude", 1412.0)
-        self.declare_parameter("noise_sigmas", [0.015, 0.015, 0.025])
+        self.declare_parameter("position_noise_sigmas", [0.015, 0.015, 0.025])
         self.declare_parameter("add_noise", True)
         self.declare_parameter("input_topic", "GPSSensor")
         self.declare_parameter("output_topic", "gps/fix")
@@ -38,7 +38,7 @@ class GpsConverterNode(Node):
         self._origin_lat = self.get_parameter("origin_latitude").value
         self._origin_lon = self.get_parameter("origin_longitude").value
         self._origin_alt = self.get_parameter("origin_altitude").value
-        self._noise_sigmas = self.get_parameter("noise_sigmas").value
+        self._position_noise_sigmas = self.get_parameter("position_noise_sigmas").value
         self._add_noise = self.get_parameter("add_noise").value
         input_topic = self.get_parameter("input_topic").value
         output_topic = self.get_parameter("output_topic").value
@@ -62,9 +62,9 @@ class GpsConverterNode(Node):
         navsat_msg.status.service = navsat_msg.status.SERVICE_GPS
 
         if self._add_noise:
-            d_east = msg.pose.pose.position.x + random.gauss(0, self._noise_sigmas[0])
-            d_north = msg.pose.pose.position.y + random.gauss(0, self._noise_sigmas[1])
-            d_up = msg.pose.pose.position.z + random.gauss(0, self._noise_sigmas[2])
+            d_east = msg.pose.pose.position.x + random.gauss(0, self._position_noise_sigmas[0])
+            d_north = msg.pose.pose.position.y + random.gauss(0, self._position_noise_sigmas[1])
+            d_up = msg.pose.pose.position.z + random.gauss(0, self._position_noise_sigmas[2])
         else:
             d_east = msg.pose.pose.position.x
             d_north = msg.pose.pose.position.y
@@ -87,9 +87,9 @@ class GpsConverterNode(Node):
         navsat_msg.longitude = lon
         navsat_msg.altitude = alt
 
-        navsat_msg.position_covariance[0] = self._noise_sigmas[0] ** 2
-        navsat_msg.position_covariance[4] = self._noise_sigmas[1] ** 2
-        navsat_msg.position_covariance[8] = self._noise_sigmas[2] ** 2
+        navsat_msg.position_covariance[0] = self._position_noise_sigmas[0] ** 2
+        navsat_msg.position_covariance[4] = self._position_noise_sigmas[1] ** 2
+        navsat_msg.position_covariance[8] = self._position_noise_sigmas[2] ** 2
         navsat_msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_DIAGONAL_KNOWN
 
         self._output_pub.publish(navsat_msg)

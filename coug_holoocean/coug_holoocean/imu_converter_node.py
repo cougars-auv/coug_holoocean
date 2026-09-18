@@ -23,6 +23,8 @@ from rclpy.qos import qos_profile_system_default
 from scipy.spatial.transform import Rotation
 from sensor_msgs.msg import Imu
 
+_UNKNOWN_COVARIANCE = -1.0
+
 
 class ImuConverterNode(Node):
     def __init__(self) -> None:
@@ -31,7 +33,7 @@ class ImuConverterNode(Node):
         self.declare_parameter("sync_slop_sec", 0.05)
         self.declare_parameter("accel_noise_sigmas", [0.0079, 0.0079, 0.0079])
         self.declare_parameter("gyro_noise_sigmas", [0.00074, 0.00074, 0.00074])
-        self.declare_parameter("ahrs_noise_sigmas", [0.00698, 0.00698, 0.01745])
+        self.declare_parameter("orientation_noise_sigmas", [0.00698, 0.00698, 0.01745])
         self.declare_parameter("add_noise", True)
         self.declare_parameter("add_bias", True)
         self.declare_parameter("accel_bias_rw_sigmas", [1.4e-5, 1.4e-5, 1.4e-5])
@@ -45,7 +47,7 @@ class ImuConverterNode(Node):
         sync_slop_sec = self.get_parameter("sync_slop_sec").value
         self._accel_noise_sigmas = self.get_parameter("accel_noise_sigmas").value
         self._gyro_noise_sigmas = self.get_parameter("gyro_noise_sigmas").value
-        self._ahrs_noise_sigmas = self.get_parameter("ahrs_noise_sigmas").value
+        self._orientation_noise_sigmas = self.get_parameter("orientation_noise_sigmas").value
         self._add_noise = self.get_parameter("add_noise").value
         self._add_bias = self.get_parameter("add_bias").value
         self._accel_bias_rw_sigmas = self.get_parameter("accel_bias_rw_sigmas").value
@@ -91,7 +93,7 @@ class ImuConverterNode(Node):
 
         if self._add_noise:
             # Perturb IMU orientation about the map-frame axes
-            map_noise = [random.gauss(0, sigma) for sigma in self._ahrs_noise_sigmas]
+            map_noise = [random.gauss(0, sigma) for sigma in self._orientation_noise_sigmas]
             map_R_ahrs = Rotation.from_rotvec(map_noise) * map_R_ahrs
 
         q = map_R_ahrs.as_quat(canonical=False)
@@ -148,9 +150,9 @@ class ImuConverterNode(Node):
         imu_msg.orientation.z = q[2]
         imu_msg.orientation.w = q[3]
 
-        imu_msg.orientation_covariance[0] = self._ahrs_noise_sigmas[0] ** 2
-        imu_msg.orientation_covariance[4] = self._ahrs_noise_sigmas[1] ** 2
-        imu_msg.orientation_covariance[8] = self._ahrs_noise_sigmas[2] ** 2
+        imu_msg.orientation_covariance[0] = self._orientation_noise_sigmas[0] ** 2
+        imu_msg.orientation_covariance[4] = self._orientation_noise_sigmas[1] ** 2
+        imu_msg.orientation_covariance[8] = self._orientation_noise_sigmas[2] ** 2
 
         self._output_pub.publish(imu_msg)
 
@@ -162,6 +164,9 @@ class ImuConverterNode(Node):
         bias_msg.twist.twist.angular.x = self._gyro_bias[0]
         bias_msg.twist.twist.angular.y = self._gyro_bias[1]
         bias_msg.twist.twist.angular.z = self._gyro_bias[2]
+
+        bias_msg.twist.covariance[0] = _UNKNOWN_COVARIANCE
+        bias_msg.twist.covariance[21] = _UNKNOWN_COVARIANCE
 
         self._bias_pub.publish(bias_msg)
 

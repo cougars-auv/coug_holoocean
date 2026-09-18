@@ -40,7 +40,7 @@ class DvlOdomConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("dvl_odom_converter_node")
 
-        self.declare_parameter("noise_sigma_scale", 0.0101)
+        self.declare_parameter("position_noise_sigma_scale", 0.0101)
         self.declare_parameter("yaw_drift_sigma", 0.3)
         self.declare_parameter("add_noise", True)
         self.declare_parameter("tf_timeout_sec", 0.1)
@@ -51,7 +51,7 @@ class DvlOdomConverterNode(Node):
         self.declare_parameter("dvl_frame", "dvl_link")
         self.declare_parameter("map_frame", "map")
 
-        self._noise_sigma_scale = self.get_parameter("noise_sigma_scale").value
+        self._position_noise_sigma_scale = self.get_parameter("position_noise_sigma_scale").value
         self._yaw_drift_sigma = self.get_parameter("yaw_drift_sigma").value
         self._add_noise = self.get_parameter("add_noise").value
         self._tf_timeout_sec = self.get_parameter("tf_timeout_sec").value
@@ -93,7 +93,7 @@ class DvlOdomConverterNode(Node):
         self._yaw_drift_rate = 0.0
 
         if self._add_noise:
-            self._scale_error = random.gauss(0, self._noise_sigma_scale)
+            self._scale_error = random.gauss(0, self._position_noise_sigma_scale)
             self._yaw_drift_rate = random.gauss(0, self._yaw_drift_sigma)
 
     def _config_callback(self, msg: ConfigCommand) -> None:
@@ -201,11 +201,10 @@ class DvlOdomConverterNode(Node):
         dvl_msg.position.x = ned_x
         dvl_msg.position.y = ned_y
         dvl_msg.position.z = ned_z
-        dvl_msg.pos_std = self._noise_sigma_scale * self._distance_traveled
+        dvl_msg.pos_std = self._position_noise_sigma_scale * self._distance_traveled
         dvl_msg.roll = ned_roll
         dvl_msg.pitch = ned_pitch
         dvl_msg.yaw = ned_yaw
-        dvl_msg.status = 0
 
         self._output_pub.publish(dvl_msg)
 

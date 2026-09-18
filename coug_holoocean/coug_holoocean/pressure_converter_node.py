@@ -28,7 +28,7 @@ class PressureConverterNode(Node):
         self.declare_parameter("water_density", 997.0)
         self.declare_parameter("gravity", 9.81)
         self.declare_parameter("atmospheric_pressure", 101325.0)
-        self.declare_parameter("noise_sigma", 195.61)
+        self.declare_parameter("fluid_pressure_noise_sigma", 195.61)
         self.declare_parameter("add_noise", True)
         self.declare_parameter("input_topic", "DepthSensor")
         self.declare_parameter("output_topic", "pressure/data")
@@ -37,7 +37,7 @@ class PressureConverterNode(Node):
         self._water_density = self.get_parameter("water_density").value
         self._gravity = self.get_parameter("gravity").value
         self._atmospheric_pressure = self.get_parameter("atmospheric_pressure").value
-        self._noise_sigma = self.get_parameter("noise_sigma").value
+        self._fluid_pressure_noise_sigma = self.get_parameter("fluid_pressure_noise_sigma").value
         self._add_noise = self.get_parameter("add_noise").value
         input_topic = self.get_parameter("input_topic").value
         output_topic = self.get_parameter("output_topic").value
@@ -64,10 +64,10 @@ class PressureConverterNode(Node):
         pressure_msg.header.stamp = msg.header.stamp
         pressure_msg.header.frame_id = self._depth_frame
         pressure_msg.fluid_pressure = pressure
-        pressure_msg.variance = self._noise_sigma**2
+        pressure_msg.variance = self._fluid_pressure_noise_sigma**2
 
         if self._add_noise:
-            pressure_msg.fluid_pressure += random.gauss(0, self._noise_sigma)
+            pressure_msg.fluid_pressure += random.gauss(0, self._fluid_pressure_noise_sigma)
 
         self._output_pub.publish(pressure_msg)
 

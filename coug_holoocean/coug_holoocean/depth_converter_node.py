@@ -19,19 +19,22 @@ from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 
+_UNKNOWN_COVARIANCE = -1.0
+_UNMEASURED_VARIANCE = 1e9
+
 
 class DepthConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("depth_converter_node")
 
-        self.declare_parameter("noise_sigma", 0.02)
+        self.declare_parameter("position_z_noise_sigma", 0.02)
         self.declare_parameter("add_noise", True)
         self.declare_parameter("input_topic", "DepthSensor")
         self.declare_parameter("output_topic", "depth/odometry")
         self.declare_parameter("depth_frame", "depth_link")
         self.declare_parameter("map_frame", "map")
 
-        self._noise_sigma = self.get_parameter("noise_sigma").value
+        self._position_z_noise_sigma = self.get_parameter("position_z_noise_sigma").value
         self._add_noise = self.get_parameter("add_noise").value
         input_topic = self.get_parameter("input_topic").value
         output_topic = self.get_parameter("output_topic").value
@@ -46,15 +49,26 @@ class DepthConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _odom_callback(self, msg: Odometry) -> None:
-        msg.header.frame_id = self._map_frame
-        msg.child_frame_id = self._depth_frame
+        depth_msg = Odometry()
+        depth_msg.header.stamp = msg.header.stamp
+        depth_msg.header.frame_id = self._map_frame
+        depth_msg.child_frame_id = self._depth_frame
 
-        msg.pose.covariance[14] = self._noise_sigma**2
-
+        depth = msg.pose.pose.position.z
         if self._add_noise:
-            msg.pose.pose.position.z += random.gauss(0, self._noise_sigma)
+            depth += random.gauss(0, self._position_z_noise_sigma)
+        depth_msg.pose.pose.position.z = depth
 
-        self._output_pub.publish(msg)
+        depth_msg.pose.covariance[14] = self._position_z_noise_sigma**2
+
+        depth_msg.pose.covariance[0] = _UNMEASURED_VARIANCE
+        depth_msg.pose.covariance[7] = _UNMEASURED_VARIANCE
+        depth_msg.pose.covariance[21] = _UNMEASURED_VARIANCE
+        depth_msg.pose.covariance[28] = _UNMEASURED_VARIANCE
+        depth_msg.pose.covariance[35] = _UNMEASURED_VARIANCE
+        depth_msg.twist.covariance[0] = _UNKNOWN_COVARIANCE
+
+        self._output_pub.publish(depth_msg)
 
 
 def main(args: list[str] | None = None) -> None:

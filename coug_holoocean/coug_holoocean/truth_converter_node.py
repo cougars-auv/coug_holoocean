@@ -16,7 +16,7 @@ from typing import cast
 
 import rclpy
 import tf2_geometry_msgs  # noqa: F401
-from geometry_msgs.msg import PoseStamped, TransformStamped
+from geometry_msgs.msg import PoseWithCovarianceStamped, TransformStamped
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
@@ -59,13 +59,13 @@ class TruthConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _odom_callback(self, msg: Odometry) -> None:
-        holo_T_base = PoseStamped()
+        holo_T_base = PoseWithCovarianceStamped()
         holo_T_base.header = msg.header
-        holo_T_base.pose = msg.pose.pose
+        holo_T_base.pose = msg.pose
 
         try:
             map_T_base = cast(
-                PoseStamped,
+                PoseWithCovarianceStamped,
                 self._tf_buffer.transform(
                     holo_T_base,
                     self._map_frame,
@@ -83,9 +83,8 @@ class TruthConverterNode(Node):
         odom_msg.header.stamp = msg.header.stamp
         odom_msg.header.frame_id = self._map_frame
         odom_msg.child_frame_id = self._base_frame
-        odom_msg.pose.pose = map_T_base.pose
-        odom_msg.pose.covariance = msg.pose.covariance
-        odom_msg.twist.covariance = msg.twist.covariance
+        odom_msg.pose = map_T_base.pose
+        odom_msg.twist = msg.twist
 
         self._output_pub.publish(odom_msg)
 
@@ -94,10 +93,10 @@ class TruthConverterNode(Node):
             map_T_base_tf.header.stamp = msg.header.stamp
             map_T_base_tf.header.frame_id = self._map_frame
             map_T_base_tf.child_frame_id = self._base_frame
-            map_T_base_tf.transform.translation.x = map_T_base.pose.position.x
-            map_T_base_tf.transform.translation.y = map_T_base.pose.position.y
-            map_T_base_tf.transform.translation.z = map_T_base.pose.position.z
-            map_T_base_tf.transform.rotation = map_T_base.pose.orientation
+            map_T_base_tf.transform.translation.x = map_T_base.pose.pose.position.x
+            map_T_base_tf.transform.translation.y = map_T_base.pose.pose.position.y
+            map_T_base_tf.transform.translation.z = map_T_base.pose.pose.position.z
+            map_T_base_tf.transform.rotation = map_T_base.pose.pose.orientation
             self._tf_broadcaster.sendTransform(map_T_base_tf)
 
 
