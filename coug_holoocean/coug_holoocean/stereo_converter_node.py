@@ -15,7 +15,7 @@
 import message_filters
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data, qos_profile_system_default
+from rclpy.qos import qos_profile_system_default
 from sensor_msgs.msg import CameraInfo, Image
 
 
@@ -43,17 +43,18 @@ class StereoConverterNode(Node):
         self._front_stereo_frame = self.get_parameter("front_stereo_frame").value
         self._back_stereo_frame = self.get_parameter("back_stereo_frame").value
 
+        # Reliable QoS to match stereolabs/zed-ros2-wrapper
         self._front_pub = self.create_publisher(
-            Image, self._front_output_topic, qos_profile_sensor_data
+            Image, self._front_output_topic, qos_profile_system_default
         )
         self._back_pub = self.create_publisher(
-            Image, self._back_output_topic, qos_profile_sensor_data
+            Image, self._back_output_topic, qos_profile_system_default
         )
         self._front_info_pub = self.create_publisher(
-            CameraInfo, self._front_stereo_info_topic, qos_profile_sensor_data
+            CameraInfo, self._front_stereo_info_topic, qos_profile_system_default
         )
         self._back_info_pub = self.create_publisher(
-            CameraInfo, self._back_stereo_info_topic, qos_profile_sensor_data
+            CameraInfo, self._back_stereo_info_topic, qos_profile_system_default
         )
 
         self._front_sub = message_filters.Subscriber(
@@ -86,25 +87,25 @@ class StereoConverterNode(Node):
         self._back_info_pub.publish(back_info_msg)
 
     def _create_camera_info_msg(self, image_msg: Image) -> CameraInfo:
-        info = CameraInfo()
-        info.header = image_msg.header
-        info.height = image_msg.height
-        info.width = image_msg.width
-        info.distortion_model = "plumb_bob"
-        info.d = [0.0, 0.0, 0.0, 0.0, 0.0]
+        msg = CameraInfo()
+        msg.header = image_msg.header
+        msg.height = image_msg.height
+        msg.width = image_msg.width
+        msg.distortion_model = "plumb_bob"
+        msg.d = [0.0, 0.0, 0.0, 0.0, 0.0]
 
-        fx = info.width / 2.0
+        fx = msg.width / 2.0
         fy = fx
-        cx = info.width / 2.0
-        cy = info.height / 2.0
+        cx = msg.width / 2.0
+        cy = msg.height / 2.0
 
-        info.k = [fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0]
+        msg.k = [fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0]
 
-        info.r = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+        msg.r = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
 
-        info.p = [fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0]
+        msg.p = [fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0]
 
-        return info
+        return msg
 
 
 def main(args: list[str] | None = None) -> None:

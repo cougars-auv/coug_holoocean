@@ -44,18 +44,16 @@ class FinStatePublisherNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _command_callback(self, msg: AgentCommand) -> None:
-        self._output_pub.publish(self._create_joint_state_msg(msg))
-
-    def _create_joint_state_msg(self, msg: AgentCommand) -> JointState:
-        joint_state = JointState()
-        joint_state.header.stamp = msg.header.stamp
-        joint_state.name = self._joint_names
+        joint_state_msg = JointState()
+        joint_state_msg.header.stamp = msg.header.stamp
+        joint_state_msg.name = self._joint_names
 
         rudder = -msg.command[0]
         starboard_elevator = msg.command[1]
         port_elevator = msg.command[2]
-        joint_state.position = [rudder, port_elevator, starboard_elevator]
-        return joint_state
+        joint_state_msg.position = [rudder, port_elevator, starboard_elevator]
+
+        self._output_pub.publish(joint_state_msg)
 
 
 def main(args: list[str] | None = None) -> None:

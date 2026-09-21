@@ -91,6 +91,7 @@ class DvlConverterNode(Node):
             self._config_callback,
             qos_profile_sensor_data,
         )
+        # Best effort QoS to match paagutie/dvl-a50
         self._output_pub = self.create_publisher(DVL, output_topic, qos_profile_sensor_data)
 
         self.get_logger().info("Initialization complete.")

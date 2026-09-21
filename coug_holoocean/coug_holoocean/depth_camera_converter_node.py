@@ -45,6 +45,7 @@ class DepthCameraConverterNode(Node):
         self._max_range = self.get_parameter("max_range").value
         self._depth_camera_frame = self.get_parameter("depth_camera_frame").value
 
+        # Reliable QoS to match stereolabs/zed-ros2-wrapper
         self._color_pub = self.create_publisher(
             Image,
             self.get_parameter("color_output_topic").value,
