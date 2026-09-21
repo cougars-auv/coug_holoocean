@@ -38,6 +38,12 @@ class HsdConverterNode(Node):
         self._output_speed_topic = self.get_parameter("output_speed_topic").value
         self._output_depth_topic = self.get_parameter("output_depth_topic").value
 
+        self._hsd_sub = self.create_subscription(
+            ControlSetpoint,
+            self._hsd_topic,
+            self._hsd_callback,
+            qos_profile_system_default,
+        )
         self._output_heading_pub = self.create_publisher(
             DesiredCommand, self._output_heading_topic, qos_profile_system_default
         )
@@ -46,13 +52,6 @@ class HsdConverterNode(Node):
         )
         self._output_depth_pub = self.create_publisher(
             DesiredCommand, self._output_depth_topic, qos_profile_system_default
-        )
-
-        self._hsd_sub = self.create_subscription(
-            ControlSetpoint,
-            self._hsd_topic,
-            self._hsd_callback,
-            qos_profile_system_default,
         )
 
         self.get_logger().info("Initialization complete.")

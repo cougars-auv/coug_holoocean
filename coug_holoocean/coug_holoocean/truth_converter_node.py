@@ -46,8 +46,6 @@ class TruthConverterNode(Node):
         self._base_frame = self.get_parameter("base_frame").value
         self._map_frame = self.get_parameter("map_frame").value
 
-        self._output_pub = self.create_publisher(Odometry, output_topic, qos_profile_system_default)
-
         self._tf_buffer = Buffer()
         self._tf_listener = TransformListener(self._tf_buffer, self)
         self._tf_broadcaster = TransformBroadcaster(self)
@@ -55,6 +53,7 @@ class TruthConverterNode(Node):
         self._input_sub = self.create_subscription(
             Odometry, input_topic, self._odom_callback, qos_profile_system_default
         )
+        self._output_pub = self.create_publisher(Odometry, output_topic, qos_profile_system_default)
 
         self.get_logger().info("Initialization complete.")
 

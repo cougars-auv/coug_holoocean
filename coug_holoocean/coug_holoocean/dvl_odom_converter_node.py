@@ -70,9 +70,6 @@ class DvlOdomConverterNode(Node):
         self._reset_pending = False
         self._reset_drift()
 
-        # Best effort QoS to match paagutie/dvl-a50
-        self._output_pub = self.create_publisher(DVLDR, output_topic, qos_profile_sensor_data)
-
         self._tf_buffer = Buffer()
         self._tf_listener = TransformListener(self._tf_buffer, self)
 
@@ -85,6 +82,8 @@ class DvlOdomConverterNode(Node):
             self._config_callback,
             qos_profile_sensor_data,
         )
+        # Best effort QoS to match paagutie/dvl-a50
+        self._output_pub = self.create_publisher(DVLDR, output_topic, qos_profile_sensor_data)
 
         self.get_logger().info("Initialization complete.")
 
