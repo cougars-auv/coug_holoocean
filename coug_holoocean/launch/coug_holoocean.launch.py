@@ -43,6 +43,7 @@ def generate_launch_description() -> LaunchDescription:
     )
 
     depth_camera_optical_frame = agent_frame(agent_ns, "depth_camera_optical_link")
+    depth_camera_link_frame = agent_frame(agent_ns, "depth_camera_link")
     depth_link_frame = agent_frame(agent_ns, "depth_link")
     dvl_link_frame = agent_frame(agent_ns, "dvl_link")
     beam0_link_frame = agent_frame(agent_ns, "beam0_link")
@@ -117,6 +118,22 @@ def generate_launch_description() -> LaunchDescription:
                     agent_param_file,
                     scenario_param_file,
                     {"use_sim_time": use_sim_time},
+                ],
+            ),
+            Node(
+                package="coug_holoocean",
+                executable="imu_converter",
+                name="depth_camera_imu_converter_node",
+                parameters=[
+                    fleet_param_file,
+                    agent_param_file,
+                    scenario_param_file,
+                    {
+                        "use_sim_time": use_sim_time,
+                        "add_noise": add_noise,
+                        "add_bias": add_noise,
+                        "imu_frame": depth_camera_link_frame,
+                    },
                 ],
             ),
             Node(
