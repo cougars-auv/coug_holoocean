@@ -140,7 +140,7 @@ class DvlConverterNode(Node):
                         self._dvl_frame, beam_frame, rclpy.time.Time()
                     )
                 except TransformException as e:
-                    self.get_logger().warn(
+                    self.get_logger().warning(
                         f"Could not transform {self._dvl_frame} to {beam_frame}: {e}",
                         throttle_duration_sec=1.0,
                     )
