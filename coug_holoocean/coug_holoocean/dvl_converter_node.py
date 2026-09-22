@@ -37,34 +37,34 @@ class DvlConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("dvl_converter_node")
 
+        self.declare_parameter("max_range", 50.0)
         self.declare_parameter("beam_velocity_noise_sigma", 0.011)
         self.declare_parameter("beam_range_noise_sigma", 0.1)
-        self.declare_parameter("beam0_frame", "beam0_link")
-        self.declare_parameter("beam1_frame", "beam1_link")
-        self.declare_parameter("beam2_frame", "beam2_link")
-        self.declare_parameter("beam3_frame", "beam3_link")
-        self.declare_parameter("max_range", 50.0)
         self.declare_parameter("add_noise", True)
         self.declare_parameter("velocity_input_topic", "DVLSensorVelocity")
         self.declare_parameter("range_input_topic", "DVLSensorRange")
         self.declare_parameter("output_topic", "dvl/data")
         self.declare_parameter("config_command_topic", "dvl/config/command")
+        self.declare_parameter("beam0_frame", "beam0_link")
+        self.declare_parameter("beam1_frame", "beam1_link")
+        self.declare_parameter("beam2_frame", "beam2_link")
+        self.declare_parameter("beam3_frame", "beam3_link")
         self.declare_parameter("dvl_frame", "dvl_link")
 
+        self._max_range = self.get_parameter("max_range").value
         self._beam_velocity_noise_sigma = self.get_parameter("beam_velocity_noise_sigma").value
         self._beam_range_noise_sigma = self.get_parameter("beam_range_noise_sigma").value
+        self._add_noise = self.get_parameter("add_noise").value
+        velocity_input_topic = self.get_parameter("velocity_input_topic").value
+        range_input_topic = self.get_parameter("range_input_topic").value
+        output_topic = self.get_parameter("output_topic").value
+        config_command_topic = self.get_parameter("config_command_topic").value
         self._beam_frames = [
             self.get_parameter("beam0_frame").value,
             self.get_parameter("beam1_frame").value,
             self.get_parameter("beam2_frame").value,
             self.get_parameter("beam3_frame").value,
         ]
-        self._max_range = self.get_parameter("max_range").value
-        self._add_noise = self.get_parameter("add_noise").value
-        velocity_input_topic = self.get_parameter("velocity_input_topic").value
-        range_input_topic = self.get_parameter("range_input_topic").value
-        output_topic = self.get_parameter("output_topic").value
-        config_command_topic = self.get_parameter("config_command_topic").value
         self._dvl_frame = self.get_parameter("dvl_frame").value
 
         self._acoustic_enabled = True
