@@ -14,6 +14,7 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch.some_substitutions_type import SomeSubstitutionsType
 from launch.substitutions import (
     EnvironmentVariable,
     LaunchConfiguration,
@@ -23,7 +24,7 @@ from launch.substitutions import (
 from launch_ros.actions import Node
 
 
-def agent_frame(agent_ns: LaunchConfiguration, frame: str) -> PythonExpression:
+def agent_frame(agent_ns: SomeSubstitutionsType, frame: str) -> PythonExpression:
     return PythonExpression(["'", agent_ns, f"/{frame}' if '", agent_ns, f"' != '' else '{frame}'"])
 
 
@@ -86,7 +87,10 @@ def generate_launch_description() -> LaunchDescription:
                     fleet_param_file,
                     agent_param_file,
                     scenario_param_file,
-                    {"use_sim_time": use_sim_time, "agent_name": agent_name},
+                    {
+                        "use_sim_time": use_sim_time,
+                        "agent_name": agent_name,
+                    },
                 ],
             ),
             Node(
@@ -107,17 +111,17 @@ def generate_launch_description() -> LaunchDescription:
                 package="depth_image_proc",
                 executable="point_cloud_xyzrgb_node",
                 name="depth_camera_cloud_node",
-                remappings=[
-                    ("depth_registered/image_rect", "camera/depth/depth_registered"),
-                    ("rgb/image_rect_color", "camera/rgb/image_rect_color"),
-                    ("rgb/camera_info", "camera/rgb/camera_info"),
-                    ("points", "camera/point_cloud/cloud_registered"),
-                ],
                 parameters=[
                     fleet_param_file,
                     agent_param_file,
                     scenario_param_file,
                     {"use_sim_time": use_sim_time},
+                ],
+                remappings=[
+                    ("depth_registered/image_rect", "camera/depth/depth_registered"),
+                    ("rgb/image_rect_color", "camera/rgb/image_rect_color"),
+                    ("rgb/camera_info", "camera/rgb/camera_info"),
+                    ("points", "camera/point_cloud/cloud_registered"),
                 ],
             ),
             Node(
@@ -222,7 +226,10 @@ def generate_launch_description() -> LaunchDescription:
                     fleet_param_file,
                     agent_param_file,
                     scenario_param_file,
-                    {"use_sim_time": use_sim_time, "agent_name": agent_name},
+                    {
+                        "use_sim_time": use_sim_time,
+                        "agent_name": agent_name,
+                    },
                 ],
             ),
             Node(
