@@ -101,7 +101,7 @@ class DvlOdomConverterNode(Node):
             return
 
         self._reset_pending = True
-        self.get_logger().info("DVL dead reckoning reset.")
+        self.get_logger().info("DVL dead reckoning reset requested.")
 
     def _odom_callback(self, msg: Odometry) -> None:
         holo_T_base = PoseStamped()
@@ -119,7 +119,7 @@ class DvlOdomConverterNode(Node):
             )
         except TransformException as e:
             self.get_logger().warning(
-                f"Could not transform {msg.header.frame_id} to {self._map_frame}: {e}",
+                f"Failed to transform from '{msg.header.frame_id}' to '{self._map_frame}': {e}",
                 throttle_duration_sec=1.0,
             )
             return
@@ -130,7 +130,7 @@ class DvlOdomConverterNode(Node):
             )
         except TransformException as e:
             self.get_logger().warning(
-                f"Could not transform {self._base_frame} to {self._dvl_frame}: {e}",
+                f"Failed to look up transform from '{self._dvl_frame}' to '{self._base_frame}': {e}",
                 throttle_duration_sec=1.0,
             )
             return

@@ -80,7 +80,7 @@ class GpsConverterNode(Node):
                 h0=self._origin_alt,
             )
         except (TypeError, ValueError) as e:
-            self.get_logger().error(f"Failed ENU to geodetic conversion: {e}")
+            self.get_logger().error(f"Failed to convert ENU position to geodetic: {e}")
             return
 
         navsat_msg.latitude = lat

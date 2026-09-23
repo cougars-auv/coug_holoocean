@@ -141,7 +141,7 @@ class DvlConverterNode(Node):
                     )
                 except TransformException as e:
                     self.get_logger().warning(
-                        f"Could not transform {self._dvl_frame} to {beam_frame}: {e}",
+                        f"Failed to look up transform from '{beam_frame}' to '{self._dvl_frame}': {e}",
                         throttle_duration_sec=1.0,
                     )
                     break

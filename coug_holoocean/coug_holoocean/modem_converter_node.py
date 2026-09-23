@@ -201,7 +201,9 @@ class ModemConverterNode(Node):
             return
 
         if msg.msg_id != seatrac.CommandId.DAT_SEND:
-            self.get_logger().warning(f"Unsupported send CID 0x{msg.msg_id:02X}. Dropping message.")
+            self.get_logger().warning(
+                f"Rejected modem send: unsupported command ID 0x{msg.msg_id:02X}."
+            )
             return
 
         beacon_send = AcousticBeaconSend()

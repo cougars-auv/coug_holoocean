@@ -73,7 +73,7 @@ class TruthConverterNode(Node):
             )
         except TransformException as e:
             self.get_logger().warning(
-                f"Could not transform {msg.header.frame_id} to {self._map_frame}: {e}",
+                f"Failed to transform from '{msg.header.frame_id}' to '{self._map_frame}': {e}",
                 throttle_duration_sec=1.0,
             )
             return
