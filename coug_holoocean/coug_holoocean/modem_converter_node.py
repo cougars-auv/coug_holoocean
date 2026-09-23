@@ -32,8 +32,8 @@ class ModemConverterNode(Node):
 
         self.declare_parameter("tick_period_sec", 0.1)
         self.declare_parameter("send_delay_sec", 0.4)
-        self.declare_parameter("resp_delay_sec", 0.0)
-        self.declare_parameter("resp_timeout_sec", 4.0)
+        self.declare_parameter("response_delay_sec", 0.0)
+        self.declare_parameter("response_timeout_sec", 4.0)
         self.declare_parameter("beacon_id", 1)
         self.declare_parameter("bearing_noise_sigmas", [0.01745, 0.01745])
         self.declare_parameter("range_noise_sigma", 0.1)
@@ -48,8 +48,8 @@ class ModemConverterNode(Node):
 
         self._tick_period_sec = self.get_parameter("tick_period_sec").value
         self._send_delay_sec = self.get_parameter("send_delay_sec").value
-        self._resp_delay_sec = self.get_parameter("resp_delay_sec").value
-        self._resp_timeout_sec = self.get_parameter("resp_timeout_sec").value
+        self._response_delay_sec = self.get_parameter("response_delay_sec").value
+        self._response_timeout_sec = self.get_parameter("response_timeout_sec").value
         self._beacon_id = self.get_parameter("beacon_id").value
         self._bearing_noise_sigmas = self.get_parameter("bearing_noise_sigmas").value
         self._range_noise_sigma = self.get_parameter("range_noise_sigma").value
@@ -63,8 +63,8 @@ class ModemConverterNode(Node):
         self._modem_frame = self.get_parameter("modem_frame").value
 
         self._send_delay_ticks = max(1, round(self._send_delay_sec / self._tick_period_sec))
-        self._resp_delay_ticks = max(0, round(self._resp_delay_sec / self._tick_period_sec))
-        self._resp_timeout_ticks = max(1, round(self._resp_timeout_sec / self._tick_period_sec))
+        self._resp_delay_ticks = max(0, round(self._response_delay_sec / self._tick_period_sec))
+        self._resp_timeout_ticks = max(1, round(self._response_timeout_sec / self._tick_period_sec))
 
         self._send_queue: list[tuple[AcousticBeaconSend, bool]] = []
         self._pending_auto_responses: list[list[Any]] = []
