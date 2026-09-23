@@ -70,7 +70,7 @@ class CmdVelConverterNode(Node):
         except ValueError as error:
             raise ValueError(
                 f"Unknown agent_type '{agent_type}' "
-                f"(expected '{AgentType.BLUEROV2}' or '{AgentType.SURFACE_VESSEL}')"
+                f"(expected '{AgentType.BLUEROV2}' or '{AgentType.SURFACE_VESSEL}')."
             ) from error
 
         self._input_sub = self.create_subscription(
