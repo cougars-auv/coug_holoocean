@@ -26,7 +26,7 @@ class PressureConverterNode(Node):
         super().__init__("pressure_converter_node")
 
         self.declare_parameter("water_density", 997.0)
-        self.declare_parameter("gravity", 9.81)
+        self.declare_parameter("gravity", 9.8)
         self.declare_parameter("atmospheric_pressure", 101325.0)
         self.declare_parameter("fluid_pressure_noise_sigma", 195.61)
         self.declare_parameter("add_noise", True)
