@@ -179,15 +179,25 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
             ],
         ),
         Node(
-            package="coug_holoocean",
-            executable="fin_state_publisher",
-            name="fin_state_publisher_node",
-            parameters=[
-                fleet_param_file,
-                agent_param_file,
-                scenario_param_file,
-                {"use_sim_time": use_sim_time},
+            package="topic_tools",
+            executable="transform",
+            name="fin_state_publisher",
+            arguments=[
+                "ControlCommand",
+                "joint_states",
+                "sensor_msgs/msg/JointState",
+                (
+                    "sensor_msgs.msg.JointState(header=m.header, "
+                    "name=['top_fin_joint', 'left_fin_joint', 'right_fin_joint'], "
+                    "position=[-m.command[0], m.command[2], m.command[1]])"
+                ),
+                "--import",
+                "sensor_msgs",
+                "--wait-for-start",
+                "--qos-reliability",
+                "reliable",
             ],
+            parameters=[{"use_sim_time": use_sim_time}],
         ),
         Node(
             package="coug_holoocean",

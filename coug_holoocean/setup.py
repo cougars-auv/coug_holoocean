@@ -28,7 +28,6 @@ setup(
             "depth_converter = coug_holoocean.depth_converter_node:main",
             "dvl_converter = coug_holoocean.dvl_converter_node:main",
             "dvl_odom_converter = coug_holoocean.dvl_odom_converter_node:main",
-            "fin_state_publisher = coug_holoocean.fin_state_publisher_node:main",
             "gps_converter = coug_holoocean.gps_converter_node:main",
             "hsd_converter = coug_holoocean.hsd_converter_node:main",
             "imu_converter = coug_holoocean.imu_converter_node:main",
