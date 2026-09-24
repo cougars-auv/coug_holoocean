@@ -36,15 +36,15 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
     agent_ns = LaunchConfiguration("agent_ns")
     add_noise = LaunchConfiguration("add_noise")
 
+    scenario_param_path = LaunchConfiguration("scenario_param_file").perform(context)
+
     fleet_param_file = PathJoinSubstitution(
         [EnvironmentVariable("CONFIG_DIR"), "fleet", "coug_holoocean_params.yaml"]
     )
     agent_param_file = PathJoinSubstitution(
         [EnvironmentVariable("CONFIG_DIR"), [agent_ns, "_params.yaml"]]
     )
-    scenario_param_file = (
-        LaunchConfiguration("scenario_param_file").perform(context) or agent_param_file
-    )
+    scenario_param_file = scenario_param_path or agent_param_file
 
     depth_camera_optical_frame = agent_frame(agent_ns, "depth_camera_optical_link")
     depth_camera_link_frame = agent_frame(agent_ns, "depth_camera_link")
