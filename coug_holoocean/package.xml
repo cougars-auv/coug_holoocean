@@ -7,24 +7,22 @@
   <maintainer email="snelsond@byu.edu">Nelson Durrant</maintainer>
   <license>Apache-2.0</license>
 
-  <depend>coug_interfaces</depend>
-  <depend>dvl_msgs</depend>
-  <depend>geometry_msgs</depend>
-  <depend>holoocean_interfaces</depend>
-  <depend>message_filters</depend>
-  <depend>nav_msgs</depend>
-  <depend>python3-numpy</depend>
-  <depend>python3-pymap3d</depend>
-  <depend>python3-scipy</depend>
-  <depend>rclpy</depend>
-  <depend>seatrac_interfaces</depend>
-  <depend>sensor_msgs</depend>
-  <depend>tf2_geometry_msgs</depend>
-  <depend>tf2_ros</depend>
-
+  <exec_depend>coug_interfaces</exec_depend>
   <exec_depend>depth_image_proc</exec_depend>
+  <exec_depend>dvl_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>holoocean_interfaces</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
+  <exec_depend>message_filters</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pymap3d</exec_depend>
+  <exec_depend>python3-scipy</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>seatrac_interfaces</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
   <exec_depend>tf2_ros_py</exec_depend>
 
   <test_depend>python3-pytest</test_depend>
