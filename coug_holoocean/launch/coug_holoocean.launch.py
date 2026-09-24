@@ -181,7 +181,7 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
         Node(
             package="topic_tools",
             executable="transform",
-            name="fin_state_publisher",
+            name="fin_state_publisher_node",
             arguments=[
                 "ControlCommand",
                 "joint_states",
