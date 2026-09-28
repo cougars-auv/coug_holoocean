@@ -29,7 +29,7 @@ class DepthCameraConverterNode(Node):
         self.declare_parameter("stamp_offset_sec", 0.0)
         self.declare_parameter("min_range", 0.2)
         self.declare_parameter("max_range", 20.0)
-        self.declare_parameter("color_input_topic", "RGBCameraDepth")
+        self.declare_parameter("color_input_topic", "DepthCameraRGBCamera")
         self.declare_parameter("depth_input_topic", "DepthCameraDepth")
         self.declare_parameter("info_input_topic", "DepthCameraInfo")
         self.declare_parameter("color_output_topic", "camera/rgb/image_rect_color")

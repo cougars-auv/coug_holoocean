@@ -24,8 +24,8 @@ class StereoConverterNode(Node):
         super().__init__("stereo_converter_node")
 
         self.declare_parameter("sync_slop_sec", 0.05)
-        self.declare_parameter("front_input_topic", "RGBCameraFront")
-        self.declare_parameter("back_input_topic", "RGBCameraBack")
+        self.declare_parameter("front_input_topic", "FrontStereoRGBCamera")
+        self.declare_parameter("back_input_topic", "BackStereoRGBCamera")
         self.declare_parameter("front_output_topic", "stereo/front/image_raw")
         self.declare_parameter("back_output_topic", "stereo/back/image_raw")
         self.declare_parameter("front_stereo_info_topic", "stereo/front/camera_info")
