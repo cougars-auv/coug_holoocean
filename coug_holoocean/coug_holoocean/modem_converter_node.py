@@ -93,7 +93,6 @@ class ModemConverterNode(Node):
             self._depth_callback,
             qos_profile_system_default,
         )
-
         # Reliable QoS to match BYU-FROST-Lab/seatrac-ros2
         self._modem_rec_pub = self.create_publisher(
             ModemRec, modem_rec_topic, qos_profile_system_default
