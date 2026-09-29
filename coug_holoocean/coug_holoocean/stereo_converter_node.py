@@ -43,6 +43,18 @@ class StereoConverterNode(Node):
         self._front_stereo_frame = self.get_parameter("front_stereo_frame").value
         self._back_stereo_frame = self.get_parameter("back_stereo_frame").value
 
+        self._front_sub = message_filters.Subscriber(
+            self, Image, self._front_input_topic, qos_profile=qos_profile_system_default
+        )
+        self._back_sub = message_filters.Subscriber(
+            self, Image, self._back_input_topic, qos_profile=qos_profile_system_default
+        )
+
+        self._time_sync = message_filters.ApproximateTimeSynchronizer(
+            [self._front_sub, self._back_sub], queue_size=10, slop=sync_slop_sec
+        )
+        self._time_sync.registerCallback(self._sync_callback)
+
         # Reliable QoS to match stereolabs/zed-ros2-wrapper
         self._front_pub = self.create_publisher(
             Image, self._front_output_topic, qos_profile_system_default
@@ -56,18 +68,6 @@ class StereoConverterNode(Node):
         self._back_info_pub = self.create_publisher(
             CameraInfo, self._back_stereo_info_topic, qos_profile_system_default
         )
-
-        self._front_sub = message_filters.Subscriber(
-            self, Image, self._front_input_topic, qos_profile=qos_profile_system_default
-        )
-        self._back_sub = message_filters.Subscriber(
-            self, Image, self._back_input_topic, qos_profile=qos_profile_system_default
-        )
-
-        self._time_sync = message_filters.ApproximateTimeSynchronizer(
-            [self._front_sub, self._back_sub], queue_size=10, slop=sync_slop_sec
-        )
-        self._time_sync.registerCallback(self._sync_callback)
 
         self.get_logger().info("Initialization complete.")
 
