@@ -18,8 +18,8 @@ from holoocean_interfaces.msg import DesiredCommand
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 
-MIN_SPEED_RPM = -1525.0
-MAX_SPEED_RPM = 1525.0
+_MIN_SPEED_RPM = -1525.0
+_MAX_SPEED_RPM = 1525.0
 
 
 class HsdConverterNode(Node):
@@ -59,7 +59,9 @@ class HsdConverterNode(Node):
     def _hsd_callback(self, msg: ControlSetpoint) -> None:
         self._output_heading_pub.publish(self._create_desired_command_msg(msg.heading))
         self._output_speed_pub.publish(
-            self._create_desired_command_msg(max(MIN_SPEED_RPM, min(MAX_SPEED_RPM, msg.speed_rpm)))
+            self._create_desired_command_msg(
+                max(_MIN_SPEED_RPM, min(_MAX_SPEED_RPM, msg.speed_rpm))
+            )
         )
         self._output_depth_pub.publish(self._create_desired_command_msg(max(-msg.depth, 0.0)))
 

@@ -28,27 +28,27 @@ class AgentType(StrEnum):
 
 
 # BlueROV2.h/BlueROV2.cpp
-BR_LINEAR_DRAG = 11.5  # mass(11.5) × SetLinearDamping(1.0)
-BR_ANGULAR_DRAG = 0.225  # Iz(0.3) × SetAngularDamping(0.75)
-BR_MAX_THRUST = 28.75  # BR_MAX_THRUST
+_BR_LINEAR_DRAG = 11.5  # mass(11.5) × SetLinearDamping(1.0)
+_BR_ANGULAR_DRAG = 0.225  # Iz(0.3) × SetAngularDamping(0.75)
+_BR_MAX_THRUST = 28.75  # BR_MAX_THRUST
 BR_VERT_X, BR_VERT_Y = 0.12, 0.2181  # 'thrusterLocations' 0-3, from COM (m)
 BR_ANGLED_X, BR_ANGLED_Y = 0.1562, 0.0988  # 'thrusterLocations' 4-7 (m)
 
 # Force/torque to hold steady state against drag at unit velocity.
-BR_H_SCALE = BR_LINEAR_DRAG / (4.0 * math.sqrt(0.5))
-BR_V_SCALE = BR_LINEAR_DRAG / 4.0
-BR_R_SCALE = BR_ANGULAR_DRAG / (4.0 * BR_VERT_Y)
-BR_P_SCALE = BR_ANGULAR_DRAG / (4.0 * BR_VERT_X)
-BR_Y_SCALE = BR_ANGULAR_DRAG / (4.0 * (BR_ANGLED_X + BR_ANGLED_Y) * math.sqrt(0.5))
+_BR_H_SCALE = _BR_LINEAR_DRAG / (4.0 * math.sqrt(0.5))
+_BR_V_SCALE = _BR_LINEAR_DRAG / 4.0
+_BR_R_SCALE = _BR_ANGULAR_DRAG / (4.0 * BR_VERT_Y)
+_BR_P_SCALE = _BR_ANGULAR_DRAG / (4.0 * BR_VERT_X)
+_BR_Y_SCALE = _BR_ANGULAR_DRAG / (4.0 * (BR_ANGLED_X + BR_ANGLED_Y) * math.sqrt(0.5))
 
 # SurfaceVessel.h/SurfaceVessel.cpp
-SV_LINEAR_DRAG = 600.0  # mass(200) × SetLinearDamping(3.0)
-SV_ANGULAR_DRAG = 384.5  # Iz(512.7) × SetAngularDamping(0.75)
-SV_MAX_THRUST = 1500.0  # SV_MAX_THRUST
-SV_THRUSTER_Y = 1.0  # 'thrusterLocations' half-separation (m)
+_SV_LINEAR_DRAG = 600.0  # mass(200) × SetLinearDamping(3.0)
+_SV_ANGULAR_DRAG = 384.5  # Iz(512.7) × SetAngularDamping(0.75)
+_SV_MAX_THRUST = 1500.0  # SV_MAX_THRUST
+_SV_THRUSTER_Y = 1.0  # 'thrusterLocations' half-separation (m)
 
-SV_H_SCALE = SV_LINEAR_DRAG
-SV_Y_SCALE = SV_ANGULAR_DRAG
+_SV_H_SCALE = _SV_LINEAR_DRAG
+_SV_Y_SCALE = _SV_ANGULAR_DRAG
 
 
 class CmdVelConverterNode(Node):
@@ -84,17 +84,17 @@ class CmdVelConverterNode(Node):
         )
 
         if self._agent_type == AgentType.BLUEROV2:
-            self._thruster_limit = BR_MAX_THRUST
-            self._h_scale = BR_H_SCALE
-            self._v_scale = BR_V_SCALE
-            self._r_scale = BR_R_SCALE
-            self._p_scale = BR_P_SCALE
-            self._y_scale = BR_Y_SCALE
+            self._thruster_limit = _BR_MAX_THRUST
+            self._h_scale = _BR_H_SCALE
+            self._v_scale = _BR_V_SCALE
+            self._r_scale = _BR_R_SCALE
+            self._p_scale = _BR_P_SCALE
+            self._y_scale = _BR_Y_SCALE
         else:
-            self._thruster_limit = SV_MAX_THRUST
-            self._thruster_y = SV_THRUSTER_Y
-            self._h_scale = SV_H_SCALE
-            self._y_scale = SV_Y_SCALE
+            self._thruster_limit = _SV_MAX_THRUST
+            self._thruster_y = _SV_THRUSTER_Y
+            self._h_scale = _SV_H_SCALE
+            self._y_scale = _SV_Y_SCALE
 
         self.get_logger().info("Initialization complete.")
 

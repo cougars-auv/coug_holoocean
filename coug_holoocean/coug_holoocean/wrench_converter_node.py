@@ -22,16 +22,16 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 
 # actuator.py
-RHO = 1026.0
-D_PROP = 0.14
-T_PROP = 0.1
-KT_0 = 0.4566
-KT_MAX = 0.1798
-JA_MAX = 0.6632
-W = 0.056
+_RHO = 1026.0
+_D_PROP = 0.14
+_T_PROP = 0.1
+_KT_0 = 0.4566
+_KT_MAX = 0.1798
+_JA_MAX = 0.6632
+_W = 0.056
 
-C1 = (1.0 - T_PROP) * RHO * pow(D_PROP, 4) * KT_0
-C2 = (1.0 - T_PROP) * RHO * pow(D_PROP, 4) * (KT_MAX - KT_0) / JA_MAX * ((1 - W) / D_PROP)
+_C1 = (1.0 - _T_PROP) * _RHO * pow(_D_PROP, 4) * _KT_0
+_C2 = (1.0 - _T_PROP) * _RHO * pow(_D_PROP, 4) * (_KT_MAX - _KT_0) / _JA_MAX * ((1 - _W) / _D_PROP)
 
 
 class WrenchConverterNode(Node):
@@ -79,8 +79,8 @@ class WrenchConverterNode(Node):
         n_rps = thruster_rpm / 60.0
 
         # Assuming no spool up/down delays
-        force_x_raw = C1 * abs(n_rps) * n_rps
-        force_x = force_x_raw + C2 * n_rps * self._speed if n_rps > 0 else force_x_raw
+        force_x_raw = _C1 * abs(n_rps) * n_rps
+        force_x = force_x_raw + _C2 * n_rps * self._speed if n_rps > 0 else force_x_raw
 
         raw_wrench_msg = WrenchStamped()
         raw_wrench_msg.header.stamp = msg.header.stamp
