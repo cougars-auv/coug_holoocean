@@ -94,23 +94,6 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
             ],
         ),
         Node(
-            package="depth_image_proc",
-            executable="point_cloud_xyzrgb_node",
-            name="depth_camera_cloud_node",
-            parameters=[
-                fleet_param_file,
-                agent_param_file,
-                scenario_param_file,
-                {"use_sim_time": use_sim_time},
-            ],
-            remappings=[
-                ("depth_registered/image_rect", "camera/depth/depth_registered"),
-                ("rgb/image_rect_color", "camera/rgb/image_rect_color"),
-                ("rgb/camera_info", "camera/rgb/camera_info"),
-                ("points", "camera/point_cloud/cloud_registered"),
-            ],
-        ),
-        Node(
             package="coug_holoocean",
             executable="imu_converter",
             name="depth_camera_imu_converter_node",
@@ -177,27 +160,6 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
                     "map_frame": "map",
                 },
             ],
-        ),
-        Node(
-            package="topic_tools",
-            executable="transform",
-            name="fin_state_publisher_node",
-            arguments=[
-                "ControlCommand",
-                "joint_states",
-                "sensor_msgs/msg/JointState",
-                (
-                    "sensor_msgs.msg.JointState(header=m.header, "
-                    "name=['top_fin_joint', 'left_fin_joint', 'right_fin_joint'], "
-                    "position=[-m.command[0], m.command[2], m.command[1]])"
-                ),
-                "--import",
-                "sensor_msgs",
-                "--wait-for-start",
-                "--qos-reliability",
-                "reliable",
-            ],
-            parameters=[{"use_sim_time": use_sim_time}],
         ),
         Node(
             package="coug_holoocean",
@@ -376,6 +338,44 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
                     "wrench_frame": com_link_frame,
                 },
             ],
+        ),
+        Node(
+            package="depth_image_proc",
+            executable="point_cloud_xyzrgb_node",
+            name="depth_camera_cloud_node",
+            parameters=[
+                fleet_param_file,
+                agent_param_file,
+                scenario_param_file,
+                {"use_sim_time": use_sim_time},
+            ],
+            remappings=[
+                ("depth_registered/image_rect", "camera/depth/depth_registered"),
+                ("rgb/image_rect_color", "camera/rgb/image_rect_color"),
+                ("rgb/camera_info", "camera/rgb/camera_info"),
+                ("points", "camera/point_cloud/cloud_registered"),
+            ],
+        ),
+        Node(
+            package="topic_tools",
+            executable="transform",
+            name="fin_state_publisher_node",
+            arguments=[
+                "ControlCommand",
+                "joint_states",
+                "sensor_msgs/msg/JointState",
+                (
+                    "sensor_msgs.msg.JointState(header=m.header, "
+                    "name=['top_fin_joint', 'left_fin_joint', 'right_fin_joint'], "
+                    "position=[-m.command[0], m.command[2], m.command[1]])"
+                ),
+                "--import",
+                "sensor_msgs",
+                "--wait-for-start",
+                "--qos-reliability",
+                "reliable",
+            ],
+            parameters=[{"use_sim_time": use_sim_time}],
         ),
     ]
 
