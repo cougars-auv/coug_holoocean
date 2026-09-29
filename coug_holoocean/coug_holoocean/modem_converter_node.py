@@ -125,6 +125,63 @@ class ModemConverterNode(Node):
             self._pending_resp_ticker = 0
             self._attempt_send()
 
+    def _modem_send_callback(self, msg: ModemSend) -> None:
+        if msg.msg_id == seatrac.CommandId.DAT_QUEUE_SET:
+            payload = list(msg.packet_data[: msg.packet_len])
+            if payload:
+                self._dat_queue[int(msg.dest_id)] = payload
+            else:
+                self._dat_queue.pop(int(msg.dest_id), None)
+
+            self._publish_cmd_update(seatrac.CommandId.DAT_QUEUE_SET, msg.dest_id)
+            return
+
+        if msg.msg_id != seatrac.CommandId.DAT_SEND:
+            self.get_logger().warning(
+                f"Rejected modem send: unsupported command ID 0x{msg.msg_id:02X}."
+            )
+            return
+
+        beacon_send = AcousticBeaconSend()
+        beacon_send.header = msg.header
+        beacon_send.from_beacon = self._beacon_id
+        beacon_send.to_beacon = int(msg.dest_id)
+        beacon_send.msg_type = seatrac.AMSGTYPE_TO_MSG_TYPE.get(
+            msg.msg_type, seatrac.AcousticMessageType.ONE_WAY
+        )
+        beacon_send.msg_data = list(msg.packet_data[: msg.packet_len])
+
+        self._send_queue.append((beacon_send, True))
+        self._attempt_send()
+
+    def _tick_callback(self) -> None:
+        # A REQ that never gets a RESP eventually times out and frees the channel
+        if self._pending_resp_target is not None:
+            self._pending_resp_ticker += 1
+            if self._pending_resp_ticker >= self._resp_timeout_ticks:
+                self._publish_cmd_update(
+                    seatrac.CommandId.DAT_ERROR,
+                    self._pending_resp_target,
+                    seatrac.CommandStatus.TRANSCEIVER_RESPONSE_TIMEOUT,
+                )
+                self._pending_resp_target = None
+                self._pending_resp_ticker = 0
+
+        ready = []
+        for item in self._pending_auto_responses:
+            item[1] -= 1
+            if item[1] <= 0:
+                ready.append(item)
+
+        for item in ready:
+            self._pending_auto_responses.remove(item)
+            self._send_queue.append((item[0], False))
+
+        self._attempt_send()
+
+        if self._send_delay_ticker > 0:
+            self._send_delay_ticker -= 1
+
     def _publish_modem_rec(self, msg: AcousticBeaconSensor) -> None:
         modem_rec = ModemRec()
         modem_rec.header.stamp = msg.header.stamp
@@ -194,63 +251,6 @@ class ModemConverterNode(Node):
         else:
             self._pending_auto_responses.append([resp, self._resp_delay_ticks])
         self._attempt_send()
-
-    def _modem_send_callback(self, msg: ModemSend) -> None:
-        if msg.msg_id == seatrac.CommandId.DAT_QUEUE_SET:
-            payload = list(msg.packet_data[: msg.packet_len])
-            if payload:
-                self._dat_queue[int(msg.dest_id)] = payload
-            else:
-                self._dat_queue.pop(int(msg.dest_id), None)
-
-            self._publish_cmd_update(seatrac.CommandId.DAT_QUEUE_SET, msg.dest_id)
-            return
-
-        if msg.msg_id != seatrac.CommandId.DAT_SEND:
-            self.get_logger().warning(
-                f"Rejected modem send: unsupported command ID 0x{msg.msg_id:02X}."
-            )
-            return
-
-        beacon_send = AcousticBeaconSend()
-        beacon_send.header = msg.header
-        beacon_send.from_beacon = self._beacon_id
-        beacon_send.to_beacon = int(msg.dest_id)
-        beacon_send.msg_type = seatrac.AMSGTYPE_TO_MSG_TYPE.get(
-            msg.msg_type, seatrac.AcousticMessageType.ONE_WAY
-        )
-        beacon_send.msg_data = list(msg.packet_data[: msg.packet_len])
-
-        self._send_queue.append((beacon_send, True))
-        self._attempt_send()
-
-    def _tick_callback(self) -> None:
-        # A REQ that never gets a RESP eventually times out and frees the channel
-        if self._pending_resp_target is not None:
-            self._pending_resp_ticker += 1
-            if self._pending_resp_ticker >= self._resp_timeout_ticks:
-                self._publish_cmd_update(
-                    seatrac.CommandId.DAT_ERROR,
-                    self._pending_resp_target,
-                    seatrac.CommandStatus.TRANSCEIVER_RESPONSE_TIMEOUT,
-                )
-                self._pending_resp_target = None
-                self._pending_resp_ticker = 0
-
-        ready = []
-        for item in self._pending_auto_responses:
-            item[1] -= 1
-            if item[1] <= 0:
-                ready.append(item)
-
-        for item in ready:
-            self._pending_auto_responses.remove(item)
-            self._send_queue.append((item[0], False))
-
-        self._attempt_send()
-
-        if self._send_delay_ticker > 0:
-            self._send_delay_ticker -= 1
 
     def _attempt_send(self) -> None:
         if not self._send_queue or self._send_delay_ticker > 0:

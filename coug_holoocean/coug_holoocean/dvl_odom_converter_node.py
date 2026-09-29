@@ -87,15 +87,6 @@ class DvlOdomConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def _reset_drift(self) -> None:
-        self._distance_traveled = 0.0
-        self._scale_error = 0.0
-        self._yaw_drift_rate = 0.0
-
-        if self._add_noise:
-            self._scale_error = random.gauss(0, self._position_noise_sigma_scale)
-            self._yaw_drift_rate = random.gauss(0, self._yaw_drift_sigma)
-
     def _config_callback(self, msg: ConfigCommand) -> None:
         if msg.command != "reset_dead_reckoning":
             return
@@ -208,6 +199,15 @@ class DvlOdomConverterNode(Node):
         dvl_msg.yaw = ned_yaw
 
         self._output_pub.publish(dvl_msg)
+
+    def _reset_drift(self) -> None:
+        self._distance_traveled = 0.0
+        self._scale_error = 0.0
+        self._yaw_drift_rate = 0.0
+
+        if self._add_noise:
+            self._scale_error = random.gauss(0, self._position_noise_sigma_scale)
+            self._yaw_drift_rate = random.gauss(0, self._yaw_drift_sigma)
 
 
 def main(args: list[str] | None = None) -> None:
