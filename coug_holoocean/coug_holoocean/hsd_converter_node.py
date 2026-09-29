@@ -27,43 +27,43 @@ class HsdConverterNode(Node):
         super().__init__("hsd_converter_node")
 
         self.declare_parameter("agent_name", "auv0")
-        self.declare_parameter("hsd_topic", "cmd_hsd")
-        self.declare_parameter("output_heading_topic", "/heading")
-        self.declare_parameter("output_speed_topic", "/speed")
-        self.declare_parameter("output_depth_topic", "/depth")
+        self.declare_parameter("input_topic", "cmd_hsd")
+        self.declare_parameter("heading_output_topic", "/heading")
+        self.declare_parameter("speed_output_topic", "/speed")
+        self.declare_parameter("depth_output_topic", "/depth")
 
         self._agent_name = self.get_parameter("agent_name").value
-        self._hsd_topic = self.get_parameter("hsd_topic").value
-        self._output_heading_topic = self.get_parameter("output_heading_topic").value
-        self._output_speed_topic = self.get_parameter("output_speed_topic").value
-        self._output_depth_topic = self.get_parameter("output_depth_topic").value
+        input_topic = self.get_parameter("input_topic").value
+        heading_output_topic = self.get_parameter("heading_output_topic").value
+        speed_output_topic = self.get_parameter("speed_output_topic").value
+        depth_output_topic = self.get_parameter("depth_output_topic").value
 
-        self._hsd_sub = self.create_subscription(
+        self._input_sub = self.create_subscription(
             ControlSetpoint,
-            self._hsd_topic,
+            input_topic,
             self._hsd_callback,
             qos_profile_system_default,
         )
-        self._output_heading_pub = self.create_publisher(
-            DesiredCommand, self._output_heading_topic, qos_profile_system_default
+        self._heading_pub = self.create_publisher(
+            DesiredCommand, heading_output_topic, qos_profile_system_default
         )
-        self._output_speed_pub = self.create_publisher(
-            DesiredCommand, self._output_speed_topic, qos_profile_system_default
+        self._speed_pub = self.create_publisher(
+            DesiredCommand, speed_output_topic, qos_profile_system_default
         )
-        self._output_depth_pub = self.create_publisher(
-            DesiredCommand, self._output_depth_topic, qos_profile_system_default
+        self._depth_pub = self.create_publisher(
+            DesiredCommand, depth_output_topic, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
 
     def _hsd_callback(self, msg: ControlSetpoint) -> None:
-        self._output_heading_pub.publish(self._create_desired_command_msg(msg.heading))
-        self._output_speed_pub.publish(
+        self._heading_pub.publish(self._create_desired_command_msg(msg.heading))
+        self._speed_pub.publish(
             self._create_desired_command_msg(
                 max(_MIN_SPEED_RPM, min(_MAX_SPEED_RPM, msg.speed_rpm))
             )
         )
-        self._output_depth_pub.publish(self._create_desired_command_msg(max(-msg.depth, 0.0)))
+        self._depth_pub.publish(self._create_desired_command_msg(max(-msg.depth, 0.0)))
 
     def _create_desired_command_msg(self, value: float) -> DesiredCommand:
         msg = DesiredCommand()

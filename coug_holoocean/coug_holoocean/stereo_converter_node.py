@@ -28,26 +28,26 @@ class StereoConverterNode(Node):
         self.declare_parameter("back_input_topic", "BackStereoRGBCamera")
         self.declare_parameter("front_output_topic", "stereo/front/image_raw")
         self.declare_parameter("back_output_topic", "stereo/back/image_raw")
-        self.declare_parameter("front_stereo_info_topic", "stereo/front/camera_info")
-        self.declare_parameter("back_stereo_info_topic", "stereo/back/camera_info")
+        self.declare_parameter("front_info_output_topic", "stereo/front/camera_info")
+        self.declare_parameter("back_info_output_topic", "stereo/back/camera_info")
         self.declare_parameter("front_stereo_frame", "front_stereo_optical_link")
         self.declare_parameter("back_stereo_frame", "back_stereo_optical_link")
 
         sync_slop_sec = self.get_parameter("sync_slop_sec").value
-        self._front_input_topic = self.get_parameter("front_input_topic").value
-        self._back_input_topic = self.get_parameter("back_input_topic").value
-        self._front_output_topic = self.get_parameter("front_output_topic").value
-        self._back_output_topic = self.get_parameter("back_output_topic").value
-        self._front_stereo_info_topic = self.get_parameter("front_stereo_info_topic").value
-        self._back_stereo_info_topic = self.get_parameter("back_stereo_info_topic").value
+        front_input_topic = self.get_parameter("front_input_topic").value
+        back_input_topic = self.get_parameter("back_input_topic").value
+        front_output_topic = self.get_parameter("front_output_topic").value
+        back_output_topic = self.get_parameter("back_output_topic").value
+        front_info_output_topic = self.get_parameter("front_info_output_topic").value
+        back_info_output_topic = self.get_parameter("back_info_output_topic").value
         self._front_stereo_frame = self.get_parameter("front_stereo_frame").value
         self._back_stereo_frame = self.get_parameter("back_stereo_frame").value
 
         self._front_sub = message_filters.Subscriber(
-            self, Image, self._front_input_topic, qos_profile=qos_profile_system_default
+            self, Image, front_input_topic, qos_profile=qos_profile_system_default
         )
         self._back_sub = message_filters.Subscriber(
-            self, Image, self._back_input_topic, qos_profile=qos_profile_system_default
+            self, Image, back_input_topic, qos_profile=qos_profile_system_default
         )
 
         self._time_sync = message_filters.ApproximateTimeSynchronizer(
@@ -57,16 +57,14 @@ class StereoConverterNode(Node):
 
         # Reliable QoS to match stereolabs/zed-ros2-wrapper
         self._front_pub = self.create_publisher(
-            Image, self._front_output_topic, qos_profile_system_default
+            Image, front_output_topic, qos_profile_system_default
         )
-        self._back_pub = self.create_publisher(
-            Image, self._back_output_topic, qos_profile_system_default
-        )
+        self._back_pub = self.create_publisher(Image, back_output_topic, qos_profile_system_default)
         self._front_info_pub = self.create_publisher(
-            CameraInfo, self._front_stereo_info_topic, qos_profile_system_default
+            CameraInfo, front_info_output_topic, qos_profile_system_default
         )
         self._back_info_pub = self.create_publisher(
-            CameraInfo, self._back_stereo_info_topic, qos_profile_system_default
+            CameraInfo, back_info_output_topic, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")

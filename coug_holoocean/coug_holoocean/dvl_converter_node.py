@@ -73,7 +73,7 @@ class DvlConverterNode(Node):
         self._tf_buffer = Buffer()
         self._tf_listener = TransformListener(self._tf_buffer, self)
 
-        self._input_sub = self.create_subscription(
+        self._velocity_sub = self.create_subscription(
             TwistWithCovarianceStamped,
             velocity_input_topic,
             self._twist_callback,
