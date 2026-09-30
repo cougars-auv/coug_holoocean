@@ -26,7 +26,7 @@ class DepthCameraConverterNode(Node):
         super().__init__("depth_camera_converter_node")
 
         self.declare_parameter("sync_slop_sec", 0.05)
-        self.declare_parameter("stamp_offset_sec", 0.0)
+        self.declare_parameter("stamp_offset_sec", 0.11)
         self.declare_parameter("min_range", 0.2)
         self.declare_parameter("max_range", 20.0)
         self.declare_parameter("color_input_topic", "DepthCameraRGBCamera")
