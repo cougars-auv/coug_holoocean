@@ -40,7 +40,7 @@ class DvlOdomConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("dvl_odom_converter_node")
 
-        self.declare_parameter("tf_timeout_sec", 0.1)
+        self.declare_parameter("transform_timeout_sec", 0.1)
         self.declare_parameter("position_noise_sigma_scale", 0.0101)
         self.declare_parameter("yaw_drift_sigma", 0.3)
         self.declare_parameter("add_noise", True)
@@ -51,7 +51,7 @@ class DvlOdomConverterNode(Node):
         self.declare_parameter("dvl_frame", "dvl_link")
         self.declare_parameter("map_frame", "map")
 
-        self._tf_timeout_sec = self.get_parameter("tf_timeout_sec").value
+        self._transform_timeout_sec = self.get_parameter("transform_timeout_sec").value
         self._position_noise_sigma_scale = self.get_parameter("position_noise_sigma_scale").value
         self._yaw_drift_sigma = self.get_parameter("yaw_drift_sigma").value
         self._add_noise = self.get_parameter("add_noise").value
@@ -105,7 +105,7 @@ class DvlOdomConverterNode(Node):
                 self._tf_buffer.transform(
                     holo_T_base,
                     self._map_frame,
-                    timeout=rclpy.duration.Duration(seconds=self._tf_timeout_sec),
+                    timeout=rclpy.duration.Duration(seconds=self._transform_timeout_sec),
                 ),
             )
         except TransformException as e:

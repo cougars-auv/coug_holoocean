@@ -33,14 +33,14 @@ class TruthConverterNode(Node):
         super().__init__("truth_converter_node")
 
         self.declare_parameter("publish_tf", False)
-        self.declare_parameter("tf_timeout_sec", 0.1)
+        self.declare_parameter("transform_timeout_sec", 0.1)
         self.declare_parameter("input_topic", "DynamicsSensorOdom")
         self.declare_parameter("output_topic", "odometry/truth")
         self.declare_parameter("base_frame", "base_link")
         self.declare_parameter("map_frame", "map")
 
         self._publish_tf = self.get_parameter("publish_tf").value
-        self._tf_timeout_sec = self.get_parameter("tf_timeout_sec").value
+        self._transform_timeout_sec = self.get_parameter("transform_timeout_sec").value
         input_topic = self.get_parameter("input_topic").value
         output_topic = self.get_parameter("output_topic").value
         self._base_frame = self.get_parameter("base_frame").value
@@ -68,7 +68,7 @@ class TruthConverterNode(Node):
                 self._tf_buffer.transform(
                     holo_T_base,
                     self._map_frame,
-                    timeout=rclpy.duration.Duration(seconds=self._tf_timeout_sec),
+                    timeout=rclpy.duration.Duration(seconds=self._transform_timeout_sec),
                 ),
             )
         except TransformException as e:
