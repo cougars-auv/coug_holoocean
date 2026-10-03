@@ -120,8 +120,8 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
                 {
                     "use_sim_time": use_sim_time,
                     "add_noise": add_noise,
-                    "depth_frame": depth_link_frame,
                     "map_frame": "map",
+                    "depth_frame": depth_link_frame,
                 },
             ],
         ),
@@ -136,11 +136,11 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
                 {
                     "use_sim_time": use_sim_time,
                     "add_noise": add_noise,
-                    "dvl_frame": dvl_link_frame,
                     "beam0_frame": beam0_link_frame,
                     "beam1_frame": beam1_link_frame,
                     "beam2_frame": beam2_link_frame,
                     "beam3_frame": beam3_link_frame,
+                    "dvl_frame": dvl_link_frame,
                 },
             ],
         ),
@@ -155,9 +155,9 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
                 {
                     "use_sim_time": use_sim_time,
                     "add_noise": add_noise,
+                    "map_frame": "map",
                     "base_frame": base_link_frame,
                     "dvl_frame": dvl_link_frame,
-                    "map_frame": "map",
                 },
             ],
         ),
@@ -248,8 +248,8 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
                 {
                     "use_sim_time": use_sim_time,
                     "add_noise": add_noise,
-                    "depth_frame": modem_link_frame,
                     "map_frame": "map",
+                    "depth_frame": modem_link_frame,
                 },
             ],
         ),
@@ -320,8 +320,8 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
                 scenario_param_file,
                 {
                     "use_sim_time": use_sim_time,
-                    "base_frame": base_link_frame,
                     "map_frame": "map",
+                    "base_frame": base_link_frame,
                 },
             ],
         ),

@@ -47,9 +47,9 @@ class DvlOdomConverterNode(Node):
         self.declare_parameter("input_topic", "DynamicsSensorOdom")
         self.declare_parameter("output_topic", "dvl/position")
         self.declare_parameter("config_command_topic", "dvl/config/command")
+        self.declare_parameter("map_frame", "map")
         self.declare_parameter("base_frame", "base_link")
         self.declare_parameter("dvl_frame", "dvl_link")
-        self.declare_parameter("map_frame", "map")
 
         self._transform_timeout_sec = self.get_parameter("transform_timeout_sec").value
         self._position_noise_sigma_scale = self.get_parameter("position_noise_sigma_scale").value
@@ -58,9 +58,9 @@ class DvlOdomConverterNode(Node):
         input_topic = self.get_parameter("input_topic").value
         output_topic = self.get_parameter("output_topic").value
         config_command_topic = self.get_parameter("config_command_topic").value
+        self._map_frame = self.get_parameter("map_frame").value
         self._base_frame = self.get_parameter("base_frame").value
         self._dvl_frame = self.get_parameter("dvl_frame").value
-        self._map_frame = self.get_parameter("map_frame").value
 
         self._ref_position = np.zeros(3)
         self._ref_rotation = Rotation.identity()
