@@ -21,9 +21,14 @@ from holoocean_interfaces.msg import AcousticBeaconSend, AcousticBeaconSensor
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
+from scipy.spatial.transform import Rotation
 from seatrac_interfaces.msg import ModemCmdUpdate, ModemRec, ModemSend
+from sensor_msgs.msg import Imu
 
 from coug_holoocean.utils import seatrac_enums as seatrac
+
+_NED_R_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv()
+_FLU_R_FRD = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
 
 
 class ModemConverterNode(Node):
@@ -37,6 +42,7 @@ class ModemConverterNode(Node):
         self.declare_parameter("beacon_id", 1)
         self.declare_parameter("bearing_noise_sigmas", [0.01745, 0.01745])
         self.declare_parameter("range_noise_sigma", 0.1)
+        self.declare_parameter("depth_noise_sigma", 0.1)
         self.declare_parameter("add_noise", True)
         self.declare_parameter("beacon_rec_topic", "AcousticBeaconSensor")
         self.declare_parameter("beacon_send_topic", "/acoustic_beacon_send")
@@ -44,6 +50,7 @@ class ModemConverterNode(Node):
         self.declare_parameter("modem_send_topic", "modem_send")
         self.declare_parameter("modem_cmd_update_topic", "modem_cmd_update")
         self.declare_parameter("depth_topic", "modem/depth/odometry")
+        self.declare_parameter("ahrs_topic", "modem/imu/data")
         self.declare_parameter("modem_frame", "modem_link")
 
         self._tick_period_sec = self.get_parameter("tick_period_sec").value
@@ -53,6 +60,7 @@ class ModemConverterNode(Node):
         self._beacon_id = self.get_parameter("beacon_id").value
         self._bearing_noise_sigmas = self.get_parameter("bearing_noise_sigmas").value
         self._range_noise_sigma = self.get_parameter("range_noise_sigma").value
+        self._depth_noise_sigma = self.get_parameter("depth_noise_sigma").value
         self._add_noise = self.get_parameter("add_noise").value
         beacon_rec_topic = self.get_parameter("beacon_rec_topic").value
         beacon_send_topic = self.get_parameter("beacon_send_topic").value
@@ -60,6 +68,7 @@ class ModemConverterNode(Node):
         modem_send_topic = self.get_parameter("modem_send_topic").value
         modem_cmd_update_topic = self.get_parameter("modem_cmd_update_topic").value
         depth_topic = self.get_parameter("depth_topic").value
+        ahrs_topic = self.get_parameter("ahrs_topic").value
         self._modem_frame = self.get_parameter("modem_frame").value
 
         self._send_delay_ticks = max(1, round(self._send_delay_sec / self._tick_period_sec))
@@ -74,6 +83,7 @@ class ModemConverterNode(Node):
         self._dat_queue: dict[int, list[int]] = {}
 
         self._agent_depth = 0.0
+        self._map_R_ahrs = Rotation.identity()
 
         self._beacon_rec_sub = self.create_subscription(
             AcousticBeaconSensor,
@@ -93,6 +103,12 @@ class ModemConverterNode(Node):
             self._depth_callback,
             qos_profile_system_default,
         )
+        self._ahrs_sub = self.create_subscription(
+            Imu,
+            ahrs_topic,
+            self._ahrs_callback,
+            qos_profile_system_default,
+        )
         # Reliable QoS to match BYU-FROST-Lab/seatrac-ros2
         self._modem_rec_pub = self.create_publisher(
             ModemRec, modem_rec_topic, qos_profile_system_default
@@ -110,6 +126,10 @@ class ModemConverterNode(Node):
 
     def _depth_callback(self, msg: Odometry) -> None:
         self._agent_depth = -msg.pose.pose.position.z
+
+    def _ahrs_callback(self, msg: Imu) -> None:
+        q = msg.orientation
+        self._map_R_ahrs = Rotation.from_quat([q.x, q.y, q.z, q.w])
 
     def _beacon_callback(self, msg: AcousticBeaconSensor) -> None:
         self._publish_modem_rec(msg)
@@ -195,16 +215,27 @@ class ModemConverterNode(Node):
             self._agent_depth * seatrac.METERS_TO_DECIMETERS
         )
 
+        # Convert ENU -> NED and FLU -> FRD
+        ned_R_beacon = _NED_R_ENU * self._map_R_ahrs * _FLU_R_FRD
+        ned_roll, ned_pitch, ned_yaw = ned_R_beacon.as_euler("xyz", degrees=True)
+
+        modem_rec.attitude_yaw = seatrac.clamp_int16(ned_yaw * seatrac.DEGREES_TO_DECIDEGREES)
+        modem_rec.attitude_pitch = seatrac.clamp_int16(ned_pitch * seatrac.DEGREES_TO_DECIDEGREES)
+        modem_rec.attitude_roll = seatrac.clamp_int16(ned_roll * seatrac.DEGREES_TO_DECIDEGREES)
+
+        azimuth = msg.azimuth
+        elevation = msg.elevation
+        range_dist = msg.range
+        if self._add_noise:
+            azimuth += random.gauss(0, self._bearing_noise_sigmas[0])
+            elevation += random.gauss(0, self._bearing_noise_sigmas[1])
+            range_dist += random.gauss(0, self._range_noise_sigma)
+
         modem_rec.includes_usbl = msg.msg_type in seatrac.HAS_USBL
         if modem_rec.includes_usbl:
             # Convert FLU -> FRD
-            azimuth = -msg.azimuth
-            elevation = msg.elevation
-            if self._add_noise:
-                azimuth += random.gauss(0, self._bearing_noise_sigmas[0])
-                elevation += random.gauss(0, self._bearing_noise_sigmas[1])
             modem_rec.usbl_azimuth = seatrac.clamp_int16(
-                math.degrees(azimuth) * seatrac.DEGREES_TO_DECIDEGREES
+                math.degrees(-azimuth) * seatrac.DEGREES_TO_DECIDEGREES
             )
             modem_rec.usbl_elevation = seatrac.clamp_int16(
                 math.degrees(elevation) * seatrac.DEGREES_TO_DECIDEGREES
@@ -213,16 +244,28 @@ class ModemConverterNode(Node):
 
         modem_rec.includes_range = msg.msg_type in seatrac.HAS_RANGE
         if modem_rec.includes_range:
-            range_dist = msg.range
-            if self._add_noise:
-                range_dist += random.gauss(0, self._range_noise_sigma)
             modem_rec.range_dist = seatrac.clamp_uint16(range_dist * seatrac.METERS_TO_DECIMETERS)
 
         modem_rec.includes_position = msg.msg_type in seatrac.HAS_Z
         if modem_rec.includes_position:
-            # TODO: Fix RESPX remote depth reading in HoloOcean (not populated)
-            modem_rec.position_enhanced = False
-            remote_depth = self._agent_depth - msg.range * math.sin(msg.elevation)
+            modem_rec.position_enhanced = (
+                msg.msg_type == seatrac.AcousticMessageType.RESPONSE_EXTENDED
+            )
+
+            if modem_rec.position_enhanced:
+                remote_depth = -msg.z
+                if self._add_noise:
+                    remote_depth += random.gauss(0, self._depth_noise_sigma)
+            else:
+                map_dir_remote = self._map_R_ahrs.apply(
+                    [
+                        math.cos(elevation) * math.cos(azimuth),
+                        math.cos(elevation) * math.sin(azimuth),
+                        math.sin(elevation),
+                    ]
+                )
+                remote_depth = self._agent_depth - range_dist * map_dir_remote[2]
+
             modem_rec.position_depth = seatrac.clamp_int16(
                 remote_depth * seatrac.METERS_TO_DECIMETERS
             )

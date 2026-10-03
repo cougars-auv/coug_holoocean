@@ -34,26 +34,26 @@ class ModemStatusConverterNode(Node):
         super().__init__("modem_status_converter_node")
 
         self.declare_parameter("sync_slop_sec", 0.05)
-        self.declare_parameter("imu_input_topic", "modem/imu/data")
+        self.declare_parameter("ahrs_input_topic", "modem/imu/data")
         self.declare_parameter("depth_input_topic", "modem/depth/odometry")
         self.declare_parameter("output_topic", "modem_status")
 
         sync_slop_sec = self.get_parameter("sync_slop_sec").value
-        imu_input_topic = self.get_parameter("imu_input_topic").value
+        ahrs_input_topic = self.get_parameter("ahrs_input_topic").value
         depth_input_topic = self.get_parameter("depth_input_topic").value
         output_topic = self.get_parameter("output_topic").value
 
         self._start_time = self.get_clock().now()
 
-        self._imu_sub = message_filters.Subscriber(
-            self, Imu, imu_input_topic, qos_profile=qos_profile_system_default
+        self._ahrs_sub = message_filters.Subscriber(
+            self, Imu, ahrs_input_topic, qos_profile=qos_profile_system_default
         )
         self._depth_sub = message_filters.Subscriber(
             self, Odometry, depth_input_topic, qos_profile=qos_profile_system_default
         )
 
         self._time_sync = message_filters.ApproximateTimeSynchronizer(
-            [self._imu_sub, self._depth_sub], queue_size=10, slop=sync_slop_sec
+            [self._ahrs_sub, self._depth_sub], queue_size=10, slop=sync_slop_sec
         )
         self._time_sync.registerCallback(self._sync_callback)
 
@@ -64,16 +64,16 @@ class ModemStatusConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def _sync_callback(self, imu_msg: Imu, depth_msg: Odometry, /) -> None:
+    def _sync_callback(self, ahrs_msg: Imu, depth_msg: Odometry, /) -> None:
         modem_status_msg = ModemStatus()
-        modem_status_msg.header = imu_msg.header
+        modem_status_msg.header = ahrs_msg.header
 
         modem_status_msg.msg_id = seatrac.CommandId.STATUS
         elapsed_ns = (self.get_clock().now() - self._start_time).nanoseconds
         modem_status_msg.timestamp = elapsed_ns // 1_000_000  # ms since start
 
         # Convert ENU -> NED and FLU -> FRD
-        q = imu_msg.orientation
+        q = ahrs_msg.orientation
         enu_R_base = Rotation.from_quat([q.x, q.y, q.z, q.w])
         ned_R_beacon = _NED_R_ENU * enu_R_base * _FLU_R_FRD
         ned_roll, ned_pitch, ned_yaw = ned_R_beacon.as_euler("xyz", degrees=True)
