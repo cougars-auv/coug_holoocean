@@ -358,19 +358,16 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
         ),
         Node(
             package="topic_tools",
-            executable="transform",
-            name="fin_state_publisher_node",
+            executable="relay_field",
+            name="fin_state_relay_node",
             arguments=[
                 "ControlCommand",
                 "joint_states",
                 "sensor_msgs/msg/JointState",
                 (
-                    "sensor_msgs.msg.JointState(header=m.header, "
-                    "name=['top_fin_joint', 'left_fin_joint', 'right_fin_joint'], "
-                    "position=[-m.command[0], m.command[2], m.command[1]])"
+                    "{header: m.header, name: [top_fin_joint, left_fin_joint, right_fin_joint], "
+                    "position: '[-m.command[0], m.command[2], m.command[1]]'}"
                 ),
-                "--import",
-                "sensor_msgs",
                 "--wait-for-start",
                 "--qos-reliability",
                 "reliable",
