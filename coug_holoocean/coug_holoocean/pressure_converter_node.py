@@ -54,6 +54,9 @@ class PressureConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _odom_callback(self, msg: Odometry) -> None:
+        self._output_pub.publish(self._convert_to_pressure(msg))
+
+    def _convert_to_pressure(self, msg: Odometry) -> FluidPressure:
         depth = -msg.pose.pose.position.z
 
         # pressure [Pa] = depth [m] * rho [kg/m^3] * g [m/s^2] + atmospheric_pressure [Pa]
@@ -69,7 +72,7 @@ class PressureConverterNode(Node):
         if self._add_noise:
             pressure_msg.fluid_pressure += random.gauss(0, self._fluid_pressure_noise_sigma)
 
-        self._output_pub.publish(pressure_msg)
+        return pressure_msg
 
 
 def main(args: list[str] | None = None) -> None:

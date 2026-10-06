@@ -69,6 +69,11 @@ class MagConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _mag_callback(self, msg: MagneticField) -> None:
+        mag_msg = self._convert_to_mag(msg)
+        self._output_pub.publish(mag_msg)
+        self._bias_pub.publish(self._convert_to_bias(mag_msg))
+
+    def _convert_to_mag(self, msg: MagneticField) -> MagneticField:
         msg.header.frame_id = self._mag_frame
 
         if self._add_bias:
@@ -92,8 +97,9 @@ class MagConverterNode(Node):
 
             msg.magnetic_field_covariance /= self._au_to_tesla**2
 
-        self._output_pub.publish(msg)
+        return msg
 
+    def _convert_to_bias(self, msg: MagneticField) -> MagneticField:
         bias_msg = MagneticField()
         bias_msg.header = msg.header
         bias_msg.magnetic_field.x = self._mag_bias[0]
@@ -102,7 +108,7 @@ class MagConverterNode(Node):
 
         bias_msg.magnetic_field_covariance[0] = _UNKNOWN_COVARIANCE
 
-        self._bias_pub.publish(bias_msg)
+        return bias_msg
 
 
 def main(args: list[str] | None = None) -> None:

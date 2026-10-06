@@ -96,6 +96,16 @@ class DepthCameraConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _sync_callback(self, depth_msg: Image, info_msg: CameraInfo, color_msg: Image, /) -> None:
+        depth_msg, info_msg, color_msg = self._convert_to_images(depth_msg, info_msg, color_msg)
+
+        self._color_pub.publish(color_msg)
+        self._color_info_pub.publish(info_msg)
+        self._depth_pub.publish(depth_msg)
+        self._depth_info_pub.publish(info_msg)
+
+    def _convert_to_images(
+        self, depth_msg: Image, info_msg: CameraInfo, color_msg: Image
+    ) -> tuple[Image, CameraInfo, Image]:
         captured_ns = max(
             Time.from_msg(depth_msg.header.stamp).nanoseconds - self._stamp_offset_ns, 0
         )
@@ -112,10 +122,7 @@ class DepthCameraConverterNode(Node):
         depth[(depth < self._min_range) | (depth > self._max_range)] = np.nan
         depth_msg.data = depth.tobytes()
 
-        self._color_pub.publish(color_msg)
-        self._color_info_pub.publish(info_msg)
-        self._depth_pub.publish(depth_msg)
-        self._depth_info_pub.publish(info_msg)
+        return depth_msg, info_msg, color_msg
 
 
 def main(args: list[str] | None = None) -> None:

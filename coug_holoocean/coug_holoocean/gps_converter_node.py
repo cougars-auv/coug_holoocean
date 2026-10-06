@@ -55,6 +55,11 @@ class GpsConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _odom_callback(self, msg: Odometry) -> None:
+        navsat_msg = self._convert_to_navsat(msg)
+        if navsat_msg is not None:
+            self._output_pub.publish(navsat_msg)
+
+    def _convert_to_navsat(self, msg: Odometry) -> NavSatFix | None:
         navsat_msg = NavSatFix()
         navsat_msg.header.stamp = msg.header.stamp
         navsat_msg.header.frame_id = self._gps_frame
@@ -81,7 +86,7 @@ class GpsConverterNode(Node):
             )
         except (TypeError, ValueError) as e:
             self.get_logger().error(f"Failed to convert ENU position to geodetic: {e}")
-            return
+            return None
 
         navsat_msg.latitude = lat
         navsat_msg.longitude = lon
@@ -92,7 +97,7 @@ class GpsConverterNode(Node):
         navsat_msg.position_covariance[8] = self._position_noise_sigmas[2] ** 2
         navsat_msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_DIAGONAL_KNOWN
 
-        self._output_pub.publish(navsat_msg)
+        return navsat_msg
 
 
 def main(args: list[str] | None = None) -> None:

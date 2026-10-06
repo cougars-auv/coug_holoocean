@@ -65,6 +65,9 @@ class ModemStatusConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _sync_callback(self, ahrs_msg: Imu, depth_msg: Odometry, /) -> None:
+        self._output_pub.publish(self._convert_to_modem_status(ahrs_msg, depth_msg))
+
+    def _convert_to_modem_status(self, ahrs_msg: Imu, depth_msg: Odometry) -> ModemStatus:
         modem_status_msg = ModemStatus()
         modem_status_msg.header = ahrs_msg.header
 
@@ -95,7 +98,7 @@ class ModemStatusConverterNode(Node):
             -depth_msg.pose.pose.position.z * seatrac.METERS_TO_DECIMETERS
         )
 
-        self._output_pub.publish(modem_status_msg)
+        return modem_status_msg
 
 
 def main(args: list[str] | None = None) -> None:

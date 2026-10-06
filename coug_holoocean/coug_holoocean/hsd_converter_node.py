@@ -57,15 +57,15 @@ class HsdConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _hsd_callback(self, msg: ControlSetpoint) -> None:
-        self._heading_pub.publish(self._create_desired_command_msg(msg.heading))
+        self._heading_pub.publish(self._convert_to_desired_command(msg.heading))
         self._speed_pub.publish(
-            self._create_desired_command_msg(
+            self._convert_to_desired_command(
                 max(_MIN_SPEED_RPM, min(_MAX_SPEED_RPM, msg.speed_rpm))
             )
         )
-        self._depth_pub.publish(self._create_desired_command_msg(max(-msg.depth, 0.0)))
+        self._depth_pub.publish(self._convert_to_desired_command(max(-msg.depth, 0.0)))
 
-    def _create_desired_command_msg(self, value: float) -> DesiredCommand:
+    def _convert_to_desired_command(self, value: float) -> DesiredCommand:
         msg = DesiredCommand()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self._agent_name

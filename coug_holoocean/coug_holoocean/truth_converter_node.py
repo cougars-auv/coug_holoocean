@@ -79,25 +79,32 @@ class TruthConverterNode(Node):
             )
             return
 
+        self._output_pub.publish(self._convert_to_odom(msg, map_T_base))
+
+        if self._publish_tf:
+            self._tf_broadcaster.sendTransform(self._convert_to_tf(msg, map_T_base))
+
+    def _convert_to_odom(self, msg: Odometry, map_T_base: PoseWithCovarianceStamped) -> Odometry:
         odom_msg = Odometry()
         odom_msg.header.stamp = msg.header.stamp
         odom_msg.header.frame_id = self._map_frame
         odom_msg.child_frame_id = self._base_frame
         odom_msg.pose = map_T_base.pose
         odom_msg.twist = msg.twist
+        return odom_msg
 
-        self._output_pub.publish(odom_msg)
-
-        if self._publish_tf:
-            map_T_base_tf = TransformStamped()
-            map_T_base_tf.header.stamp = msg.header.stamp
-            map_T_base_tf.header.frame_id = self._map_frame
-            map_T_base_tf.child_frame_id = self._base_frame
-            map_T_base_tf.transform.translation.x = map_T_base.pose.pose.position.x
-            map_T_base_tf.transform.translation.y = map_T_base.pose.pose.position.y
-            map_T_base_tf.transform.translation.z = map_T_base.pose.pose.position.z
-            map_T_base_tf.transform.rotation = map_T_base.pose.pose.orientation
-            self._tf_broadcaster.sendTransform(map_T_base_tf)
+    def _convert_to_tf(
+        self, msg: Odometry, map_T_base: PoseWithCovarianceStamped
+    ) -> TransformStamped:
+        map_T_base_tf = TransformStamped()
+        map_T_base_tf.header.stamp = msg.header.stamp
+        map_T_base_tf.header.frame_id = self._map_frame
+        map_T_base_tf.child_frame_id = self._base_frame
+        map_T_base_tf.transform.translation.x = map_T_base.pose.pose.position.x
+        map_T_base_tf.transform.translation.y = map_T_base.pose.pose.position.y
+        map_T_base_tf.transform.translation.z = map_T_base.pose.pose.position.z
+        map_T_base_tf.transform.rotation = map_T_base.pose.pose.orientation
+        return map_T_base_tf
 
 
 def main(args: list[str] | None = None) -> None:

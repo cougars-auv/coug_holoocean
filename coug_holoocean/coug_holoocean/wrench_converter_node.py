@@ -74,6 +74,15 @@ class WrenchConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _control_callback(self, msg: AgentCommand) -> None:
+        raw_wrench_msg, wrench_msg = self._convert_to_wrench(msg)
+        self._wrench_raw_pub.publish(raw_wrench_msg)
+        self._wrench_pub.publish(wrench_msg)
+
+    def _odom_callback(self, msg: Odometry) -> None:
+        linear = msg.twist.twist.linear
+        self._speed = math.hypot(linear.x, linear.y, linear.z)
+
+    def _convert_to_wrench(self, msg: AgentCommand) -> tuple[WrenchStamped, WrenchStamped]:
         thruster_rpm = msg.command[-1]
 
         n_rps = thruster_rpm / 60.0
@@ -86,17 +95,13 @@ class WrenchConverterNode(Node):
         raw_wrench_msg.header.stamp = msg.header.stamp
         raw_wrench_msg.header.frame_id = self._wrench_frame
         raw_wrench_msg.wrench.force.x = force_x_raw
-        self._wrench_raw_pub.publish(raw_wrench_msg)
 
         wrench_msg = WrenchStamped()
         wrench_msg.header.stamp = msg.header.stamp
         wrench_msg.header.frame_id = self._wrench_frame
         wrench_msg.wrench.force.x = force_x
-        self._wrench_pub.publish(wrench_msg)
 
-    def _odom_callback(self, msg: Odometry) -> None:
-        linear = msg.twist.twist.linear
-        self._speed = math.hypot(linear.x, linear.y, linear.z)
+        return raw_wrench_msg, wrench_msg
 
 
 def main(args: list[str] | None = None) -> None:

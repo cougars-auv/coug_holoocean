@@ -112,6 +112,37 @@ class DvlConverterNode(Node):
         if not self._acoustic_enabled:
             return
 
+        frd_beam_axes: list[npt.NDArray[np.float64]] = (
+            self._resolve_beam_axes() if self._beam_ranges is not None else []
+        )
+        self._output_pub.publish(self._convert_to_dvl(msg, frd_beam_axes))
+
+    def _resolve_beam_axes(self) -> list[npt.NDArray[np.float64]]:
+        frd_beam_axes: list[npt.NDArray[np.float64]] = []
+        for beam_frame in self._beam_frames:
+            try:
+                dvl_T_beam_tf = self._tf_buffer.lookup_transform(
+                    self._dvl_frame, beam_frame, rclpy.time.Time()
+                )
+            except TransformException as e:
+                self.get_logger().warning(
+                    f"Failed to look up transform from '{beam_frame}' to '{self._dvl_frame}': {e}",
+                    throttle_duration_sec=1.0,
+                )
+                break
+
+            q = dvl_T_beam_tf.transform.rotation
+            dvl_R_beam = Rotation.from_quat([q.x, q.y, q.z, q.w])
+
+            # Each beam frame points +X down its own beam; convert FLU -> FRD
+            frd_R_beam = _FRD_R_FLU * dvl_R_beam
+            frd_beam_axes.append(frd_R_beam.apply([1.0, 0.0, 0.0]))
+
+        return frd_beam_axes
+
+    def _convert_to_dvl(
+        self, msg: TwistWithCovarianceStamped, frd_beam_axes: list[npt.NDArray[np.float64]]
+    ) -> DVL:
         msg.header.frame_id = self._dvl_frame
 
         dvl_msg = DVL()
@@ -132,39 +163,16 @@ class DvlConverterNode(Node):
 
         dvl_msg.altitude = -1.0
 
-        frd_beam_axes: list[npt.NDArray[np.float64]] = []
-        if self._beam_ranges is not None:
-            for beam_frame in self._beam_frames:
-                try:
-                    dvl_T_beam_tf = self._tf_buffer.lookup_transform(
-                        self._dvl_frame, beam_frame, rclpy.time.Time()
-                    )
-                except TransformException as e:
-                    self.get_logger().warning(
-                        f"Failed to look up transform from '{beam_frame}' to '{self._dvl_frame}': {e}",
-                        throttle_duration_sec=1.0,
-                    )
-                    break
+        if self._beam_ranges is not None and len(frd_beam_axes) == len(self._beam_frames):
+            dvl_msg.beams = self._convert_to_beams(self._beam_ranges, frd_velocity, frd_beam_axes)
 
-                q = dvl_T_beam_tf.transform.rotation
-                dvl_R_beam = Rotation.from_quat([q.x, q.y, q.z, q.w])
-
-                # Each beam frame points +X down its own beam; convert FLU -> FRD
-                frd_R_beam = _FRD_R_FLU * dvl_R_beam
-                frd_beam_axes.append(frd_R_beam.apply([1.0, 0.0, 0.0]))
-
-            if len(frd_beam_axes) == len(self._beam_frames):
-                dvl_msg.beams = self._create_beam_msgs(
-                    self._beam_ranges, frd_velocity, frd_beam_axes
-                )
-
-                beam_altitudes = [
-                    beam.distance * frd_beam_axis[2]
-                    for beam, frd_beam_axis in zip(dvl_msg.beams, frd_beam_axes, strict=True)
-                    if beam.valid
-                ]
-                if beam_altitudes:
-                    dvl_msg.altitude = sum(beam_altitudes) / len(beam_altitudes)
+            beam_altitudes = [
+                beam.distance * frd_beam_axis[2]
+                for beam, frd_beam_axis in zip(dvl_msg.beams, frd_beam_axes, strict=True)
+                if beam.valid
+            ]
+            if beam_altitudes:
+                dvl_msg.altitude = sum(beam_altitudes) / len(beam_altitudes)
 
         frd_beam_axis_matrix = np.array(
             [frd_beam_axes[beam.id] for beam in dvl_msg.beams if beam.valid]
@@ -190,9 +198,9 @@ class DvlConverterNode(Node):
         dvl_msg.covariance = frd_velocity_covariance.flatten().tolist()
         dvl_msg.fom = float(np.sqrt(np.linalg.eigvalsh(frd_velocity_covariance).max()))
 
-        self._output_pub.publish(dvl_msg)
+        return dvl_msg
 
-    def _create_beam_msgs(
+    def _convert_to_beams(
         self,
         beam_ranges: npt.NDArray[np.float64],
         frd_velocity: npt.NDArray[np.float64],

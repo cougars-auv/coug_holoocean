@@ -99,6 +99,9 @@ class CmdVelConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _twist_callback(self, msg: TwistStamped) -> None:
+        self._output_pub.publish(self._convert_to_agent_command(msg))
+
+    def _convert_to_agent_command(self, msg: TwistStamped) -> AgentCommand:
         agent_command_msg = AgentCommand()
         agent_command_msg.header.stamp = self.get_clock().now().to_msg()
         agent_command_msg.header.frame_id = self._agent_name
@@ -117,7 +120,7 @@ class CmdVelConverterNode(Node):
 
         agent_command_msg.command = final_cmds
 
-        self._output_pub.publish(agent_command_msg)
+        return agent_command_msg
 
     def _bluerov2_command(self, msg: TwistStamped) -> list[float]:
         # Assuming no quadratic drag

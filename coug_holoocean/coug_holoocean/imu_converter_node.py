@@ -85,6 +85,11 @@ class ImuConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _sync_callback(self, imu_msg: Imu, ahrs_msg: Vector3Stamped, /) -> None:
+        imu_msg = self._convert_to_imu(imu_msg, ahrs_msg)
+        self._output_pub.publish(imu_msg)
+        self._bias_pub.publish(self._convert_to_bias(imu_msg))
+
+    def _convert_to_imu(self, imu_msg: Imu, ahrs_msg: Vector3Stamped) -> Imu:
         roll_rad = math.radians(ahrs_msg.vector.x)
         pitch_rad = math.radians(ahrs_msg.vector.y)
         yaw_rad = math.radians(ahrs_msg.vector.z)
@@ -154,8 +159,9 @@ class ImuConverterNode(Node):
         imu_msg.orientation_covariance[4] = self._orientation_noise_sigmas[1] ** 2
         imu_msg.orientation_covariance[8] = self._orientation_noise_sigmas[2] ** 2
 
-        self._output_pub.publish(imu_msg)
+        return imu_msg
 
+    def _convert_to_bias(self, imu_msg: Imu) -> TwistWithCovarianceStamped:
         bias_msg = TwistWithCovarianceStamped()
         bias_msg.header = imu_msg.header
         bias_msg.twist.twist.linear.x = self._accel_bias[0]
@@ -168,7 +174,7 @@ class ImuConverterNode(Node):
         bias_msg.twist.covariance[0] = _UNKNOWN_COVARIANCE
         bias_msg.twist.covariance[21] = _UNKNOWN_COVARIANCE
 
-        self._bias_pub.publish(bias_msg)
+        return bias_msg
 
 
 def main(args: list[str] | None = None) -> None:

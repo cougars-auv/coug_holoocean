@@ -49,6 +49,9 @@ class DepthConverterNode(Node):
         self.get_logger().info("Initialization complete.")
 
     def _odom_callback(self, msg: Odometry) -> None:
+        self._output_pub.publish(self._convert_to_odom(msg))
+
+    def _convert_to_odom(self, msg: Odometry) -> Odometry:
         depth_msg = Odometry()
         depth_msg.header.stamp = msg.header.stamp
         depth_msg.header.frame_id = self._map_frame
@@ -68,7 +71,7 @@ class DepthConverterNode(Node):
         depth_msg.pose.covariance[35] = _UNMEASURED_VARIANCE
         depth_msg.twist.covariance[0] = _UNKNOWN_COVARIANCE
 
-        self._output_pub.publish(depth_msg)
+        return depth_msg
 
 
 def main(args: list[str] | None = None) -> None:

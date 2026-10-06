@@ -127,6 +127,11 @@ class DvlOdomConverterNode(Node):
             )
             return
 
+        self._output_pub.publish(self._convert_to_dvl(msg, map_T_base, base_T_dvl_tf))
+
+    def _convert_to_dvl(
+        self, msg: Odometry, map_T_base: PoseStamped, base_T_dvl_tf: TransformStamped
+    ) -> DVLDR:
         # Transform the base pose to the DVL pose, both in the map frame
         map_T_base_tf = TransformStamped()
         map_T_base_tf.header = map_T_base.header
@@ -198,7 +203,7 @@ class DvlOdomConverterNode(Node):
         dvl_msg.pitch = ned_pitch
         dvl_msg.yaw = ned_yaw
 
-        self._output_pub.publish(dvl_msg)
+        return dvl_msg
 
     def _reset_drift(self) -> None:
         self._distance_traveled = 0.0

@@ -132,7 +132,7 @@ class ModemConverterNode(Node):
         self._map_R_ahrs = Rotation.from_quat([q.x, q.y, q.z, q.w])
 
     def _beacon_callback(self, msg: AcousticBeaconSensor) -> None:
-        self._publish_modem_rec(msg)
+        self._modem_rec_pub.publish(self._convert_to_modem_rec(msg))
 
         # The real beacon firmware answers REQ messages with the queued data
         if msg.msg_type in seatrac.REQ_TO_RESP and msg.to_beacon == self._beacon_id:
@@ -201,7 +201,7 @@ class ModemConverterNode(Node):
         if self._send_delay_ticker > 0:
             self._send_delay_ticker -= 1
 
-    def _publish_modem_rec(self, msg: AcousticBeaconSensor) -> None:
+    def _convert_to_modem_rec(self, msg: AcousticBeaconSensor) -> ModemRec:
         modem_rec = ModemRec()
         modem_rec.header.stamp = msg.header.stamp
         modem_rec.header.frame_id = self._modem_frame
@@ -274,7 +274,7 @@ class ModemConverterNode(Node):
         modem_rec.packet_len = len(payload)
         modem_rec.packet_data = payload + [0] * (30 - len(payload))
 
-        self._modem_rec_pub.publish(modem_rec)
+        return modem_rec
 
     def _queue_auto_response(self, msg: AcousticBeaconSensor) -> None:
         # Consume any payload staged for the requester (or for all beacons)
