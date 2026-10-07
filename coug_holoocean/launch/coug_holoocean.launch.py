@@ -340,23 +340,6 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
             ],
         ),
         Node(
-            package="depth_image_proc",
-            executable="point_cloud_xyzrgb_node",
-            name="depth_camera_cloud",
-            parameters=[
-                fleet_param_file,
-                agent_param_file,
-                scenario_param_file,
-                {"use_sim_time": use_sim_time},
-            ],
-            remappings=[
-                ("depth_registered/image_rect", "camera/depth/depth_registered"),
-                ("rgb/image_rect_color", "camera/rgb/image_rect_color"),
-                ("rgb/camera_info", "camera/rgb/camera_info"),
-                ("points", "camera/point_cloud/cloud_registered"),
-            ],
-        ),
-        Node(
             package="topic_tools",
             executable="relay_field",
             name="fin_state_relay",
@@ -373,6 +356,23 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
                 "reliable",
             ],
             parameters=[{"use_sim_time": use_sim_time}],
+        ),
+        Node(
+            package="depth_image_proc",
+            executable="point_cloud_xyzrgb_node",
+            name="point_cloud_xyzrgb",
+            parameters=[
+                fleet_param_file,
+                agent_param_file,
+                scenario_param_file,
+                {"use_sim_time": use_sim_time},
+            ],
+            remappings=[
+                ("depth_registered/image_rect", "camera/depth/depth_registered"),
+                ("rgb/image_rect_color", "camera/rgb/image_rect_color"),
+                ("rgb/camera_info", "camera/rgb/camera_info"),
+                ("points", "camera/point_cloud/cloud_registered"),
+            ],
         ),
     ]
 
