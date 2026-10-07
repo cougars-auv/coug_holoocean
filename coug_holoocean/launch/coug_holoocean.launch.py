@@ -342,7 +342,7 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
         Node(
             package="depth_image_proc",
             executable="point_cloud_xyzrgb_node",
-            name="depth_camera_cloud_node",
+            name="depth_camera_cloud",
             parameters=[
                 fleet_param_file,
                 agent_param_file,
@@ -359,7 +359,7 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
         Node(
             package="topic_tools",
             executable="relay_field",
-            name="fin_state_relay_node",
+            name="fin_state_relay",
             arguments=[
                 "ControlCommand",
                 "joint_states",
