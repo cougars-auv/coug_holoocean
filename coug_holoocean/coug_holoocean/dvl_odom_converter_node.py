@@ -122,7 +122,8 @@ class DvlOdomConverterNode(Node):
             )
         except TransformException as e:
             self.get_logger().warning(
-                f"Failed to look up transform from '{self._dvl_frame}' to '{self._base_frame}': {e}",
+                f"Failed to look up transform from '{self._dvl_frame}' to "
+                f"'{self._base_frame}': {e}",
                 throttle_duration_sec=1.0,
             )
             return
