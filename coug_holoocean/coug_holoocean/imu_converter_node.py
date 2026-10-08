@@ -24,6 +24,7 @@ from scipy.spatial.transform import Rotation
 from sensor_msgs.msg import Imu
 
 _UNKNOWN_COVARIANCE = -1.0
+_NANOSECONDS_TO_SECONDS = 1e-9
 
 
 class ImuConverterNode(Node):
@@ -106,7 +107,9 @@ class ImuConverterNode(Node):
         imu_msg.header.frame_id = self._imu_frame
 
         if self._add_bias:
-            current_stamp = imu_msg.header.stamp.sec + imu_msg.header.stamp.nanosec * 1e-9
+            current_stamp = (
+                imu_msg.header.stamp.sec + imu_msg.header.stamp.nanosec * _NANOSECONDS_TO_SECONDS
+            )
             if self._last_stamp is not None:
                 dt = current_stamp - self._last_stamp
                 if dt > 0.0:

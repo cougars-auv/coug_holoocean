@@ -31,6 +31,8 @@ from tf2_ros import (  # type: ignore[attr-defined, unused-ignore]
 
 _FRD_R_FLU = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
 _LOST_LOCK_VELOCITY_VARIANCE = 100.01
+_SECONDS_TO_MICROSECONDS = 1e6
+_MICROSECONDS_TO_NANOSECONDS = 1e3
 
 
 class DvlConverterNode(Node):
@@ -159,7 +161,10 @@ class DvlConverterNode(Node):
         )
 
         # Convert nanoseconds to microseconds
-        dvl_msg.time_of_validity = int(msg.header.stamp.sec * 1e6 + msg.header.stamp.nanosec / 1e3)
+        dvl_msg.time_of_validity = int(
+            msg.header.stamp.sec * _SECONDS_TO_MICROSECONDS
+            + msg.header.stamp.nanosec / _MICROSECONDS_TO_NANOSECONDS
+        )
 
         dvl_msg.altitude = -1.0
 

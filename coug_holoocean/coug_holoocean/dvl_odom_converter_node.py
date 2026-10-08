@@ -34,6 +34,7 @@ from tf2_ros import (  # type: ignore[attr-defined, unused-ignore]
 
 _NED_R_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv()
 _FLU_R_FRD = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
+_NANOSECONDS_TO_SECONDS = 1e-9
 
 
 class DvlOdomConverterNode(Node):
@@ -159,7 +160,7 @@ class DvlOdomConverterNode(Node):
         enu_R_dvl = Rotation.from_quat([q.x, q.y, q.z, q.w])
         ned_R_dvl = _NED_R_ENU * enu_R_dvl
 
-        stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * _NANOSECONDS_TO_SECONDS
         ned_position = np.array([ned_x, ned_y, ned_z])
 
         if self._reset_pending:

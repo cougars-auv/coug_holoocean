@@ -20,6 +20,8 @@ from rclpy.qos import qos_profile_system_default
 from rclpy.time import Time
 from sensor_msgs.msg import CameraInfo, Image
 
+_SECONDS_TO_NANOSECONDS = 1e9
+
 
 class DepthCameraConverterNode(Node):
     def __init__(self) -> None:
@@ -39,7 +41,8 @@ class DepthCameraConverterNode(Node):
         self.declare_parameter("depth_camera_frame", "depth_camera_optical_link")
 
         self._stamp_offset_ns = round(
-            self.get_parameter("stamp_offset_sec").get_parameter_value().double_value * 1e9
+            self.get_parameter("stamp_offset_sec").get_parameter_value().double_value
+            * _SECONDS_TO_NANOSECONDS
         )
         self._min_range = self.get_parameter("min_range").value
         self._max_range = self.get_parameter("max_range").value

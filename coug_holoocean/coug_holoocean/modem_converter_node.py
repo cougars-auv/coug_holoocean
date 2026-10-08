@@ -29,6 +29,7 @@ from coug_holoocean.utils import seatrac_enums as seatrac
 
 _NED_R_ENU = Rotation.from_quat([math.sqrt(0.5), math.sqrt(0.5), 0.0, 0.0]).inv()
 _FLU_R_FRD = Rotation.from_quat([1.0, 0.0, 0.0, 0.0])
+_MAX_PAYLOAD_LEN = 30
 
 
 class ModemConverterNode(Node):
@@ -270,9 +271,9 @@ class ModemConverterNode(Node):
                 remote_depth * seatrac.METERS_TO_DECIMETERS
             )
 
-        payload = list(msg.msg_data[:30])
+        payload = list(msg.msg_data[:_MAX_PAYLOAD_LEN])
         modem_rec.packet_len = len(payload)
-        modem_rec.packet_data = payload + [0] * (30 - len(payload))
+        modem_rec.packet_data = payload + [0] * (_MAX_PAYLOAD_LEN - len(payload))
 
         return modem_rec
 

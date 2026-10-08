@@ -22,7 +22,6 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_system_default
 
 # actuator.py
-_RHO = 1026.0
 _D_PROP = 0.14
 _T_PROP = 0.1
 _KT_0 = 0.4566
@@ -30,25 +29,34 @@ _KT_MAX = 0.1798
 _JA_MAX = 0.6632
 _W = 0.056
 
-_C1 = (1.0 - _T_PROP) * _RHO * pow(_D_PROP, 4) * _KT_0
-_C2 = (1.0 - _T_PROP) * _RHO * pow(_D_PROP, 4) * (_KT_MAX - _KT_0) / _JA_MAX * ((1 - _W) / _D_PROP)
-
 
 class WrenchConverterNode(Node):
     def __init__(self) -> None:
         super().__init__("wrench_converter_node")
 
+        self.declare_parameter("water_density", 997.0)
         self.declare_parameter("control_topic", "ControlCommand")
         self.declare_parameter("odom_topic", "DynamicsSensorOdom")
         self.declare_parameter("wrench_raw_topic", "cmd_wrench_raw")
         self.declare_parameter("wrench_topic", "cmd_wrench")
         self.declare_parameter("wrench_frame", "com_link")
 
+        water_density = self.get_parameter("water_density").value
         control_topic = self.get_parameter("control_topic").value
         odom_topic = self.get_parameter("odom_topic").value
         wrench_raw_topic = self.get_parameter("wrench_raw_topic").value
         wrench_topic = self.get_parameter("wrench_topic").value
         self._wrench_frame = self.get_parameter("wrench_frame").value
+
+        self._c1 = (1.0 - _T_PROP) * water_density * pow(_D_PROP, 4) * _KT_0
+        self._c2 = (
+            (1.0 - _T_PROP)
+            * water_density
+            * pow(_D_PROP, 4)
+            * (_KT_MAX - _KT_0)
+            / _JA_MAX
+            * ((1 - _W) / _D_PROP)
+        )
 
         self._control_sub = self.create_subscription(
             AgentCommand,
@@ -88,8 +96,8 @@ class WrenchConverterNode(Node):
         n_rps = thruster_rpm / 60.0
 
         # Assuming no spool up/down delays
-        force_x_raw = _C1 * abs(n_rps) * n_rps
-        force_x = force_x_raw + _C2 * n_rps * self._speed if n_rps > 0 else force_x_raw
+        force_x_raw = self._c1 * abs(n_rps) * n_rps
+        force_x = force_x_raw + self._c2 * n_rps * self._speed if n_rps > 0 else force_x_raw
 
         raw_wrench_msg = WrenchStamped()
         raw_wrench_msg.header.stamp = msg.header.stamp
