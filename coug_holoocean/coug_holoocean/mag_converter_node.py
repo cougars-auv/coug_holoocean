@@ -32,7 +32,7 @@ class MagConverterNode(Node):
         self.declare_parameter("add_bias", True)
         self.declare_parameter("hard_iron_bias_sigmas", [1.0e-05, 1.0e-05, 1.0e-05])
         self.declare_parameter("input_topic", "MagnetometerSensor")
-        self.declare_parameter("output_topic", "imu/mag_au")
+        self.declare_parameter("output_topic", "imu/mag")
         self.declare_parameter("bias_topic", "imu/mag/bias")
         self.declare_parameter("mag_frame", "imu_link")
 
