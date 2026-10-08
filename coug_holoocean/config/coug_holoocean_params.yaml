@@ -53,7 +53,7 @@
     ros__parameters:
       # --- Node Settings ---
       # https://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=MS5837-02BA01&DocType=DS&DocLang=English
-      position_z_noise_sigma: 0.02 # [m]
+      position_z_noise_sigma: 0.02 # [m] ±2 mbar accuracy
 
       # --- ROS Topics and Frames ---
       input_topic: "DepthSensor"
@@ -162,8 +162,8 @@
       beacon_id: 1
 
       # https://www.blueprintsubsea.com/seatrac/seatrac-standard
-      bearing_noise_sigmas: [0.01745, 0.01745] # [azimuth, elevation] [rad]
-      range_noise_sigma: 0.1 # [m]
+      bearing_noise_sigmas: [0.01745, 0.01745] # [azimuth, elevation] [rad] ~±1° angular resolution
+      range_noise_sigma: 0.1 # [m] ±0.1 m range resolution
       # https://www.blueprintsubsea.com/downloads/seatrac/UM-140-D00221-13.pdf
       depth_noise_sigma: 0.1 # [m]
 
@@ -227,7 +227,7 @@
       atmospheric_pressure: 101325.0 # [Pa]
 
       # https://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=MS5837-02BA01&DocType=DS&DocLang=English
-      fluid_pressure_noise_sigma: 195.61 # [Pa]
+      fluid_pressure_noise_sigma: 195.61 # [Pa] ±2 mbar accuracy
 
       # --- ROS Topics and Frames ---
       input_topic: "DepthSensor"
