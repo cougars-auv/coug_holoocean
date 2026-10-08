@@ -38,7 +38,7 @@ class DvlConverterNode(Node):
         super().__init__("dvl_converter_node")
 
         self.declare_parameter("max_range", 50.0)
-        self.declare_parameter("beam_velocity_noise_sigma", 0.011)
+        self.declare_parameter("beam_velocity_noise_sigma", 0.0101)
         self.declare_parameter("beam_range_noise_sigma", 0.1)
         self.declare_parameter("add_noise", True)
         self.declare_parameter("velocity_input_topic", "DVLSensorVelocity")
