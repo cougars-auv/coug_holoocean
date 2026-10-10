@@ -41,7 +41,7 @@ class ImuConverterNode(Node):
         self.declare_parameter("gyro_bias_rw_sigmas", [3.5e-6, 3.5e-6, 3.5e-6])
         self.declare_parameter("imu_input_topic", "IMUSensor")
         self.declare_parameter("ahrs_input_topic", "RotationSensor")
-        self.declare_parameter("output_topic", "imu/data")
+        self.declare_parameter("imu_output_topic", "imu/data")
         self.declare_parameter("bias_topic", "imu/bias")
         self.declare_parameter("imu_frame", "imu_link")
 
@@ -55,7 +55,7 @@ class ImuConverterNode(Node):
         self._gyro_bias_rw_sigmas = self.get_parameter("gyro_bias_rw_sigmas").value
         imu_input_topic = self.get_parameter("imu_input_topic").value
         ahrs_input_topic = self.get_parameter("ahrs_input_topic").value
-        output_topic = self.get_parameter("output_topic").value
+        imu_output_topic = self.get_parameter("imu_output_topic").value
         bias_topic = self.get_parameter("bias_topic").value
         self._imu_frame = self.get_parameter("imu_frame").value
 
@@ -78,7 +78,7 @@ class ImuConverterNode(Node):
         self._time_sync.registerCallback(self._sync_callback)
 
         # Reliable QoS to match SBG-SYSTEMS/sbg_ros2_driver
-        self._output_pub = self.create_publisher(Imu, output_topic, qos_profile_system_default)
+        self._imu_pub = self.create_publisher(Imu, imu_output_topic, qos_profile_system_default)
         self._bias_pub = self.create_publisher(
             TwistWithCovarianceStamped, bias_topic, qos_profile_system_default
         )
@@ -87,7 +87,7 @@ class ImuConverterNode(Node):
 
     def _sync_callback(self, imu_msg: Imu, ahrs_msg: Vector3Stamped, /) -> None:
         imu_msg = self._convert_to_imu(imu_msg, ahrs_msg)
-        self._output_pub.publish(imu_msg)
+        self._imu_pub.publish(imu_msg)
         self._bias_pub.publish(self._convert_to_bias(imu_msg))
 
     def _convert_to_imu(self, imu_msg: Imu, ahrs_msg: Vector3Stamped) -> Imu:

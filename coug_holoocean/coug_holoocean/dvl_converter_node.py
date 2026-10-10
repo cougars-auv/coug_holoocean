@@ -87,10 +87,10 @@ class DvlConverterNode(Node):
             self._range_callback,
             qos_profile_system_default,
         )
-        self._config_sub = self.create_subscription(
+        self._config_command_sub = self.create_subscription(
             ConfigCommand,
             config_command_topic,
-            self._config_callback,
+            self._config_command_callback,
             qos_profile_sensor_data,
         )
         # Best effort QoS to match paagutie/dvl-a50
@@ -101,7 +101,7 @@ class DvlConverterNode(Node):
     def _range_callback(self, msg: DVLSensorRange) -> None:
         self._beam_ranges = msg.range
 
-    def _config_callback(self, msg: ConfigCommand) -> None:
+    def _config_command_callback(self, msg: ConfigCommand) -> None:
         if msg.command != "set_config" or msg.parameter_name != "acoustic_enabled":
             return
 

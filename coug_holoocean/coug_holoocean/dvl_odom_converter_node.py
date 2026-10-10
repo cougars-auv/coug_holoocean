@@ -77,10 +77,10 @@ class DvlOdomConverterNode(Node):
         self._input_sub = self.create_subscription(
             Odometry, input_topic, self._odom_callback, qos_profile_system_default
         )
-        self._config_sub = self.create_subscription(
+        self._config_command_sub = self.create_subscription(
             ConfigCommand,
             config_command_topic,
-            self._config_callback,
+            self._config_command_callback,
             qos_profile_sensor_data,
         )
         # Best effort QoS to match paagutie/dvl-a50
@@ -88,7 +88,7 @@ class DvlOdomConverterNode(Node):
 
         self.get_logger().info("Initialization complete.")
 
-    def _config_callback(self, msg: ConfigCommand) -> None:
+    def _config_command_callback(self, msg: ConfigCommand) -> None:
         if msg.command != "reset_dead_reckoning":
             return
 

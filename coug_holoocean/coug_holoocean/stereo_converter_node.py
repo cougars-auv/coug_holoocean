@@ -28,8 +28,8 @@ class StereoConverterNode(Node):
         self.declare_parameter("back_input_topic", "BackStereoRGBCamera")
         self.declare_parameter("front_output_topic", "stereo/front/image_raw")
         self.declare_parameter("back_output_topic", "stereo/back/image_raw")
-        self.declare_parameter("front_info_output_topic", "stereo/front/camera_info")
-        self.declare_parameter("back_info_output_topic", "stereo/back/camera_info")
+        self.declare_parameter("front_camera_info_output_topic", "stereo/front/camera_info")
+        self.declare_parameter("back_camera_info_output_topic", "stereo/back/camera_info")
         self.declare_parameter("front_stereo_frame", "front_stereo_optical_link")
         self.declare_parameter("back_stereo_frame", "back_stereo_optical_link")
 
@@ -38,8 +38,8 @@ class StereoConverterNode(Node):
         back_input_topic = self.get_parameter("back_input_topic").value
         front_output_topic = self.get_parameter("front_output_topic").value
         back_output_topic = self.get_parameter("back_output_topic").value
-        front_info_output_topic = self.get_parameter("front_info_output_topic").value
-        back_info_output_topic = self.get_parameter("back_info_output_topic").value
+        front_camera_info_output_topic = self.get_parameter("front_camera_info_output_topic").value
+        back_camera_info_output_topic = self.get_parameter("back_camera_info_output_topic").value
         self._front_stereo_frame = self.get_parameter("front_stereo_frame").value
         self._back_stereo_frame = self.get_parameter("back_stereo_frame").value
 
@@ -60,11 +60,11 @@ class StereoConverterNode(Node):
             Image, front_output_topic, qos_profile_system_default
         )
         self._back_pub = self.create_publisher(Image, back_output_topic, qos_profile_system_default)
-        self._front_info_pub = self.create_publisher(
-            CameraInfo, front_info_output_topic, qos_profile_system_default
+        self._front_camera_info_pub = self.create_publisher(
+            CameraInfo, front_camera_info_output_topic, qos_profile_system_default
         )
-        self._back_info_pub = self.create_publisher(
-            CameraInfo, back_info_output_topic, qos_profile_system_default
+        self._back_camera_info_pub = self.create_publisher(
+            CameraInfo, back_camera_info_output_topic, qos_profile_system_default
         )
 
         self.get_logger().info("Initialization complete.")
@@ -75,8 +75,8 @@ class StereoConverterNode(Node):
         self._front_pub.publish(front_msg)
         self._back_pub.publish(back_msg)
 
-        self._front_info_pub.publish(self._convert_to_camera_info(front_msg))
-        self._back_info_pub.publish(self._convert_to_camera_info(back_msg))
+        self._front_camera_info_pub.publish(self._convert_to_camera_info(front_msg))
+        self._back_camera_info_pub.publish(self._convert_to_camera_info(back_msg))
 
     def _convert_to_images(self, front_msg: Image, back_msg: Image) -> tuple[Image, Image]:
         back_msg.header.stamp = front_msg.header.stamp
