@@ -1,0 +1,117 @@
+# Copyright 2026 BYU FROST Lab
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import random
+
+import pymap3d as pm
+import rclpy
+from nav_msgs.msg import Odometry
+from rclpy.node import Node
+from rclpy.qos import qos_profile_system_default
+from sensor_msgs.msg import NavSatFix
+
+
+class GpsConverterNode(Node):
+    def __init__(self) -> None:
+        super().__init__("gps_converter_node")
+
+        self.declare_parameter("origin_latitude", 40.33940)
+        self.declare_parameter("origin_longitude", -111.90721)
+        self.declare_parameter("origin_altitude", 1412.0)
+        self.declare_parameter("position_noise_sigmas", [0.015, 0.015, 0.025])
+        self.declare_parameter("add_noise", True)
+        self.declare_parameter("input_topic", "GPSSensor")
+        self.declare_parameter("output_topic", "gps/fix")
+        self.declare_parameter("gps_frame", "gps_link")
+
+        self._origin_lat = self.get_parameter("origin_latitude").value
+        self._origin_lon = self.get_parameter("origin_longitude").value
+        self._origin_alt = self.get_parameter("origin_altitude").value
+        self._position_noise_sigmas = self.get_parameter("position_noise_sigmas").value
+        self._add_noise = self.get_parameter("add_noise").value
+        input_topic = self.get_parameter("input_topic").value
+        output_topic = self.get_parameter("output_topic").value
+        self._gps_frame = self.get_parameter("gps_frame").value
+
+        self._input_sub = self.create_subscription(
+            Odometry, input_topic, self._odom_callback, qos_profile_system_default
+        )
+        # Reliable QoS to match SBG-SYSTEMS/sbg_ros2_driver
+        self._output_pub = self.create_publisher(
+            NavSatFix, output_topic, qos_profile_system_default
+        )
+
+        self.get_logger().info("Initialization complete.")
+
+    def _odom_callback(self, msg: Odometry) -> None:
+        navsat_msg = self._convert_to_navsat(msg)
+        if navsat_msg is not None:
+            self._output_pub.publish(navsat_msg)
+
+    def _convert_to_navsat(self, msg: Odometry) -> NavSatFix | None:
+        navsat_msg = NavSatFix()
+        navsat_msg.header.stamp = msg.header.stamp
+        navsat_msg.header.frame_id = self._gps_frame
+        navsat_msg.status.status = navsat_msg.status.STATUS_FIX
+        navsat_msg.status.service = navsat_msg.status.SERVICE_GPS
+
+        if self._add_noise:
+            d_east = msg.pose.pose.position.x + random.gauss(0, self._position_noise_sigmas[0])
+            d_north = msg.pose.pose.position.y + random.gauss(0, self._position_noise_sigmas[1])
+            d_up = msg.pose.pose.position.z + random.gauss(0, self._position_noise_sigmas[2])
+        else:
+            d_east = msg.pose.pose.position.x
+            d_north = msg.pose.pose.position.y
+            d_up = msg.pose.pose.position.z
+
+        try:
+            lat, lon, alt = pm.enu2geodetic(
+                e=d_east,
+                n=d_north,
+                u=d_up,
+                lat0=self._origin_lat,
+                lon0=self._origin_lon,
+                h0=self._origin_alt,
+            )
+        except (TypeError, ValueError) as e:
+            self.get_logger().error(f"Failed to convert ENU position to geodetic: {e}")
+            return None
+
+        navsat_msg.latitude = lat
+        navsat_msg.longitude = lon
+        navsat_msg.altitude = alt
+
+        navsat_msg.position_covariance[0] = self._position_noise_sigmas[0] ** 2
+        navsat_msg.position_covariance[4] = self._position_noise_sigmas[1] ** 2
+        navsat_msg.position_covariance[8] = self._position_noise_sigmas[2] ** 2
+        navsat_msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_DIAGONAL_KNOWN
+
+        return navsat_msg
+
+
+def main(args: list[str] | None = None) -> None:
+    rclpy.init(args=args)
+    gps_converter_node = GpsConverterNode()
+    try:
+        rclpy.spin(gps_converter_node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        gps_converter_node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()

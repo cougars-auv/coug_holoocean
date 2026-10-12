@@ -1,0 +1,92 @@
+# Copyright 2026 BYU FROST Lab
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import random
+
+import rclpy
+from nav_msgs.msg import Odometry
+from rclpy.node import Node
+from rclpy.qos import qos_profile_system_default
+from sensor_msgs.msg import FluidPressure
+
+
+class PressureConverterNode(Node):
+    def __init__(self) -> None:
+        super().__init__("pressure_converter_node")
+
+        self.declare_parameter("water_density", 997.0)
+        self.declare_parameter("gravity", 9.8)
+        self.declare_parameter("atmospheric_pressure", 101325.0)
+        self.declare_parameter("fluid_pressure_noise_sigma", 195.61)
+        self.declare_parameter("add_noise", True)
+        self.declare_parameter("input_topic", "DepthSensor")
+        self.declare_parameter("output_topic", "pressure/data")
+        self.declare_parameter("depth_frame", "depth_link")
+
+        self._water_density = self.get_parameter("water_density").value
+        self._gravity = self.get_parameter("gravity").value
+        self._atmospheric_pressure = self.get_parameter("atmospheric_pressure").value
+        self._fluid_pressure_noise_sigma = self.get_parameter("fluid_pressure_noise_sigma").value
+        self._add_noise = self.get_parameter("add_noise").value
+        input_topic = self.get_parameter("input_topic").value
+        output_topic = self.get_parameter("output_topic").value
+        self._depth_frame = self.get_parameter("depth_frame").value
+
+        self._input_sub = self.create_subscription(
+            Odometry, input_topic, self._odom_callback, qos_profile_system_default
+        )
+        # Reliable QoS to match BYU-FROST-Lab/pressure_sensor_ros2
+        self._output_pub = self.create_publisher(
+            FluidPressure, output_topic, qos_profile_system_default
+        )
+
+        self.get_logger().info("Initialization complete.")
+
+    def _odom_callback(self, msg: Odometry) -> None:
+        self._output_pub.publish(self._convert_to_pressure(msg))
+
+    def _convert_to_pressure(self, msg: Odometry) -> FluidPressure:
+        depth = -msg.pose.pose.position.z
+
+        # pressure [Pa] = depth [m] * rho [kg/m^3] * g [m/s^2] + atmospheric_pressure [Pa]
+        rho_g = self._water_density * self._gravity
+        pressure = depth * rho_g + self._atmospheric_pressure
+
+        pressure_msg = FluidPressure()
+        pressure_msg.header.stamp = msg.header.stamp
+        pressure_msg.header.frame_id = self._depth_frame
+        pressure_msg.fluid_pressure = pressure
+        pressure_msg.variance = self._fluid_pressure_noise_sigma**2
+
+        if self._add_noise:
+            pressure_msg.fluid_pressure += random.gauss(0, self._fluid_pressure_noise_sigma)
+
+        return pressure_msg
+
+
+def main(args: list[str] | None = None) -> None:
+    rclpy.init(args=args)
+    pressure_converter_node = PressureConverterNode()
+    try:
+        rclpy.spin(pressure_converter_node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        pressure_converter_node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()

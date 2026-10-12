@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>coug_holoocean</name>
+  <version>0.0.0</version>
+  <description>ROS 2 bridge for the HoloOcean simulator.</description>
+  <maintainer email="snelsond@byu.edu">Nelson Durrant</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>coug_interfaces</exec_depend>
+  <exec_depend>depth_image_proc</exec_depend>
+  <exec_depend>dvl_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>holoocean_interfaces</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>message_filters</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pymap3d</exec_depend>
+  <exec_depend>python3-scipy</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>seatrac_interfaces</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
+  <exec_depend>topic_tools</exec_depend>
+  <exec_depend>tf2_ros_py</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>python3-pytest-cov</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
